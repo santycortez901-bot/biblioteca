@@ -1,0 +1,411 @@
+/* =========================================
+   FOOTER / PANEL LATERAL
+========================================= */
+
+.footer {
+  width: 225px;
+  height: 100vh;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  background: #193b4c;
+  color: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-sizing: border-box;
+
+  z-index: 1000;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.footer-header {
+  height: 70px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 15px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-sizing: border-box;
+}
+
+
+/* LOGO */
+
+.logo-container {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.logo-container img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* INFORMACIÓN */
+
+.biblioteca-info {
+  margin-left: 10px;
+}
+
+.biblioteca-info h3 {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 15px;
+
+  color: #ffffff;
+}
+
+.biblioteca-info span {
+  display: block;
+
+  color: #ff7910;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  line-height: 13px;
+}
+
+
+/* =========================================
+   MENÚ
+========================================= */
+
+.footer-menu {
+  padding: 24px 10px 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+/* TÍTULO */
+
+.menu-title {
+  margin: 0 12px 12px;
+
+  font-size: 10px;
+
+  color: #718b97;
+
+  letter-spacing: 1px;
+
+  font-weight: 600;
+}
+
+
+/* ITEMS */
+
+.menu-item {
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 13px;
+
+  border-radius: 11px;
+
+  color: #a9b9c0;
+
+  text-decoration: none;
+
+  font-size: 13px;
+
+  transition: all 0.2s ease;
+
+  box-sizing: border-box;
+}
+
+
+/* ICONOS */
+
+.icon {
+  width: 25px;
+
+  display: flex;
+  align-items: center;
+
+  font-size: 17px;
+
+  color: #aebdc3;
+}
+
+
+/* HOVER */
+
+.menu-item:hover {
+  background: rgba(44, 174, 181, 0.15);
+
+  color: #ffffff;
+}
+
+
+/* ACTIVO */
+
+.menu-item.active {
+  background: #2caeb5;
+
+  color: #ffffff;
+
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.18);
+}
+
+.menu-item.active .icon {
+  color: #ffffff;
+}
+
+
+/* =========================================
+   PARTE INFERIOR
+========================================= */
+
+.footer-bottom {
+  margin-top: auto;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  padding: 13px 15px 12px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   ALERTAS
+========================================= */
+
+.alertas {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  justify-content: space-between;
+
+  color: #aebcc2;
+
+  font-size: 12px;
+}
+
+.alertas-info {
+  display: flex;
+  align-items: center;
+}
+
+.alert-icon {
+  width: 25px;
+
+  font-size: 16px;
+
+  color: #b5c2c7;
+}
+
+
+/* NOTIFICACIÓN */
+
+.notification {
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f47c13;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: bold;
+}
+
+
+/* =========================================
+   USUARIO
+========================================= */
+
+.usuario {
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+}
+
+
+/* AVATAR */
+
+.avatar {
+  width: 27px;
+  height: 27px;
+
+  border-radius: 50%;
+
+  background: #2caeb5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* NOMBRE */
+
+.nombre {
+  margin-left: 9px;
+
+  color: #d2dadd;
+
+  font-size: 11px;
+}
+
+
+/* BOTÓN SALIR */
+
+.logout {
+  margin-left: auto;
+
+  background: transparent;
+
+  border: none;
+
+  color: #8fa3aa;
+
+  font-size: 17px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.logout:hover {
+  color: #ffffff;
+}
+
+
+/* =========================================
+   CONTENIDO DE LA PÁGINA
+========================================= */
+
+/*
+  Como el footer funciona como panel lateral,
+  el contenido principal debe dejarle espacio.
+*/
+
+:host {
+  display: block;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+
+  .footer {
+    width: 210px;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .footer {
+    width: 70px;
+  }
+
+  .biblioteca-info,
+  .menu-title,
+  .menu-item span:last-child,
+  .alertas-info span:last-child,
+  .nombre {
+    display: none;
+  }
+
+  .footer-header {
+    justify-content: center;
+
+    padding: 0;
+  }
+
+  .footer-menu {
+    padding: 24px 8px 0;
+  }
+
+  .menu-item {
+    justify-content: center;
+
+    padding: 0;
+  }
+
+  .icon {
+    width: auto;
+  }
+
+  .footer-bottom {
+    padding: 10px;
+  }
+
+  .alertas {
+    justify-content: center;
+  }
+
+  .notification {
+    position: absolute;
+
+    right: 5px;
+  }
+
+  .usuario {
+    justify-content: center;
+  }
+
+  .logout {
+    display: none;
+  }
+
+}
