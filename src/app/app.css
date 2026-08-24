@@ -1,0 +1,19 @@
+
+.contenedor{
+    display: flex;
+}
+.contenedor2{
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    bottom: 0 
+}
+.nav{
+    width: 20%;
+}
+.router-outlet{
+    width: 80%;
+}
+.footer{
+    width: 100%;
+}
