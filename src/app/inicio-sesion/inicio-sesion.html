@@ -1,52 +1,49 @@
 <div class="login-container">
-  <div class="login-card">
 
-    <!-- Logo -->
-    <div class="logo-wrapper">
-      <img src="assets/logo-biblioteca.png" alt="Biblioteca Popular Bernardino Rivadavia" class="logo" />
-    </div>
+  <div class="login-box">
 
-    <!-- Título y Subtítulo -->
-    <div class="header">
-      <h1>Iniciar sesión</h1>
-      <p>Ingresá tus credenciales de acceso. pedo</p>
-    </div>
+    <h1>Iniciar sesión</h1>
 
-    <!-- Formulario de login -->
-    <form (ngSubmit)="onLogin()" class="login-form">
+    <p class="subtitle">
+      Biblioteca Popular Bernardino Rivadavia
+    </p>
+
+    <form>
 
       <div class="form-group">
-        <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" name="usuario" [(ngModel)]="usuario" placeholder="admin" required
-          autocomplete="username" />
+        <label for="usuario">Nombre de usuario</label>
+
+        <input
+          type="text"
+          id="usuario"
+          name="usuario"
+          placeholder="Ingrese su usuario"
+          required
+        >
       </div>
 
       <div class="form-group">
         <label for="contrasena">Contraseña</label>
-        <div class="password-wrapper">
-          <input [type]="showPassword ? 'text' : 'password'" id="contrasena" name="contrasena" [(ngModel)]="contrasena"
-            placeholder="••••••••" required autocomplete="current-password" />
-          <button type="button" class="toggle-password-btn" (click)="showPassword = !showPassword"
-            aria-label="Mostrar u ocultar contraseña">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </button>
-        </div>
+
+        <input
+          type="password"
+          id="contrasena"
+          name="contrasena"
+          placeholder="Ingrese su contraseña"
+          required
+        >
       </div>
 
-      <button type="submit" class="btn-primary">
-        Ingresar al sistema
+      <button type="submit">
+        Ingresar
       </button>
 
     </form>
 
-    <!-- Pie de tarjeta -->
-    <div class="footer-info">
-      <span>Sistema de uso interno</span>
-      <a href="#" class="brand-link">Biblioteca Popular Bernardino Rivadavia</a>
-    </div>
+    <p class="footer">
+      Sistema interno de la Biblioteca Popular Bernardino Rivadavia
+    </p>
+
   </div>
+
 </div>
