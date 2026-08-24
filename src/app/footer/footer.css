@@ -1,0 +1,121 @@
+/* ==========================================
+   SOLUCIÓN COMPLETA PARA EL FOOTER
+   ========================================== */
+
+/* Fuerza al footer a ocupar TODO el ancho de la pantalla derecha */
+.footer {
+  background: #080c10; /* Color oscuro alineado con la aplicación */
+  color: #ffffff;
+  width: 100vw;
+  position: relative;
+  margin-top: 500px; /* Se ubica abajo */
+  padding: 50px 0 25px;
+  border-top: 1px solid #1a232e;
+  box-sizing: border-box;
+}
+
+/* Contenedor interno centrado para el texto y columnas */
+.footer-container {
+  max-width: 1200px;
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid de las 3 columnas principales */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 35px;
+  align-items: start;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brand-desc {
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Redes Sociales */
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.social-links a {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.social-links a:hover {
+  color: #ffffff;
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.social-links svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Columnas "Páginas" y "Apoyo" */
+.footer-column h3 {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-column li {
+  margin-bottom: 10px;
+}
+
+.footer-column a {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.footer-column a:hover {
+  color: #38bdf8;
+}
+
+/* Copyright abajo de todo de lado a lado */
+.footer-bottom {
+  border-top: 1px solid #1e293b;
+  padding-top: 20px;
+  width: 100%;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
