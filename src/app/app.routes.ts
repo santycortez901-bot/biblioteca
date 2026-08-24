@@ -8,14 +8,14 @@ import { Footer } from './footer/footer';
 import { Nav } from './nav/nav';
 
 export const routes: Routes = [
-    {path:'',redirectTo: 'inicio', pathMatch: 'full' },
-    {path:'inicio', component: Inicio},
-    {path:'inicioSesion', component: InicioSesion},
-    {path:'libros', component: Libros},
-    {path:'prestamos', component: Prestamos},
-    {path:'socios', component: Socios},
-    {path:'footer', component: Footer},
-    {path:'nav', component: Nav},
+    { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+    { path: 'inicio', component: Inicio },
+    { path: 'inicioSesion', component: InicioSesion },
+    { path: 'libros', component: Libros },
+    { path: 'prestamos', component: Prestamos },
+    { path: 'socios', component: Socios },
+    { path: 'footer', component: Footer },
+    { path: 'nav', component: Nav },
 
 
 ];
