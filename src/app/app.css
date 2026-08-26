@@ -1,20 +1,23 @@
 
 .contenedor{
     display: flex;
+    background-color: #f3f6f9;
 }
 .contenedor2{
     display: flex;
     flex-direction: column;
     position: sticky;
-    bottom: 0 
-
+    bottom: 0 ;
+    background-color: #f3f6f9;
 }
 .nav{
     width: 20%;
 }
 .router-outlet{
     width: 80%;
+    background-color: #f3f6f9;
 }
 .footer{
     width: 100%;
+    background-color: #f3f6f9;
 }
