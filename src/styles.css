@@ -1,1 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
+/* Reset basico para eliminar bordes blancos del navegador */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Forzar a que los componentes de Angular se comporten como bloques */
+app-nav, app-footer, router-outlet {
+  display: block;
+}

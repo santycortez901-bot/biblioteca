@@ -8,7 +8,7 @@
   color: #ffffff;
   width: 100vw;
   position: relative;
-  margin-top: 500px; /* Se ubica abajo */
+  margin-top: 200px; /* Se ubica abajo */
   padding: 50px 0 25px;
   border-top: 1px solid #1a232e;
   box-sizing: border-box;
@@ -21,6 +21,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
 
 /* Grid de las 3 columnas principales */
@@ -36,6 +37,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: center;
 }
 
 .brand-desc {
