@@ -1,14 +1,20 @@
+
+
+:host {
+  display: block;
+}
+
 /* =========================================
-   FOOTER / PANEL LATERAL
+   NAV LATERAL
 ========================================= */
 
-.footer {
-  width: 225px;
-  height: 100vh;
-
+.nav {
   position: fixed;
   top: 0;
   left: 0;
+
+  width: 204px;
+  height: 100vh;
 
   background: #193b4c;
   color: #ffffff;
@@ -36,11 +42,13 @@
   display: flex;
   align-items: center;
 
-  padding: 0 15px;
+  padding: 0 14px;
 
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   box-sizing: border-box;
+
+  flex-shrink: 0;
 }
 
 
@@ -74,7 +82,7 @@
 /* INFORMACIÓN */
 
 .biblioteca-info {
-  margin-left: 10px;
+  margin-left: 9px;
 }
 
 .biblioteca-info h3 {
@@ -93,7 +101,7 @@
 
   color: #ff7910;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
 
   line-height: 13px;
@@ -105,21 +113,18 @@
 ========================================= */
 
 .footer-menu {
-  padding: 24px 10px 0;
+  padding: 23px 9px 0;
 
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 3px;
 }
 
-
-/* TÍTULO */
-
 .menu-title {
-  margin: 0 12px 12px;
+  margin: 0 11px 11px;
 
-  font-size: 10px;
+  font-size: 9px;
 
   color: #718b97;
 
@@ -132,61 +137,33 @@
 /* ITEMS */
 
 .menu-item {
-  height: 38px;
+  height: 36px;
 
   display: flex;
   align-items: center;
 
-  padding: 0 13px;
+  padding: 0 12px;
 
-  border-radius: 11px;
+  border-radius: 8px;
 
   color: #a9b9c0;
 
   text-decoration: none;
 
-  font-size: 13px;
+  font-size: 12px;
 
   transition: all 0.2s ease;
 
   box-sizing: border-box;
 }
 
-
-/* ICONOS */
-
-.icon {
-  width: 25px;
-
-  display: flex;
-  align-items: center;
-
-  font-size: 17px;
-
-  color: #aebdc3;
-}
-
-
-/* HOVER */
-
 .menu-item:hover {
   background: rgba(44, 174, 181, 0.15);
-
   color: #ffffff;
 }
-
-
-/* ACTIVO */
 
 .menu-item.active {
   background: #2caeb5;
-
-  color: #ffffff;
-
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.18);
-}
-
-.menu-item.active .icon {
   color: #ffffff;
 }
 
@@ -200,7 +177,7 @@
 
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 
-  padding: 13px 15px 12px;
+  padding: 12px 14px;
 
   box-sizing: border-box;
 }
@@ -211,7 +188,7 @@
 ========================================= */
 
 .alertas {
-  height: 42px;
+  height: 38px;
 
   display: flex;
   align-items: center;
@@ -220,20 +197,12 @@
 
   color: #aebcc2;
 
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .alertas-info {
   display: flex;
   align-items: center;
-}
-
-.alert-icon {
-  width: 25px;
-
-  font-size: 16px;
-
-  color: #b5c2c7;
 }
 
 
@@ -253,7 +222,7 @@
 
   color: #ffffff;
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: bold;
 }
 
@@ -263,7 +232,7 @@
 ========================================= */
 
 .usuario {
-  height: 38px;
+  height: 34px;
 
   display: flex;
   align-items: center;
@@ -286,7 +255,7 @@
 
   color: #ffffff;
 
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -294,11 +263,11 @@
 /* NOMBRE */
 
 .nombre {
-  margin-left: 9px;
+  margin-left: 8px;
 
   color: #d2dadd;
 
-  font-size: 11px;
+  font-size: 10px;
 }
 
 
@@ -313,7 +282,7 @@
 
   color: #8fa3aa;
 
-  font-size: 17px;
+  font-size: 16px;
 
   cursor: pointer;
 
@@ -326,78 +295,58 @@
 
 
 /* =========================================
-   CONTENIDO DE LA PÁGINA
-========================================= */
-
-/*
-  Como el footer funciona como panel lateral,
-  el contenido principal debe dejarle espacio.
-*/
-
-:host {
-  display: block;
-}
-
-
-/* =========================================
    RESPONSIVE
 ========================================= */
 
 @media (max-width: 700px) {
 
-  .footer {
-    width: 210px;
+  .nav {
+    width: 190px;
   }
 
 }
 
-
 @media (max-width: 500px) {
 
-  .footer {
-    width: 70px;
+  .nav {
+    width: 65px;
   }
 
   .biblioteca-info,
   .menu-title,
-  .menu-item span:last-child,
-  .alertas-info span:last-child,
   .nombre {
     display: none;
   }
 
   .footer-header {
     justify-content: center;
-
     padding: 0;
   }
 
   .footer-menu {
-    padding: 24px 8px 0;
+    padding: 24px 7px 0;
   }
 
   .menu-item {
     justify-content: center;
-
     padding: 0;
   }
 
-  .icon {
-    width: auto;
-  }
-
   .footer-bottom {
-    padding: 10px;
+    padding: 10px 7px;
   }
 
   .alertas {
     justify-content: center;
   }
 
+  .alertas-info {
+    display: none;
+  }
+
   .notification {
     position: absolute;
-
-    right: 5px;
+    right: 4px;
   }
 
   .usuario {
@@ -407,5 +356,5 @@
   .logout {
     display: none;
   }
-
 }
+
