@@ -8,7 +8,6 @@
   color: #ffffff;
   width: 100vw;
   position: relative;
-  margin-top: 200px; /* Se ubica abajo */
   padding: 50px 0 25px;
   border-top: 1px solid #1a232e;
   box-sizing: border-box;
@@ -17,7 +16,7 @@
 /* Contenedor interno centrado para el texto y columnas */
 .footer-container {
   max-width: 1200px;
-  width: 90%;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
