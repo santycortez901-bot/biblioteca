@@ -2,15 +2,6 @@
    RESET Y ESTILOS GLOBALES
    ========================================== */
 :root {
-  --bg-main: #f3f6f9;
-  --text-dark: #0f172a;
-  --text-muted: #64748b;
-  --text-subtext: #94a3b8;
-  --primary-color: #23b2a0;
-  --card-bg: #ffffff;
-  --border-radius-card: 20px;
-  --border-radius-btn: 30px;
-
   /* Estados */
   --badge-activo-bg: #dcfce7;
   --badge-activo-text: #15803d;
@@ -24,7 +15,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #f3f6f9;
+  background-color:#f3f6f9;
   color: #0f172a;
   min-height: 100vh;
 }
@@ -32,10 +23,11 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
 }
 
 /* ==========================================
@@ -45,12 +37,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 }
 
 .header h1 {
   font-size: 28px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: #0f172a;
   margin: 0;
 }
 
@@ -63,6 +56,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
@@ -77,7 +71,7 @@ body {
 .toolbar {
   background-color: #ffffff;
   border-radius: 20px;
-  padding: 18px 24px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -104,7 +98,7 @@ body {
   border-radius: 12px;
   font-size: 14px;
   background-color: #f8fafc;
-  color: var(--text-dark);
+  color:#0f172a;
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -125,7 +119,7 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .filter-group {
@@ -137,7 +131,7 @@ body {
 
 .filter-btn {
   background-color: #f1f5f9;
-  color:#64748b;
+  color: #64748b;
   border: none;
   padding: 7px 16px;
   border-radius: 30px;
@@ -149,7 +143,7 @@ body {
 
 .filter-btn:hover {
   background-color: #e2e8f0;
-  color: var(--text-dark);
+  color: #0f172a;
 }
 
 .filter-btn.active {
@@ -170,11 +164,11 @@ body {
 }
 
 /* ==========================================
-   TABLA DE DATOS
+   TABLA DE DATOS (Escritorio)
    ========================================== */
 .table-container {
   background-color: #ffffff;
-  border-radius: 20px;
+  border-radius: 20PX;
   padding: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   overflow-x: auto;
@@ -198,7 +192,7 @@ th {
 td {
   padding: 16px;
   font-size: 14px;
-  color: var(--text-dark);
+  color: #0f172a;
   border-bottom: 1px solid #f8fafc;
   vertical-align: middle;
 }
@@ -215,18 +209,17 @@ tr:last-child td {
 
 .user-name {
   font-weight: 700;
-  color: var(--text-dark);
+  color: #0f172a;
 }
 
 .user-subtext {
   font-size: 12px;
   color: #94a3b8;
   margin-top: 2px;
+  word-break: break-all;
 }
 
-/* ==========================================
-   BADGES DE ESTADO
-   ========================================== */
+/* Badges y estados */
 .badge {
   display: inline-block;
   padding: 4px 12px;
@@ -237,12 +230,12 @@ tr:last-child td {
 }
 
 .badge-activo {
-  background-color: var(--badge-activo-bg);
-  color: var(--badge-activo-text);
+  background-color: #dcfce7;
+  color: #15803d;
 }
 
 .badge-bloqueado {
-  background-color: var(--badge-bloqueado-bg);
+  background-color: #fef3c7;
   color: var(--badge-bloqueado-text);
 }
 
@@ -257,9 +250,7 @@ tr:last-child td {
   font-size: 13px;
 }
 
-/* ==========================================
-   BOTÓN DE AYUDA FLOTANTE
-   ========================================== */
+/* Botón flotante */
 .help-btn {
   position: fixed;
   bottom: 24px;
@@ -275,9 +266,104 @@ tr:last-child td {
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease, background-color 0.2s ease;
+  z-index: 100;
 }
 
 .help-btn:hover {
-  background-color:#23b2a0;
+  background-color: #23b2a0;
   transform: scale(1.05);
+}
+
+/* ==========================================
+   MEDIA QUERIES (RESPONSIVO)
+   ========================================== */
+
+/* Tablets / Pantallas medianas (< 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .results-count {
+    margin-left: 0;
+    width: 100%;
+    text-align: right;
+  }
+}
+
+/* Dispositivos Móviles (< 600px) */
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .btn-primary {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  /* Transformar tabla en formato de Tarjetas (Cards) */
+  .table-container {
+    padding: 8px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead {
+    display: none; /* Ocultar cabeceras estándar de la tabla */
+  }
+
+  tr {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dotted #f1f5f9;
+    text-align: right;
+  }
+
+  td:last-child {
+    border-bottom: none;
+  }
+
+  /* Inserción del nombre de la columna mediante data-label */
+  td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-align: left;
+    padding-right: 12px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
 }

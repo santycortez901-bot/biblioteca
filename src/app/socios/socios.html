@@ -1,72 +1,69 @@
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <h1>Socios</h1>
+    <button class="btn-primary">+ Nuevo socio</button>
+  </header>
 
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <h1>Socios</h1>
-      <button class="btn-primary">+ Nuevo socio</button>
-    </header>
-
-    <!-- Toolbar / Search & Filters -->
-    <div class="toolbar">
-      <div class="search-box">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" placeholder="Buscar por nombre, DNI o carnet...">
-      </div>
-
-      <div class="filters">
-        <div class="filter-group">
-          <button class="filter-btn active">Todos</button>
-          <button class="filter-btn">Activo</button>
-          <button class="filter-btn">Bloqueado</button>
-          <button class="filter-btn">Baja</button>
-        </div>
-
-        <div class="filter-group">
-          <button class="filter-btn dark active">Todas edades</button>
-          <button class="filter-btn">+18</button>
-          <button class="filter-btn">-18</button>
-        </div>
-
-        <span class="results-count">10 resultado(s)</span>
-      </div>
+  <!-- Toolbar / Search & Filters -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" placeholder="Buscar por nombre, DNI o carnet...">
     </div>
 
-    <!-- Data Table -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>CARNET</th>
-            <th>NOMBRE</th>
-            <th>DNI</th>
-            <th>CONTACTO</th>
-            <th>ESTADO</th>
-            <th>PRÉSTAMO</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="text-muted">CAR001</td>
-            <td>
-              <div class="user-name">María González</div>
-              <div class="user-subtext">41 años</div>
-            </td>
-            <td>28456789</td>
-            <td>
-              <div>2914567890</div>
-              <div class="user-subtext">maria.gonzalez@email.c...</div>
-            </td>
-            <td><span class="badge badge-activo">activo</span></td>
-            <td class="prestamo-active">• Sí — vence 31/08/2026</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="filters">
+      <div class="filter-group">
+        <button class="filter-btn active">Todos</button>
+        <button class="filter-btn">Activo</button>
+        <button class="filter-btn">Bloqueado</button>
+        <button class="filter-btn">Baja</button>
+      </div>
+
+      <div class="filter-group">
+        <button class="filter-btn dark active">Todas edades</button>
+        <button class="filter-btn">+18</button>
+        <button class="filter-btn">-18</button>
+      </div>
+
+      <span class="results-count">10 resultado(s)</span>
     </div>
   </div>
 
-  <button class="help-btn">?</button>
-</body>
+  <!-- Data Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>CARNET</th>
+          <th>NOMBRE</th>
+          <th>DNI</th>
+          <th>CONTACTO</th>
+          <th>ESTADO</th>
+          <th>PRÉSTAMO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="CARNET" class="text-muted">CAR001</td>
+          <td data-label="NOMBRE">
+            <div class="user-name">María González</div>
+            <div class="user-subtext">41 años</div>
+          </td>
+          <td data-label="DNI">28456789</td>
+          <td data-label="CONTACTO">
+            <div>2914567890</div>
+            <div class="user-subtext">maria.gonzalez@email.com</div>
+          </td>
+          <td data-label="ESTADO"><span class="badge badge-activo">activo</span></td>
+          <td data-label="PRÉSTAMO" class="prestamo-active">• Sí — vence 31/08/2026</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<button class="help-btn">?</button>
