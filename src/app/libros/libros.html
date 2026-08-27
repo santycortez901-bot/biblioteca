@@ -1,1 +1,413 @@
-<h1>libros</h1>
+<div class="app-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="logo-section">
+      <div class="logo">
+        <span>📚</span>
+      </div>
+
+      <div class="brand">
+        <strong>Biblioteca Popular</strong>
+        <span>Bernardino Rivadavia</span>
+      </div>
+    </div>
+
+    <div class="menu-title">MENÚ</div>
+
+    <nav class="menu">
+
+      <a class="menu-item" routerLink="/inicio">
+        <span class="icon">⌂</span>
+        <span>Inicio</span>
+      </a>
+
+      <a class="menu-item" routerLink="/socios">
+        <span class="icon">♧</span>
+        <span>Socios</span>
+      </a>
+
+      <a class="menu-item" routerLink="/prestamos">
+        <span class="icon">📖</span>
+        <span>Préstamos</span>
+      </a>
+
+      <a class="menu-item" routerLink="/cuotas">
+        <span class="icon">▣</span>
+        <span>Cuotas</span>
+      </a>
+
+      <a class="menu-item active" routerLink="/libros">
+        <span class="icon">▣</span>
+        <span>Libros</span>
+      </a>
+
+      <a class="menu-item" routerLink="/actividad">
+        <span class="icon">▤</span>
+        <span>Actividad</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-avatar">AB</div>
+
+      <div class="user-info">
+        <strong>Administrador</strong>
+        <span>Biblioteca</span>
+      </div>
+
+      <span class="arrow">⌄</span>
+    </div>
+
+  </aside>
+
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
+
+    <!-- HEADER -->
+    <header class="page-header">
+
+      <h1>Libros</h1>
+
+      <button class="add-button">
+        <span>+</span>
+        Agregar libro
+      </button>
+
+    </header>
+
+
+    <!-- BUSCADOR -->
+    <section class="search-card">
+
+      <div class="search-box">
+
+        <span class="search-icon">⌕</span>
+
+        <input
+          type="text"
+          placeholder="Buscar por título, autor o número de inventario..."
+        />
+
+      </div>
+
+      <span class="book-count">8 libro(s)</span>
+
+    </section>
+
+
+    <!-- TABLA -->
+    <section class="books-card">
+
+      <div class="table-header">
+
+        <div>INVENTARIO</div>
+        <div>TÍTULO</div>
+        <div>AUTOR</div>
+        <div>COPIAS</div>
+        <div>ESTADO</div>
+        <div>ACCIONES</div>
+
+      </div>
+
+
+      <!-- LIBRO 1 -->
+      <div class="book-row">
+
+        <div class="inventory">INV001</div>
+
+        <div class="title">
+          <strong>Cien años de soledad</strong>
+          <span>1 copia(s) en préstamo</span>
+        </div>
+
+        <div class="author">
+          Gabriel García Márquez
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>2/3</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 2 -->
+      <div class="book-row">
+
+        <div class="inventory">INV002</div>
+
+        <div class="title">
+          <strong>El principito</strong>
+        </div>
+
+        <div class="author">
+          Antoine de Saint-Exupéry
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>2/2</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 3 -->
+      <div class="book-row">
+
+        <div class="inventory">INV003</div>
+
+        <div class="title">
+          <strong>1984</strong>
+          <span>1 copia(s) en préstamo</span>
+        </div>
+
+        <div class="author">
+          George Orwell
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>0/1</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status unavailable">Sin copias</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 4 -->
+      <div class="book-row">
+
+        <div class="inventory">INV004</div>
+
+        <div class="title">
+          <strong>Don Quijote de la Mancha</strong>
+          <span>1 copia(s) en préstamo</span>
+        </div>
+
+        <div class="author">
+          Miguel de Cervantes
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>1/2</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 5 -->
+      <div class="book-row">
+
+        <div class="inventory">INV005</div>
+
+        <div class="title">
+          <strong>La sombra del viento</strong>
+          <span>1 copia(s) en préstamo</span>
+        </div>
+
+        <div class="author">
+          Carlos Ruiz Zafón
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>1/2</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 6 -->
+      <div class="book-row">
+
+        <div class="inventory">INV006</div>
+
+        <div class="title">
+          <strong>Rayuela</strong>
+          <span>1 copia(s) en préstamo</span>
+        </div>
+
+        <div class="author">
+          Julio Cortázar
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>0/1</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status unavailable">Sin copias</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 7 -->
+      <div class="book-row">
+
+        <div class="inventory">INV007</div>
+
+        <div class="title">
+          <strong>Ficciones</strong>
+        </div>
+
+        <div class="author">
+          Jorge Luis Borges
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>2/2</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+
+      <!-- LIBRO 8 -->
+      <div class="book-row">
+
+        <div class="inventory">INV008</div>
+
+        <div class="title">
+          <strong>El aleph</strong>
+        </div>
+
+        <div class="author">
+          Jorge Luis Borges
+        </div>
+
+        <div class="copies">
+
+          <button>−</button>
+
+          <strong>1/1</strong>
+
+          <button>+</button>
+
+          <span>disponibles</span>
+
+        </div>
+
+        <div>
+          <span class="status available">Disponible</span>
+        </div>
+
+        <div>
+          <button class="view-button">Ver copias</button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
