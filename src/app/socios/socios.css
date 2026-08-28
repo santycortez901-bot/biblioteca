@@ -1,16 +1,6 @@
 /* ==========================================
    RESET Y ESTILOS GLOBALES
    ========================================== */
-:root {
-  /* Estados */
-  --badge-activo-bg: #dcfce7;
-  --badge-activo-text: #15803d;
-  --badge-bloqueado-bg: #fef3c7;
-  --badge-bloqueado-text: #b45309;
-  --badge-baja-bg: #fee2e2;
-  --badge-baja-text: #dc2626;
-}
-
 body {
   margin: 0;
   padding: 0;
