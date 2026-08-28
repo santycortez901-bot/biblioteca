@@ -236,12 +236,12 @@ tr:last-child td {
 
 .badge-bloqueado {
   background-color: #fef3c7;
-  color: var(--badge-bloqueado-text);
+  color: #b45309;
 }
 
 .badge-baja {
-  background-color: var(--badge-baja-bg);
-  color: var(--badge-baja-text);
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .prestamo-active {
