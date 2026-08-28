@@ -4,10 +4,10 @@
 
 /* Fuerza al footer a ocupar TODO el ancho de la pantalla derecha */
 .footer {
-  background: #080c10; /* Color oscuro alineado con la aplicación */
+  background: #122131; /* Color oscuro alineado con la aplicación */
   color: #ffffff;
-  width: 100vw;
-  position: relative;
+  
+  position: center;
   padding: 50px 0 25px;
   border-top: 1px solid #1a232e;
   box-sizing: border-box;
@@ -15,7 +15,7 @@
 
 /* Contenedor interno centrado para el texto y columnas */
 .footer-container {
-  max-width: 1200px;
+  
   width: 100%;
   margin: 0 auto;
   display: flex;
