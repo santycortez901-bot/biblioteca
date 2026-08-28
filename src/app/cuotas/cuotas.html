@@ -1,1 +1,99 @@
 
+<div class="cuotas-container">
+  <!-- Encabezado -->
+  <div class="header">
+    <h1>Cuotas</h1>
+    <div class="badge-monto">Cuota mensual: <strong>$1.200</strong></div>
+  </div>
+
+  <!-- Contenedor Principal (Tarjeta Blanca) -->
+  <div class="main-card">
+    
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" placeholder="Buscar por nombre, DNI o carnet..." />
+      </div>
+
+      <div class="filter-group">
+        <button class="btn-filter active">Todos</button>
+        <button class="btn-filter">Al día</button>
+        <button class="btn-filter">Pendientes</button>
+        <button class="btn-filter">Baja</button>
+        <span class="count-label">10 socio(s)</span>
+      </div>
+    </div>
+
+    <!-- Tabla de Cuotas -->
+    <div class="table-container">
+      <table class="cuotas-table">
+        <thead>
+          <tr>
+            <th>SOCIO</th>
+            <th>DEUDA</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Fila 1: Activo -->
+          <tr>
+            <td class="socio-info">
+              <div class="nombre">María González</div>
+              <div class="meta">CAR001 · 28456789</div>
+              <span class="badge badge-activo">activo</span>
+            </td>
+            <td class="deuda-col">
+              <span class="deuda-monto">$1.200</span>
+              <span class="deuda-meses">1 mes(es)</span>
+            </td>
+            <td class="acciones-col">
+              <button class="btn-cobrar">Cobrar $1.200</button>
+              <button class="btn-wsp" title="Enviar WhatsApp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Fila 2: Bloqueado -->
+          <tr class="row-warning">
+            <td class="socio-info">
+              <div class="nombre">Ana Martínez</div>
+              <div class="meta">CAR003 · 25789012</div>
+              <span class="badge badge-bloqueado">bloqueado</span>
+            </td>
+            <td class="deuda-col">
+              <span class="deuda-monto">$3.600</span>
+              <span class="deuda-meses">3 mes(es)</span>
+            </td>
+            <td class="acciones-col">
+              <button class="btn-cobrar">Cobrar $3.600</button>
+              <button class="btn-wsp" title="Enviar WhatsApp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Fila 3: Baja -->
+          <tr class="row-danger">
+            <td class="socio-info">
+              <div class="nombre">Juan López</div>
+              <div class="meta">CAR004 · 30234567</div>
+              <span class="badge badge-baja">baja</span>
+            </td>
+            <td class="deuda-col">
+              <span class="deuda-monto">$4.800</span>
+              <span class="deuda-meses">4 mes(es)</span>
+            </td>
+            <td class="acciones-col">
+              <button class="btn-cobrar">Cobrar $4.800</button>
+              <button class="btn-wsp" title="Enviar WhatsApp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
