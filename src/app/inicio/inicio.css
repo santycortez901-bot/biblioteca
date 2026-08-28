@@ -1,26 +1,425 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
-
-.titulo-clasico {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: #1a252f;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 30px 0;
-  position: relative;
-  padding-bottom: 15px;
+* {
+  box-sizing: border-box;
 }
 
-/* Línea decorativa inferior */
-.titulo-clasico::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #c5a059, transparent);
+.inicio {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28px 24px;
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #13283a;
+}
+
+/* =========================
+   ENCABEZADO
+========================= */
+
+.encabezado {
+  margin-bottom: 25px;
+}
+
+.encabezado h1 {
+  margin: 0 0 5px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #12263a;
+}
+
+.encabezado span {
+  color: #718096;
+  font-size: 13px;
+}
+
+
+/* =========================
+   ESTADÍSTICAS
+========================= */
+
+.estadisticas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  
+}
+
+.tarjeta {
+  background: white;
+  border-radius: 16px;
+  min-height: 92px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+.tarjeta:hover {
+   transform: translateY(-2px);
+}
+
+.estadistica .icono {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+}
+
+.estadistica strong {
+  display: block;
+  font-size: 23px;
+  margin-bottom: 4px;
+  color: #12263a;
+}
+
+.estadistica span {
+  display: block;
+  font-size: 12px;
+  color: #718096;
+}
+
+.vencidos .icono {
+  background: #fff0f1;
+  color: #ff5360;
+}
+
+.pendientes .icono {
+  background: #fff7eb;
+  color: #ff9718;
+}
+
+.activos .icono {
+  background: #e7f8f7;
+  color: #20b5ac;
+}
+
+
+/* =========================
+   BÚSQUEDA
+========================= */
+
+.busqueda {
+  background: white;
+  border-radius: 16px;
+  padding: 27px 25px 25px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);
+}
+
+.titulo-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+
+.icono-lupa {
+  font-size: 30px;
+  color: #20b5ac;
+}
+
+.titulo-busqueda h3 {
+  margin: 0 0 3px;
+  font-size: 15px;
+}
+
+.titulo-busqueda small {
+  color: #8995a5;
+  font-size: 11px;
+}
+
+.filtros {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 15px;
+}
+
+.filtro {
+  border: 1px solid #dce3e9;
+  background: white;
+  color: #30445a;
+  border-radius: 20px;
+  padding: 9px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filtro:hover {
+  border-color: #20b5ac;
+}
+
+.filtro.activo {
+  background: #2bb5aa;
+  border-color: #2bb5aa;
+  color: white;
+}
+
+.campo-busqueda {
+  height: 46px;
+  border: 1px solid #dce2e8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+  overflow: hidden;
+}
+
+.campo-busqueda > span {
+  color: #91a0af;
+  font-size: 20px;
+}
+
+.campo-busqueda input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #34495e;
+}
+
+.campo-busqueda input::placeholder {
+  color: #9aa6b4;
+}
+
+.btn-buscar {
+  height: 100%;
+  border: none;
+  background: #2bb5aa;
+  color: white;
+  font-weight: 600;
+  padding: 0 25px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-buscar:hover {
+  background: #20a69c;
+}
+
+
+/* =========================
+   ACCIONES
+========================= */
+
+.acciones {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.accion {
+  height: 150px;
+  border-radius: 16px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.accion:hover {
+  transform: translateY(-2px);
+}
+
+.accion-icono {
+  width: 49px;
+  height: 49px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27px;
+  margin-bottom: 13px;
+}
+
+.accion h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.accion span {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.nuevo-prestamo {
+  background: #2bb5aa;
+}
+
+.cobrar-cuota {
+  background: #ff9619;
+}
+
+.cargar-socio {
+  background: #1d3345;
+}
+
+
+/* =========================
+   ACTIVIDAD
+========================= */
+
+.actividad {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);
+}
+
+.actividad-header {
+  height: 56px;
+  padding: 0 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.actividad-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #12263a;
+}
+
+.actividad-header a {
+  color: #16aaa1;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.actividad-lista {
+  width: 100%;
+}
+
+.actividad-item {
+  min-height: 48px;
+  padding: 0 25px;
+  display: grid;
+  grid-template-columns: 65px 1fr auto 50px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f0f2f4;
+  font-size: 12px;
+}
+
+.actividad-item:last-child {
+  border-bottom: none;
+}
+
+.descripcion {
+  color: #293d50;
+}
+
+.fecha {
+  color: #8491a0;
+  font-size: 11px;
+}
+
+.usuario {
+  color: #8491a0;
+  font-size: 11px;
+  text-align: right;
+}
+
+.badge {
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge.login {
+  background: #e4efff;
+  color: #3978e8;
+}
+
+.badge.prestamo {
+  background: #dff7f5;
+  color: #159e96;
+}
+
+.badge.cuota {
+  background: #fff0dc;
+  color: #ed8b18;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .estadisticas,
+  .acciones {
+    grid-template-columns: 1fr;
+  }
+
+  .actividad-item {
+    grid-template-columns: 65px 1fr;
+    padding: 12px 20px;
+  }
+
+  .fecha,
+  .usuario {
+    display: none;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .inicio {
+    padding: 20px 15px;
+  }
+
+  .busqueda {
+    padding: 20px 16px;
+  }
+
+  .filtros {
+    flex-wrap: wrap;
+  }
+
+  .campo-busqueda {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+
+  .campo-busqueda input {
+    height: 42px;
+    min-width: 150px;
+  }
+
+  .btn-buscar {
+    height: 42px;
+    border-radius: 8px;
+  }
+
+  .actividad-header {
+    padding: 0 18px;
+  }
+
+  .actividad-item {
+    padding: 12px 18px;
+  }
+
 }
