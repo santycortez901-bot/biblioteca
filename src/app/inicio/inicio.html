@@ -9,7 +9,7 @@
   <!-- Estadísticas -->
   <div class="estadisticas">
 
-    <div class="tarjeta estadistica vencidos">
+    <div class="tarjeta estadistica vencidos" routerLink='/prestamos'>
       <div class="icono">◷</div>
       <div>
         <strong>2</strong>
@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <div class="tarjeta estadistica pendientes">
+    <div class="tarjeta estadistica pendientes" routerLink='/socios'>
       <div class="icono">▤</div>
       <div>
         <strong>10</strong>
@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    <div class="tarjeta estadistica activos">
+    <div class="tarjeta estadistica activos" routerLink='/socios'>
       
       <div class="icono">♙</div>
       <div>
@@ -49,9 +49,9 @@
     </div>
 
     <div class="filtros">
-      <button class="filtro activo">ID / Carnet</button>
-      <button class="filtro">DNI / Apellido</button>
-      <button class="filtro">N° Inventario</button>
+      
+      <button class="filtro activo">DNI / APELLIDO / Nº CARNET</button>
+      <button class="filtro">N° INVENTARIO / ID</button>
     </div>
 
     <div class="campo-busqueda">
@@ -107,7 +107,7 @@
     <div class="actividad-header">
       <h3>Actividad reciente</h3>
 
-      <a href="#">
+      <a routerLink='/actividades'>
         Ver todo →
       </a>
     </div>
