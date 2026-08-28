@@ -1,0 +1,755 @@
+/* ==============================
+   CONFIGURACIÓN GENERAL
+================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #10243a;
+}
+
+body {
+  margin: 0;
+}
+
+
+/* ==============================
+   CONTENEDOR PRINCIPAL
+================================ */
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  background: #f1f5f9;
+}
+
+
+/* ==============================
+   SIDEBAR
+================================ */
+
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: #172c40;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+
+/* LOGO */
+
+.logo-section {
+  height: 100px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+  width: 43px;
+  height: 43px;
+  background: white;
+  border-radius: 9px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 23px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.brand span {
+  color: #25c1b5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* MENÚ */
+
+.menu-title {
+  color: #8da0b2;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 25px 20px 10px;
+  letter-spacing: 0.5px;
+}
+
+.menu {
+  padding: 0 10px;
+}
+
+.menu-item {
+  height: 50px;
+  margin: 4px 0;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 0 16px;
+
+  color: #e6edf3;
+  text-decoration: none;
+
+  border-radius: 10px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-item.active {
+  background: #27b9ad;
+  color: white;
+}
+
+.icon {
+  width: 23px;
+  text-align: center;
+  font-size: 21px;
+}
+
+
+/* USUARIO */
+
+.sidebar-bottom {
+  margin-top: auto;
+
+  min-height: 90px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 43px;
+  height: 43px;
+
+  border-radius: 50%;
+
+  background: #20b7aa;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 3px;
+}
+
+.user-info strong {
+  font-size: 13px;
+}
+
+.user-info span {
+  color: #20b7aa;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.arrow {
+  font-size: 20px;
+}
+
+
+/* ==============================
+   CONTENIDO
+================================ */
+
+.main-content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+
+  min-height: 100vh;
+
+  padding: 34px 35px 50px;
+}
+
+
+/* ==============================
+   HEADER
+================================ */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 25px;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  font-size: 30px;
+  font-weight: 750;
+
+  color: #12283e;
+}
+
+
+/* BOTÓN AGREGAR */
+
+.add-button {
+  border: none;
+
+  background: #27b9ad;
+  color: white;
+
+  height: 49px;
+
+  padding: 0 22px;
+
+  border-radius: 11px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 12px rgba(39, 185, 173, 0.18);
+
+  transition: 0.2s ease;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+.add-button span {
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 400;
+}
+
+
+/* ==============================
+   BUSCADOR
+================================ */
+
+.search-card {
+  background: white;
+
+  border-radius: 15px;
+
+  padding: 13px 17px;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  margin-bottom: 25px;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.05),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.search-box {
+  flex: 1;
+
+  height: 41px;
+
+  border: 1px solid #dce3e9;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 13px;
+}
+
+.search-icon {
+  font-size: 25px;
+  color: #8a9aab;
+  margin-right: 9px;
+}
+
+.search-box input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  font-size: 14px;
+
+  color: #23384c;
+}
+
+.search-box input::placeholder {
+  color: #8a97a7;
+}
+
+.book-count {
+  color: #66788a;
+  font-size: 13px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+
+/* ==============================
+   TABLA
+================================ */
+
+.books-card {
+  background: white;
+
+  border-radius: 15px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.05),
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+
+/* CABECERA */
+
+.table-header {
+  min-height: 52px;
+
+  display: grid;
+
+  grid-template-columns:
+    0.9fr 2.1fr 2fr 1.5fr 1.1fr 0.9fr;
+
+  align-items: center;
+
+  padding: 0 20px;
+
+  border-bottom: 1px solid #e8edf1;
+
+  color: #788899;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+
+/* FILAS */
+
+.book-row {
+  min-height: 88px;
+
+  display: grid;
+
+  grid-template-columns:
+    0.9fr 2.1fr 2fr 1.5fr 1.1fr 0.9fr;
+
+  align-items: center;
+
+  padding: 0 20px;
+
+  border-bottom: 1px solid #edf0f3;
+}
+
+.book-row:last-child {
+  border-bottom: none;
+}
+
+
+/* INVENTARIO */
+
+.inventory {
+  color: #65778a;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+/* TÍTULO */
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title strong {
+  color: #142b42;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.title span {
+  color: #f07819;
+  font-size: 11px;
+}
+
+
+/* AUTOR */
+
+.author {
+  color: #4d6278;
+  font-size: 13px;
+}
+
+
+/* ==============================
+   COPIAS
+================================ */
+
+.copies {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copies button {
+  width: 29px;
+  height: 29px;
+
+  border: none;
+
+  background: #f0f3f6;
+
+  border-radius: 8px;
+
+  color: #32495f;
+
+  font-size: 19px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.copies button:hover {
+  background: #e4e9ed;
+}
+
+.copies strong {
+  font-size: 13px;
+  min-width: 25px;
+  text-align: center;
+  color: #172d43;
+}
+
+.copies span {
+  color: #8795a5;
+  font-size: 11px;
+}
+
+
+/* ==============================
+   ESTADO
+================================ */
+
+.status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  width: fit-content;
+}
+
+.status.available {
+  background: #d9f8e7;
+  color: #15924c;
+}
+
+.status.unavailable {
+  background: #ffe0e5;
+  color: #e64659;
+}
+
+
+/* ==============================
+   ACCIONES
+================================ */
+
+.view-button {
+  border: none;
+
+  background: transparent;
+
+  color: #13a99e;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  padding: 5px 0;
+}
+
+.view-button:hover {
+  color: #087e76;
+  text-decoration: underline;
+}
+
+
+/* ==============================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 1100px) {
+
+  .sidebar {
+    width: 220px;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    padding: 25px;
+  }
+
+  .table-header,
+  .book-row {
+    grid-template-columns:
+      0.8fr 1.7fr 1.5fr 1.3fr 1fr 0.8fr;
+  }
+
+  .copies {
+    gap: 5px;
+  }
+
+  .copies span {
+    display: none;
+  }
+}
+
+
+@media (max-width: 850px) {
+
+  .sidebar {
+    width: 75px;
+  }
+
+  .logo-section {
+    justify-content: center;
+    padding: 15px;
+  }
+
+  .brand,
+  .menu-title,
+  .menu-item span:not(.icon),
+  .user-info,
+  .arrow {
+    display: none;
+  }
+
+  .menu-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebar-bottom {
+    justify-content: center;
+    padding: 15px;
+  }
+
+  .main-content {
+    margin-left: 75px;
+    width: calc(100% - 75px);
+  }
+}
+
+
+@media (max-width: 650px) {
+
+  .main-content {
+    padding: 20px 15px;
+  }
+
+  .page-header h1 {
+    font-size: 25px;
+  }
+
+  .add-button {
+    padding: 0 14px;
+  }
+
+  .search-card {
+    padding: 10px;
+  }
+
+  .book-count {
+    display: none;
+  }
+
+  .books-card {
+    overflow-x: auto;
+  }
+
+  .table-header,
+  .book-row {
+    min-width: 900px;
+  }
+
+}
+
+/* ==============================
+   MODAL FLOTANTE (SIN ALTERAR TU CSS)
+================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(16, 36, 58, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #12283e;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #8a9aab;
+  cursor: pointer;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4d6278;
+}
+
+.form-group input {
+  height: 42px;
+  border: 1px solid #dce3e9;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  color: #12283e;
+}
+
+.form-group input:focus {
+  border-color: #27b9ad;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.submit-btn {
+  flex: 1;
+  height: 42px;
+  background: #27b9ad;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  flex: 1;
+  height: 42px;
+  background: white;
+  color: #4d6278;
+  border: 1px solid #dce3e9;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  filter: brightness(0.95);
+}
+
+.cancel-btn:hover {
+  background: #f8fafc;
+}
