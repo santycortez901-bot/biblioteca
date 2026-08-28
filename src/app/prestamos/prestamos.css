@@ -1,0 +1,774 @@
+/* ========================================
+   CONTENEDOR PRINCIPAL
+======================================== */
+
+.prestamos-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 18px 70px;
+  box-sizing: border-box;
+
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #102b43;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  font-size: 25px;
+  font-weight: 700;
+  color: #102b43;
+}
+
+.btn-nuevo {
+  height: 36px;
+  padding: 0 17px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #28b5ad;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  transition: 0.2s;
+}
+
+.btn-nuevo:hover {
+  background: #20a39c;
+}
+
+.plus {
+  font-size: 21px;
+  font-weight: 400;
+}
+
+
+/* ========================================
+   TOOLBAR
+======================================== */
+
+.toolbar {
+  min-height: 76px;
+  padding: 15px;
+
+  box-sizing: border-box;
+
+  background: white;
+
+  border: 1px solid #e2e7eb;
+  border-radius: 17px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  box-shadow: 0 2px 4px rgba(20, 40, 60, 0.08);
+
+  margin-bottom: 19px;
+}
+
+
+/* ========================================
+   BUSCADOR
+======================================== */
+
+.search-box {
+  height: 42px;
+
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #dce3e9;
+  border-radius: 12px;
+
+  background: #fbfcfd;
+
+  box-sizing: border-box;
+
+  padding: 0 12px;
+}
+
+.search-icon {
+  color: #8d9bad;
+
+  font-size: 25px;
+
+  margin-right: 9px;
+
+  transform: rotate(-20deg);
+}
+
+.search-box input {
+  width: 100%;
+  height: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #42566b;
+
+  font-size: 13px;
+}
+
+.search-box input::placeholder {
+  color: #697b8d;
+}
+
+
+/* ========================================
+   FILTROS
+======================================== */
+
+.filters {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  white-space: nowrap;
+}
+
+.filter {
+  height: 34px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #f4f6f8;
+
+  color: #31475d;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.filter:hover {
+  background: #e8edf1;
+}
+
+.filter.active {
+  background: #28b5ad;
+  color: white;
+
+  font-weight: 700;
+}
+
+.records {
+  margin-left: 5px;
+
+  color: #8291a2;
+
+  font-size: 12px;
+}
+
+
+/* ========================================
+   TABLA
+======================================== */
+
+.table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  background: white;
+
+  border: 1px solid #e1e6ea;
+  border-radius: 17px;
+
+  box-shadow: 0 2px 4px rgba(20, 40, 60, 0.08);
+
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+
+  min-width: 1000px;
+
+  border-collapse: collapse;
+}
+
+
+/* ========================================
+   CABECERA
+======================================== */
+
+thead {
+  background: #fafbfc;
+}
+
+thead tr {
+  height: 44px;
+}
+
+th {
+  padding: 0 16px;
+
+  text-align: left;
+
+  color: #8493a5;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  border-bottom: 1px solid #edf0f2;
+
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   FILAS
+======================================== */
+
+tbody tr {
+  height: 62px;
+
+  transition: 0.15s;
+}
+
+tbody tr:nth-child(even) {
+  background: #fdfafb;
+}
+
+tbody tr:hover {
+  background: #f5fafb;
+}
+
+td {
+  padding: 8px 16px;
+
+  border-bottom: 1px solid #f0f2f4;
+
+  font-size: 12px;
+
+  color: #344b61;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* ========================================
+   ID
+======================================== */
+
+.prestamo-id {
+  color: #7d91a7;
+
+  font-size: 11px;
+}
+
+
+/* ========================================
+   SOCIO
+======================================== */
+
+.socio {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.socio-nombre {
+  color: #071f35;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.socio-estado {
+  color: #00a85a;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   LIBRO
+======================================== */
+
+.libro {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  max-width: 190px;
+}
+
+.libro-nombre {
+  display: block;
+
+  color: #102b43;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.inventario {
+  color: #91a0b0;
+
+  font-size: 11px;
+}
+
+
+/* ========================================
+   FECHAS
+======================================== */
+
+.fecha {
+  color: #52687d;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+}
+
+.vencimiento {
+  color: #243d55;
+}
+
+
+/* ========================================
+   ESTADO
+======================================== */
+
+.estado {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 54px;
+  height: 24px;
+
+  padding: 0 10px;
+
+  box-sizing: border-box;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.estado-activo {
+  background: #d5f8e5;
+
+  color: #00884b;
+}
+
+.estado-vencido {
+  background: #ffe0e0;
+
+  color: #e32626;
+}
+
+
+/* ========================================
+   RENOVACIONES
+======================================== */
+
+.renovaciones {
+  color: #142d44;
+
+  font-size: 12px;
+}
+
+
+/* ========================================
+   ACCIONES
+======================================== */
+
+.acciones {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+/* RENOVAR */
+
+.btn-renovar {
+  height: 29px;
+
+  padding: 0 12px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #e4f3ff;
+
+  color: #0073b9;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  white-space: nowrap;
+
+  transition: 0.2s;
+}
+
+.btn-renovar:hover {
+  background: #d3ecfc;
+}
+
+.btn-renovar span {
+  font-size: 15px;
+}
+
+
+/* DEVOLVER */
+
+.btn-devolver {
+  height: 29px;
+
+  padding: 0 12px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #d9f8e7;
+
+  color: #008a4b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  white-space: nowrap;
+
+  transition: 0.2s;
+}
+
+.btn-devolver:hover {
+  background: #c6f2da;
+}
+
+.btn-devolver span {
+  font-size: 12px;
+}
+
+
+/* ========================================
+   TABLET
+   1000px
+======================================== */
+
+@media (max-width: 1000px) {
+
+  .prestamos-container {
+    padding: 20px 14px 50px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    min-height: auto;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+
+    overflow-x: auto;
+
+    padding-bottom: 2px;
+
+    scrollbar-width: thin;
+  }
+
+  .filter {
+    flex-shrink: 0;
+  }
+
+  .records {
+    margin-left: auto;
+
+    flex-shrink: 0;
+  }
+
+  .table-container {
+    border-radius: 14px;
+  }
+}
+
+
+/* ========================================
+   TABLET PEQUEÑA
+   768px
+======================================== */
+
+@media (max-width: 768px) {
+
+  .prestamos-container {
+    padding: 18px 12px 45px;
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 23px;
+  }
+
+  .btn-nuevo {
+    height: 35px;
+
+    padding: 0 13px;
+
+    font-size: 12px;
+  }
+
+  .toolbar {
+    padding: 12px;
+
+    border-radius: 14px;
+  }
+
+  .search-box {
+    height: 40px;
+  }
+
+  .filters {
+    gap: 6px;
+  }
+
+  .filter {
+    height: 32px;
+
+    padding: 0 12px;
+  }
+
+  .records {
+    font-size: 11px;
+  }
+}
+
+
+/* ========================================
+   CELULAR
+   600px
+======================================== */
+
+@media (max-width: 600px) {
+
+  .prestamos-container {
+    padding: 16px 10px 40px;
+  }
+
+  /* HEADER */
+
+  .page-header {
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 21px;
+  }
+
+  .btn-nuevo {
+    height: 34px;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+  }
+
+  .plus {
+    font-size: 18px;
+  }
+
+
+  /* TOOLBAR */
+
+  .toolbar {
+    padding: 10px;
+
+    gap: 10px;
+
+    border-radius: 13px;
+  }
+
+  .search-box {
+    height: 39px;
+
+    border-radius: 10px;
+  }
+
+  .search-box input {
+    font-size: 12px;
+  }
+
+  .search-icon {
+    font-size: 22px;
+  }
+
+
+  /* FILTROS */
+
+  .filters {
+    width: 100%;
+
+    overflow-x: auto;
+
+    padding-bottom: 4px;
+  }
+
+  .filter {
+    height: 31px;
+
+    padding: 0 11px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+  }
+
+  .records {
+    display: none;
+  }
+
+
+  /* TABLA */
+
+  .table-container {
+    border-radius: 13px;
+  }
+
+  table {
+    min-width: 900px;
+  }
+
+  th {
+    padding: 0 13px;
+
+    font-size: 10px;
+  }
+
+  td {
+    padding: 8px 13px;
+  }
+
+  tbody tr {
+    height: 60px;
+  }
+
+
+  /* ACCIONES */
+
+  .acciones {
+    gap: 5px;
+  }
+
+  .btn-renovar,
+  .btn-devolver {
+    height: 28px;
+
+    padding: 0 10px;
+
+    font-size: 10px;
+  }
+}
+
+
+/* ========================================
+   CELULAR MUY PEQUEÑO
+   400px
+======================================== */
+
+@media (max-width: 400px) {
+
+  .prestamos-container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .btn-nuevo {
+    padding: 0 9px;
+
+    font-size: 10px;
+  }
+
+  .toolbar {
+    padding: 9px;
+  }
+
+  .filter {
+    padding: 0 10px;
+  }
+}

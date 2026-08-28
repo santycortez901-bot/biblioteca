@@ -1,1 +1,444 @@
-<h1>prestamos</h1>
+<div class="prestamos-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <h1>Préstamos</h1>
+
+    <button class="btn-nuevo">
+      <span class="plus">+</span>
+      Nuevo préstamo
+    </button>
+  </div>
+
+
+  <!-- BUSCADOR + FILTROS -->
+  <div class="toolbar">
+
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+
+      <input
+        type="text"
+        placeholder="Buscar por socio, libro o ID de inventario..."
+      >
+    </div>
+
+    <div class="filters">
+
+      <button class="filter active">
+        Todos
+      </button>
+
+      <button class="filter">
+        Al día
+      </button>
+
+      <button class="filter">
+        Vencidos
+      </button>
+
+      <button class="filter">
+        Devueltos
+      </button>
+
+      <span class="records">
+        5 registro(s)
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- TABLA -->
+  <div class="table-container">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>SOCIO</th>
+          <th>LIBRO</th>
+          <th>INICIO</th>
+          <th>VENCIMIENTO</th>
+          <th>ESTADO</th>
+          <th>RENOV.</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+
+
+      <tbody>
+
+        <!-- PRÉSTAMO 1 -->
+        <tr>
+
+          <td>
+            <span class="prestamo-id">PR001</span>
+          </td>
+
+          <td>
+            <div class="socio">
+              <span class="socio-nombre">
+                María González
+              </span>
+
+              <span class="socio-estado">
+                activo
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="libro">
+              <span class="libro-nombre">
+                Cien años de soledad
+              </span>
+
+              <span class="inventario">
+                INV001
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="fecha">
+              01/08/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="fecha vencimiento">
+              31/08/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="estado estado-activo">
+              activo
+            </span>
+          </td>
+
+          <td>
+            <span class="renovaciones">
+              0/2
+            </span>
+          </td>
+
+          <td>
+            <div class="acciones">
+
+              <button class="btn-renovar">
+                <span>↻</span>
+                Renovar
+              </button>
+
+              <button class="btn-devolver">
+                <span>✓</span>
+                Devolver
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+
+        <!-- PRÉSTAMO 2 -->
+        <tr>
+
+          <td>
+            <span class="prestamo-id">PR002</span>
+          </td>
+
+          <td>
+            <div class="socio">
+              <span class="socio-nombre">
+                Carlos Rodríguez
+              </span>
+
+              <span class="socio-estado">
+                activo
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="libro">
+              <span class="libro-nombre">
+                1984
+              </span>
+
+              <span class="inventario">
+                INV003
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="fecha">
+              20/06/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="fecha vencimiento">
+              20/07/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="estado estado-vencido">
+              vencido
+            </span>
+          </td>
+
+          <td>
+            <span class="renovaciones">
+              1/2
+            </span>
+          </td>
+
+          <td>
+            <div class="acciones">
+
+              <button class="btn-renovar">
+                <span>↻</span>
+                Renovar
+              </button>
+
+              <button class="btn-devolver">
+                <span>✓</span>
+                Devolver
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+
+        <!-- PRÉSTAMO 3 -->
+        <tr>
+
+          <td>
+            <span class="prestamo-id">PR003</span>
+          </td>
+
+          <td>
+            <div class="socio">
+              <span class="socio-nombre">
+                Laura Fernández
+              </span>
+
+              <span class="socio-estado">
+                activo
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="libro">
+              <span class="libro-nombre">
+                Don Quijote de la Mancha
+              </span>
+
+              <span class="inventario">
+                INV004
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="fecha">
+              05/08/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="fecha vencimiento">
+              04/09/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="estado estado-activo">
+              activo
+            </span>
+          </td>
+
+          <td>
+            <span class="renovaciones">
+              1/2
+            </span>
+          </td>
+
+          <td>
+            <div class="acciones">
+
+              <button class="btn-renovar">
+                <span>↻</span>
+                Renovar
+              </button>
+
+              <button class="btn-devolver">
+                <span>✓</span>
+                Devolver
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+
+        <!-- PRÉSTAMO 4 -->
+        <tr>
+
+          <td>
+            <span class="prestamo-id">PR004</span>
+          </td>
+
+          <td>
+            <div class="socio">
+              <span class="socio-nombre">
+                Diego Sánchez
+              </span>
+
+              <span class="socio-estado">
+                activo
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="libro">
+              <span class="libro-nombre">
+                La sombra del viento
+              </span>
+
+              <span class="inventario">
+                INV005
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="fecha">
+              10/07/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="fecha vencimiento">
+              09/08/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="estado estado-vencido">
+              vencido
+            </span>
+          </td>
+
+          <td>
+            <span class="renovaciones">
+              2/2
+            </span>
+          </td>
+
+          <td>
+            <div class="acciones">
+
+              <button class="btn-devolver">
+                <span>✓</span>
+                Devolver
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+
+        <!-- PRÉSTAMO 5 -->
+        <tr>
+
+          <td>
+            <span class="prestamo-id">PR005</span>
+          </td>
+
+          <td>
+            <div class="socio">
+              <span class="socio-nombre">
+                Florencia Morales
+              </span>
+
+              <span class="socio-estado">
+                activo
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="libro">
+              <span class="libro-nombre">
+                Rayuela
+              </span>
+
+              <span class="inventario">
+                INV006
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="fecha">
+              12/08/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="fecha vencimiento">
+              11/09/2026
+            </span>
+          </td>
+
+          <td>
+            <span class="estado estado-activo">
+              activo
+            </span>
+          </td>
+
+          <td>
+            <span class="renovaciones">
+              0/2
+            </span>
+          </td>
+
+          <td>
+            <div class="acciones">
+
+              <button class="btn-renovar">
+                <span>↻</span>
+                Renovar
+              </button>
+
+              <button class="btn-devolver">
+                <span>✓</span>
+                Devolver
+              </button>
+
+            </div>
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
