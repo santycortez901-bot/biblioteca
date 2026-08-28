@@ -361,12 +361,7 @@ body {
   display: grid;
 
   grid-template-columns:
-    0.9fr
-    2.1fr
-    2fr
-    1.5fr
-    1.1fr
-    0.9fr;
+    0.9fr 2.1fr 2fr 1.5fr 1.1fr 0.9fr;
 
   align-items: center;
 
@@ -390,12 +385,7 @@ body {
   display: grid;
 
   grid-template-columns:
-    0.9fr
-    2.1fr
-    2fr
-    1.5fr
-    1.1fr
-    0.9fr;
+    0.9fr 2.1fr 2fr 1.5fr 1.1fr 0.9fr;
 
   align-items: center;
 
@@ -568,12 +558,7 @@ body {
   .table-header,
   .book-row {
     grid-template-columns:
-      0.8fr
-      1.7fr
-      1.5fr
-      1.3fr
-      1fr
-      0.8fr;
+      0.8fr 1.7fr 1.5fr 1.3fr 1fr 0.8fr;
   }
 
   .copies {
@@ -653,4 +638,118 @@ body {
     min-width: 900px;
   }
 
+}
+
+/* ==============================
+   MODAL FLOTANTE (SIN ALTERAR TU CSS)
+================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(16, 36, 58, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #12283e;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #8a9aab;
+  cursor: pointer;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4d6278;
+}
+
+.form-group input {
+  height: 42px;
+  border: 1px solid #dce3e9;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  color: #12283e;
+}
+
+.form-group input:focus {
+  border-color: #27b9ad;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.submit-btn {
+  flex: 1;
+  height: 42px;
+  background: #27b9ad;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  flex: 1;
+  height: 42px;
+  background: white;
+  color: #4d6278;
+  border: 1px solid #dce3e9;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  filter: brightness(0.95);
+}
+
+.cancel-btn:hover {
+  background: #f8fafc;
 }

@@ -1,147 +1,85 @@
-<div class="app-container">
+<!-- CONTENIDO PRINCIPAL -->
+<main class="main-content">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <!-- HEADER -->
+  <header class="page-header">
 
-    <div class="logo-section">
-      <div class="logo">
-        <span>📚</span>
-      </div>
+    <h1>Libros</h1>
 
-      <div class="brand">
-        <strong>Biblioteca Popular</strong>
-        <span>Bernardino Rivadavia</span>
-      </div>
+    <button class="add-button" (click)="openModal()">
+      <span>+</span>
+      Agregar libro
+    </button>
+
+  </header>
+
+
+  <!-- BUSCADOR -->
+  <section class="search-card">
+
+    <div class="search-box">
+
+      <span class="search-icon">⌕</span>
+
+      <input type="text" placeholder="Buscar por título, autor o número de inventario..." />
+
     </div>
 
-    <div class="menu-title">MENÚ</div>
+    <span class="book-count">{{ libros.length }} libro(s)</span>
 
-    <nav class="menu">
+  </section>
 
-      <a class="menu-item" routerLink="/inicio">
-        <span class="icon">⌂</span>
-        <span>Inicio</span>
-      </a>
 
-      <a class="menu-item" routerLink="/socios">
-        <span class="icon">♧</span>
-        <span>Socios</span>
-      </a>
+  <!-- TABLA DINÁMICA -->
+  <section class="books-card">
 
-      <a class="menu-item" routerLink="/prestamos">
-        <span class="icon">📖</span>
-        <span>Préstamos</span>
-      </a>
+    <div class="table-header">
 
-      <a class="menu-item" routerLink="/cuotas">
-        <span class="icon">▣</span>
-        <span>Cuotas</span>
-      </a>
+      <div>INVENTARIO</div>
+      <div>TÍTULO</div>
+      <div>AUTOR</div>
+      <div>COPIAS</div>
+      <div>ESTADO</div>
+      <div>ACCIONES</div>
 
-      <a class="menu-item active" routerLink="/libros">
-        <span class="icon">▣</span>
-        <span>Libros</span>
-      </a>
-
-      <a class="menu-item" routerLink="/actividad">
-        <span class="icon">▤</span>
-        <span>Actividad</span>
-      </a>
-
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="user-avatar">AB</div>
-
-      <div class="user-info">
-        <strong>Administrador</strong>
-        <span>Biblioteca</span>
-      </div>
-
-      <span class="arrow">⌄</span>
     </div>
 
-  </aside>
-
-
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="main-content">
-
-    <!-- HEADER -->
-    <header class="page-header">
-
-      <h1>Libros</h1>
-
-      <button class="add-button">
-        <span>+</span>
-        Agregar libro
-      </button>
-
-    </header>
-
-
-    <!-- BUSCADOR -->
-    <section class="search-card">
-
-      <div class="search-box">
-
-        <span class="search-icon">⌕</span>
-
-        <input
-          type="text"
-          placeholder="Buscar por título, autor o número de inventario..."
-        />
-
-      </div>
-
-      <span class="book-count">8 libro(s)</span>
-
-    </section>
-
-
-    <!-- TABLA -->
-    <section class="books-card">
-
-      <div class="table-header">
-
-        <div>INVENTARIO</div>
-        <div>TÍTULO</div>
-        <div>AUTOR</div>
-        <div>COPIAS</div>
-        <div>ESTADO</div>
-        <div>ACCIONES</div>
-
-      </div>
-
-
-      <!-- LIBRO 1 -->
+    @for (libro of libros; track libro.inventario) {
       <div class="book-row">
 
-        <div class="inventory">INV001</div>
+        <div class="inventory">{{ libro.inventario }}</div>
 
         <div class="title">
-          <strong>Cien años de soledad</strong>
-          <span>1 copia(s) en préstamo</span>
+          <strong>{{ libro.titulo }}</strong>
+          
+          <!-- Si hay copias prestadas muestra la cantidad; si no, no muestra texto secundario -->
+          @if (libro.copiasTotales - libro.copiasDisponibles > 0) {
+            <span>{{ libro.copiasTotales - libro.copiasDisponibles }} copia(s) en préstamo</span>
+          }
         </div>
 
         <div class="author">
-          Gabriel García Márquez
+          {{ libro.autor }}
         </div>
 
         <div class="copies">
 
-          <button>−</button>
+          <button (click)="prestarCopia(libro)">−</button>
 
-          <strong>2/3</strong>
+          <strong>{{ libro.copiasDisponibles }}/{{ libro.copiasTotales }}</strong>
 
-          <button>+</button>
+          <button (click)="devolverCopia(libro)">+</button>
 
           <span>disponibles</span>
 
         </div>
 
         <div>
-          <span class="status available">Disponible</span>
+          @if (libro.copiasDisponibles > 0) {
+            <span class="status available">Disponible</span>
+          } @else {
+            <span class="status unavailable">Sin copias</span>
+          }
         </div>
 
         <div>
@@ -149,265 +87,43 @@
         </div>
 
       </div>
+    }
+
+  </section>
+
+</main>
 
 
-      <!-- LIBRO 2 -->
-      <div class="book-row">
-
-        <div class="inventory">INV002</div>
-
-        <div class="title">
-          <strong>El principito</strong>
-        </div>
-
-        <div class="author">
-          Antoine de Saint-Exupéry
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>2/2</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status available">Disponible</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
+<!-- MODAL AGREGAR LIBRO -->
+@if (isModalOpen) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Agregar libro</h2>
+        <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
       </div>
 
-
-      <!-- LIBRO 3 -->
-      <div class="book-row">
-
-        <div class="inventory">INV003</div>
-
-        <div class="title">
-          <strong>1984</strong>
-          <span>1 copia(s) en préstamo</span>
+      <form (submit)="closeModal()">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" placeholder="Ingrese el título" required />
         </div>
 
-        <div class="author">
-          George Orwell
+        <div class="form-group">
+          <label>Autor</label>
+          <input type="text" placeholder="Ingrese el autor" required />
         </div>
 
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>0/1</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
+        <div class="form-group">
+          <label>Cantidad de copias</label>
+          <input type="number" value="1" min="1" required />
         </div>
 
-        <div>
-          <span class="status unavailable">Sin copias</span>
+        <div class="modal-actions">
+          <button type="submit" class="submit-btn">Agregar</button>
+          <button type="button" class="cancel-btn" (click)="closeModal()">Cancelar</button>
         </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-
-      <!-- LIBRO 4 -->
-      <div class="book-row">
-
-        <div class="inventory">INV004</div>
-
-        <div class="title">
-          <strong>Don Quijote de la Mancha</strong>
-          <span>1 copia(s) en préstamo</span>
-        </div>
-
-        <div class="author">
-          Miguel de Cervantes
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>1/2</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status available">Disponible</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-
-      <!-- LIBRO 5 -->
-      <div class="book-row">
-
-        <div class="inventory">INV005</div>
-
-        <div class="title">
-          <strong>La sombra del viento</strong>
-          <span>1 copia(s) en préstamo</span>
-        </div>
-
-        <div class="author">
-          Carlos Ruiz Zafón
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>1/2</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status available">Disponible</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-
-      <!-- LIBRO 6 -->
-      <div class="book-row">
-
-        <div class="inventory">INV006</div>
-
-        <div class="title">
-          <strong>Rayuela</strong>
-          <span>1 copia(s) en préstamo</span>
-        </div>
-
-        <div class="author">
-          Julio Cortázar
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>0/1</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status unavailable">Sin copias</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-
-      <!-- LIBRO 7 -->
-      <div class="book-row">
-
-        <div class="inventory">INV007</div>
-
-        <div class="title">
-          <strong>Ficciones</strong>
-        </div>
-
-        <div class="author">
-          Jorge Luis Borges
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>2/2</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status available">Disponible</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-
-      <!-- LIBRO 8 -->
-      <div class="book-row">
-
-        <div class="inventory">INV008</div>
-
-        <div class="title">
-          <strong>El aleph</strong>
-        </div>
-
-        <div class="author">
-          Jorge Luis Borges
-        </div>
-
-        <div class="copies">
-
-          <button>−</button>
-
-          <strong>1/1</strong>
-
-          <button>+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          <span class="status available">Disponible</span>
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-</div>
+      </form>
+    </div>
+  </div>
+}
