@@ -1,1 +1,76 @@
-<h1>historial</h1>
+<div class="actividad-container">
+  <h2>Actividades</h2>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <input type="text" placeholder="Historial" />
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active">Todos</button>
+      <button class="filter-btn">Préstamos</button>
+      <button class="filter-btn">Cuotas</button>
+      <button class="filter-btn">Socios</button>
+      <button class="filter-btn">Libros</button>
+      <button class="filter-btn">Eliminaciones</button>
+      <button class="filter-btn">Ediciones</button>
+    </div>
+
+    <div class="selector-container">
+      <span class="records-count">16 registro(s)</span>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="table-card">
+    <table class="activity-table">
+      <thead>
+        <tr>
+          <th>TIPO</th>
+          <th>DESCRIPCIÓN</th>
+          <th>FECHA Y HORA</th>
+          <th>USUARIO</th>
+          <th>ID RELACIONADO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-login">login</span></td>
+          <td>Inicio de sesión del sistema</td>
+          <td>28/08/2026 12:00</td>
+          <td><span class="badge-user">admin</span></td>
+          <td class="empty-id">&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-login">login</span></td>
+          <td>Inicio de sesión del sistema</td>
+          <td>19/08/2026 10:30</td>
+          <td><span class="badge-user">admin</span></td>
+          <td class="empty-id">&mdash;</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-prestamo">prestamo</span></td>
+          <td>Nuevo préstamo: Rayuela &rarr; Florencia Morales</td>
+          <td>19/08/2026 09:15</td>
+          <td><span class="badge-user">admin</span></td>
+          <td class="id-code">PR005</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-cuota">cuota</span></td>
+          <td>Cuota cobrada: María González &mdash; Julio 2026 ($1.200)</td>
+          <td>18/08/2026 16:20</td>
+          <td><span class="badge-user">admin</span></td>
+          <td class="id-code">S001</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-socio">socio</span></td>
+          <td>Nuevo socio registrado: Pablo Torres (CAR010)</td>
+          <td>18/08/2026 14:45</td>
+          <td><span class="badge-user">admin</span></td>
+          <td class="id-code">S010</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
