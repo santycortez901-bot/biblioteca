@@ -1,4 +1,4 @@
-/* Layout General */
+/* Layout General - Ajustado para pegarse a la barra lateral */
 .cuotas-container {
   padding: 24px;
   background-color: #f0f4f8;
@@ -6,7 +6,10 @@
   color: #334155;
   min-height: 100vh;
   box-sizing: border-box;
-  margin-left: 220px; 
+  
+  /* Se elimina el margen sobrante para pegarse al menú lateral */
+  margin-left: 0; 
+  width: 100%;
 }
 
 .header {
@@ -32,12 +35,14 @@
   border: 1px solid #e2e8f0;
 }
 
-/* Card Principal */
+/* Card Principal - Ocupa todo el ancho disponible */
 .main-card {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  padding: 16px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Toolbar y Filtros */
@@ -57,7 +62,7 @@
   border-radius: 20px;
   padding: 8px 16px;
   flex-grow: 1;
-  max-width: 600px;
+  max-width: 500px;
 }
 
 .search-box svg {
@@ -106,6 +111,7 @@
 /* Tabla */
 .table-container {
   overflow-x: auto;
+  width: 100%;
 }
 
 .cuotas-table {
