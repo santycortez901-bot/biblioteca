@@ -17,23 +17,24 @@
 
     <div class="filters">
       <div class="filter-group">
-        <button class="filter-btn active">Todos</button>
-        <button class="filter-btn">Activo</button>
-        <button class="filter-btn">Bloqueado</button>
-        <button class="filter-btn">Baja</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'Todos'" (click)="FiltroEstado('Todos')">Todos</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'activo'" (click)="FiltroEstado('activo')">Activo</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'bloqueado'" (click)="FiltroEstado('bloqueado')">Bloqueado</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'" (click)="FiltroEstado('inactivo')">Baja</button>
       </div>
 
       <div class="filter-group">
-        <button class="filter-btn dark active">Todas edades</button>
-        <button class="filter-btn">+18</button>
-        <button class="filter-btn">-18</button>
+        <button class="filter-btn dark" [class.active]="filtroEdad === 'Todas edades'" (click)="FiltroEdad('Todas edades')">Todas edades</button>
+        <button class="filter-btn" [class.active]="filtroEdad === '+18'" (click)="FiltroEdad('+18')">+18</button>
+        <button class="filter-btn" [class.active]="filtroEdad === '-18'" (click)="FiltroEdad('-18')">-18</button>
       </div>
 
-      <span class="results-count"></span>
+      <span class="results-count">{{sociosFiltrados.length}} resultados</span>
     </div>
   </div>
 
   <!-- Data Table -->
+   @if(sociosFiltrados.length>0){
   <div class="table-container">
     <table>
       <thead>
@@ -47,23 +48,27 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td data-label="CARNET" class="text-muted">CAR001</td>
+          @for(s of sociosFiltrados; track s.id){
+          <tr>
+          <td data-label="CARNET" class="text-muted">{{s.numCarnet}}</td>
           <td data-label="NOMBRE">
-            <div class="user-name">María González</div>
-            <div class="user-subtext">41 años</div>
+            <div class="user-name">{{s.nombre}}</div>
+            <div class="user-subtext">{{s.edad}}</div>
           </td>
-          <td data-label="DNI">28456789</td>
+          <td data-label="DNI">{{s.dni}}</td>
           <td data-label="CONTACTO">
-            <div>2914567890</div>
-            <div class="user-subtext">maria.gonzalez@email.com</div>
+            <div>{{s.telefono}}</div>
+            <div class="user-subtext">{{s.email}}</div>
           </td>
-          <td data-label="ESTADO"><span class="badge badge-activo">activo</span></td>
-          <td data-label="PRÉSTAMO" class="prestamo-active">• Sí — vence 31/08/2026</td>
-        </tr>
+          <td data-label="ESTADO"><span class="badge badge-activo">{{s.estado}}</span></td>
+          <td data-label="PRÉSTAMO" class="prestamo-active">{{s.prestamos}}</td>
+        </tr>}
       </tbody>
     </table>
+  </div>}
+  @else{
+    <div class="no-results">
+    <p>No se encontraron socios que coincidan con los filtros aplicados.</p>
   </div>
+  }
 </div>
-
-<button class="help-btn">?</button>
