@@ -772,3 +772,14 @@ tbody tr:last-child td {
     padding: 0 10px;
   }
 }
+.estado-devuelto {
+  background: #e8edf1;
+  color: #667788;
+}
+
+.sin-resultados {
+  height: 100px;
+  text-align: center;
+  color: #8291a2;
+  font-size: 13px;
+}
