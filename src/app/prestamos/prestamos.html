@@ -1,48 +1,79 @@
 <div class="prestamos-container">
 
   <!-- HEADER -->
+
   <div class="page-header">
+
     <h1>Préstamos</h1>
 
-    <button class="btn-nuevo">
+    <button
+      class="btn-nuevo"
+      (click)="nuevoPrestamo()"
+    >
       <span class="plus">+</span>
       Nuevo préstamo
     </button>
+
   </div>
 
 
-  <!-- BUSCADOR + FILTROS -->
+  <!-- BUSCADOR Y FILTROS -->
+
   <div class="toolbar">
 
     <div class="search-box">
+
       <span class="search-icon">⌕</span>
 
       <input
         type="text"
         placeholder="Buscar por socio, libro o ID de inventario..."
+        [(ngModel)]="busqueda"
       >
+
     </div>
+
 
     <div class="filters">
 
-      <button class="filter active">
+      <button
+        class="filter"
+        [class.active]="filtro === 'todos'"
+        (click)="cambiarFiltro('todos')"
+      >
         Todos
       </button>
 
-      <button class="filter">
+
+      <button
+        class="filter"
+        [class.active]="filtro === 'activo'"
+        (click)="cambiarFiltro('activo')"
+      >
         Al día
       </button>
 
-      <button class="filter">
+
+      <button
+        class="filter"
+        [class.active]="filtro === 'vencido'"
+        (click)="cambiarFiltro('vencido')"
+      >
         Vencidos
       </button>
 
-      <button class="filter">
+
+      <button
+        class="filter"
+        [class.active]="filtro === 'devuelto'"
+        (click)="cambiarFiltro('devuelto')"
+      >
         Devueltos
       </button>
 
+
       <span class="records">
-        5 registro(s)
+        {{ prestamosFiltrados.length }} registro(s)
       </span>
 
     </div>
@@ -51,12 +82,15 @@
 
 
   <!-- TABLA -->
+
   <div class="table-container">
 
     <table>
 
       <thead>
+
         <tr>
+
           <th>ID</th>
           <th>SOCIO</th>
           <th>LIBRO</th>
@@ -65,375 +99,174 @@
           <th>ESTADO</th>
           <th>RENOV.</th>
           <th>ACCIONES</th>
+
         </tr>
+
       </thead>
 
 
       <tbody>
 
-        <!-- PRÉSTAMO 1 -->
-        <tr>
+        @for (prestamo of prestamosFiltrados; track prestamo.id) {
 
-          <td>
-            <span class="prestamo-id">PR001</span>
-          </td>
+          <tr>
 
-          <td>
-            <div class="socio">
-              <span class="socio-nombre">
-                María González
+            <!-- ID -->
+
+            <td>
+
+              <span class="prestamo-id">
+                {{ prestamo.id }}
               </span>
 
-              <span class="socio-estado">
-                activo
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <div class="libro">
-              <span class="libro-nombre">
-                Cien años de soledad
-              </span>
-
-              <span class="inventario">
-                INV001
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <span class="fecha">
-              01/08/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="fecha vencimiento">
-              31/08/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="estado estado-activo">
-              activo
-            </span>
-          </td>
-
-          <td>
-            <span class="renovaciones">
-              0/2
-            </span>
-          </td>
-
-          <td>
-            <div class="acciones">
-
-              <button class="btn-renovar">
-                <span>↻</span>
-                Renovar
-              </button>
-
-              <button class="btn-devolver">
-                <span>✓</span>
-                Devolver
-              </button>
-
-            </div>
-          </td>
-
-        </tr>
+            </td>
 
 
-        <!-- PRÉSTAMO 2 -->
-        <tr>
+            <!-- SOCIO -->
 
-          <td>
-            <span class="prestamo-id">PR002</span>
-          </td>
+            <td>
 
-          <td>
-            <div class="socio">
-              <span class="socio-nombre">
-                Carlos Rodríguez
+              <div class="socio">
+
+                <span class="socio-nombre">
+                  {{ prestamo.socio }}
+                </span>
+
+                @if (prestamo.estado !== 'devuelto') {
+
+                  <span class="socio-estado">
+                    activo
+                  </span>
+
+                }
+
+              </div>
+
+            </td>
+
+
+            <!-- LIBRO -->
+
+            <td>
+
+              <div class="libro">
+
+                <span class="libro-nombre">
+                  {{ prestamo.libro }}
+                </span>
+
+                <span class="inventario">
+                  {{ prestamo.inventario }}
+                </span>
+
+              </div>
+
+            </td>
+
+
+            <!-- INICIO -->
+
+            <td>
+
+              <span class="fecha">
+                {{ prestamo.fechaInicio }}
               </span>
 
-              <span class="socio-estado">
-                activo
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <div class="libro">
-              <span class="libro-nombre">
-                1984
-              </span>
-
-              <span class="inventario">
-                INV003
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <span class="fecha">
-              20/06/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="fecha vencimiento">
-              20/07/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="estado estado-vencido">
-              vencido
-            </span>
-          </td>
-
-          <td>
-            <span class="renovaciones">
-              1/2
-            </span>
-          </td>
-
-          <td>
-            <div class="acciones">
-
-              <button class="btn-renovar">
-                <span>↻</span>
-                Renovar
-              </button>
-
-              <button class="btn-devolver">
-                <span>✓</span>
-                Devolver
-              </button>
-
-            </div>
-          </td>
-
-        </tr>
+            </td>
 
 
-        <!-- PRÉSTAMO 3 -->
-        <tr>
+            <!-- VENCIMIENTO -->
 
-          <td>
-            <span class="prestamo-id">PR003</span>
-          </td>
+            <td>
 
-          <td>
-            <div class="socio">
-              <span class="socio-nombre">
-                Laura Fernández
+              <span class="fecha vencimiento">
+                {{ prestamo.fechaVencimiento }}
               </span>
 
-              <span class="socio-estado">
-                activo
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <div class="libro">
-              <span class="libro-nombre">
-                Don Quijote de la Mancha
-              </span>
-
-              <span class="inventario">
-                INV004
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <span class="fecha">
-              05/08/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="fecha vencimiento">
-              04/09/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="estado estado-activo">
-              activo
-            </span>
-          </td>
-
-          <td>
-            <span class="renovaciones">
-              1/2
-            </span>
-          </td>
-
-          <td>
-            <div class="acciones">
-
-              <button class="btn-renovar">
-                <span>↻</span>
-                Renovar
-              </button>
-
-              <button class="btn-devolver">
-                <span>✓</span>
-                Devolver
-              </button>
-
-            </div>
-          </td>
-
-        </tr>
+            </td>
 
 
-        <!-- PRÉSTAMO 4 -->
-        <tr>
+            <!-- ESTADO -->
 
-          <td>
-            <span class="prestamo-id">PR004</span>
-          </td>
+            <td>
 
-          <td>
-            <div class="socio">
-              <span class="socio-nombre">
-                Diego Sánchez
+              <span
+                class="estado"
+                [class.estado-activo]="prestamo.estado === 'activo'"
+                [class.estado-vencido]="prestamo.estado === 'vencido'"
+                [class.estado-devuelto]="prestamo.estado === 'devuelto'"
+              >
+                {{ prestamo.estado }}
               </span>
 
-              <span class="socio-estado">
-                activo
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <div class="libro">
-              <span class="libro-nombre">
-                La sombra del viento
-              </span>
-
-              <span class="inventario">
-                INV005
-              </span>
-            </div>
-          </td>
-
-          <td>
-            <span class="fecha">
-              10/07/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="fecha vencimiento">
-              09/08/2026
-            </span>
-          </td>
-
-          <td>
-            <span class="estado estado-vencido">
-              vencido
-            </span>
-          </td>
-
-          <td>
-            <span class="renovaciones">
-              2/2
-            </span>
-          </td>
-
-          <td>
-            <div class="acciones">
-
-              <button class="btn-devolver">
-                <span>✓</span>
-                Devolver
-              </button>
-
-            </div>
-          </td>
-
-        </tr>
+            </td>
 
 
-        <!-- PRÉSTAMO 5 -->
-        <tr>
+            <!-- RENOVACIONES -->
 
-          <td>
-            <span class="prestamo-id">PR005</span>
-          </td>
+            <td>
 
-          <td>
-            <div class="socio">
-              <span class="socio-nombre">
-                Florencia Morales
+              <span class="renovaciones">
+                {{ prestamo.renovaciones }}/2
               </span>
 
-              <span class="socio-estado">
-                activo
-              </span>
-            </div>
-          </td>
+            </td>
 
-          <td>
-            <div class="libro">
-              <span class="libro-nombre">
-                Rayuela
-              </span>
 
-              <span class="inventario">
-                INV006
-              </span>
-            </div>
-          </td>
+            <!-- ACCIONES -->
 
-          <td>
-            <span class="fecha">
-              12/08/2026
-            </span>
-          </td>
+            <td>
 
-          <td>
-            <span class="fecha vencimiento">
-              11/09/2026
-            </span>
-          </td>
+              <div class="acciones">
 
-          <td>
-            <span class="estado estado-activo">
-              activo
-            </span>
-          </td>
+                @if (prestamo.renovaciones < 2 && prestamo.estado !== 'devuelto') {
 
-          <td>
-            <span class="renovaciones">
-              0/2
-            </span>
-          </td>
+                  <button
+                    class="btn-renovar"
+                    (click)="renovarPrestamo(prestamo)"
+                  >
+                    <span>↻</span>
+                    Renovar
+                  </button>
 
-          <td>
-            <div class="acciones">
+                }
 
-              <button class="btn-renovar">
-                <span>↻</span>
-                Renovar
-              </button>
 
-              <button class="btn-devolver">
-                <span>✓</span>
-                Devolver
-              </button>
+                @if (prestamo.estado !== 'devuelto') {
 
-            </div>
-          </td>
+                  <button
+                    class="btn-devolver"
+                    (click)="devolverPrestamo(prestamo)"
+                  >
+                    <span>✓</span>
+                    Devolver
+                  </button>
 
-        </tr>
+                }
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        }
+
+
+        @if (prestamosFiltrados.length === 0) {
+
+          <tr>
+
+            <td
+              colspan="8"
+              class="sin-resultados"
+            >
+              No se encontraron préstamos.
+            </td>
+
+          </tr>
+
+        }
 
       </tbody>
 
