@@ -1,9 +1,10 @@
-export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido';
-export interface Socio {id: string;
+export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido'| 'bloqueado';
+export interface Socio {
+  id: string;
   nombre: string;
-  dni: number;
+  dni: string;
   numCarnet: string;
   edad: number;
   email: string;
-  Telefono: string;
+  telefono: string;
   estado: EstadoSocio;}
