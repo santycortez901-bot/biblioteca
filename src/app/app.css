@@ -17,13 +17,13 @@ body {
 }
 
 .app-content {
-  margin-left: 235px;
-  width: calc(100% - 235px);
+  margin-left: 200px;
+  width: calc(100% - 200px);
 
   display: flex;
   flex-direction: column;
 
-  min-height: 100vh;
+  
   box-sizing: border-box;
 }
 
@@ -33,9 +33,4 @@ body {
   background: #eef4f7;
 }
 
-app-footer {
-  width: 100%;
-  display: block;
-  margin: 0;
-  padding: 0;
-}
+
