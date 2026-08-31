@@ -6,7 +6,7 @@
 .footer {
   background: #122131; /* Color oscuro alineado con la aplicación */
   color: #ffffff;
-  
+  margin-top: 100px;
   position: center;
   padding: 50px 0 25px;
   border-top: 1px solid #1a232e;
