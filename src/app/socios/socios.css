@@ -2,16 +2,17 @@
    RESET Y ESTILOS GLOBALES
    ========================================== */
 body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color:#f3f6f9;
-  color: #0f172a;
+  width: 100%;
   min-height: 100vh;
+  padding: 24px 18px 70px;
+  box-sizing: border-box;
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #102b43;
 }
 
 .container {
-  max-width: 1200px;
+  
   margin: 0 auto;
   padding: 20px 16px;
   display: flex;
@@ -31,10 +32,11 @@ body {
 }
 
 .header h1 {
-  font-size: 28px;
-  font-weight: 800;
-  color: #0f172a;
   margin: 0;
+
+  font-size: 25px;
+  font-weight: 700;
+  color: #102b43;
 }
 
 .btn-primary {
@@ -209,6 +211,7 @@ tr:last-child td {
   word-break: break-all;
 }
 
+
 /* Badges y estados */
 .badge {
   display: inline-block;
@@ -234,35 +237,22 @@ tr:last-child td {
   color: #dc2626;
 }
 
-.prestamo-active {
-  color: #23b2a0;
+/* Estilo base para la columna de préstamos */
+td[data-label="PRÉSTAMO"] {
   font-weight: 600;
   font-size: 13px;
 }
 
-/* Botón flotante */
-.help-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 42px;
-  height: 42px;
-  background-color: #1e293b;
-  color: #ffffff;
-  border: none;
-  border-radius: 50%;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, background-color 0.2s ease;
-  z-index: 100;
+/* Si está Encurso -> Rojo */
+.prestamo-encurso {
+  color: #ef4444;
 }
 
-.help-btn:hover {
-  background-color: #23b2a0;
-  transform: scale(1.05);
+/* Si está Libre -> Verde */
+.prestamo-libre {
+  color: #23b2a0;
 }
+
 
 /* ==========================================
    MEDIA QUERIES (RESPONSIVO)
@@ -356,4 +346,13 @@ tr:last-child td {
     padding: 8px 10px;
     font-size: 12px;
   }
+}
+/* ==========================================
+   MENSAJE SIN RESULTADOS
+   ========================================== */
+.sin-resultados {
+  height: 100px;
+  text-align: center;
+  color: #8291a2;
+  font-size: 13px;
 }

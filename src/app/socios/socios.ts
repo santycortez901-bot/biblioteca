@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { Socio } from '../models/models/socio';
+import { FormsModule } from '@angular/forms'; // Importante para usar [(ngModel)]
 @Component({
   selector: 'app-socios',
-  imports: [],
+  imports: [FormsModule], // Agregamos FormsModule aquí
   templateUrl: './socios.html',
   styleUrl: './socios.css',
 })
 export class Socios {
+  busqueda: string = '';
   filtroEstado: string = 'Todos';
   filtroEdad: string = 'Todas edades';
   socios: Socio[] = [
@@ -41,19 +43,31 @@ export class Socios {
   }
 
   get sociosFiltrados(): Socio[] {
-    return this.socios.filter(socio => {
-      // Filtrado por Estado
-      const cumpleEstado = this.filtroEstado === 'Todos' || socio.estado === this.filtroEstado.toLowerCase();
+  // Preparamos el texto de búsqueda en minúsculas y sin espacios extra
+  const termino = this.busqueda.toLowerCase().trim();
 
-      // Filtrado por Edad
-      let cumpleEdad = true;
-      if (this.filtroEdad === '+18') {
-        cumpleEdad = socio.edad >= 18;
-      } else if (this.filtroEdad === '-18') {
-        cumpleEdad = socio.edad < 18;
-      }
+  return this.socios.filter(socio => {
+    // Filtrado por Búsqueda (coincidencia en nombre, DNI o carnet)
+    const cumpleBusqueda = !termino || 
+      socio.nombre.toLowerCase().includes(termino) ||
+      socio.dni.toLowerCase().includes(termino) ||
+      socio.numCarnet.toLowerCase().includes(termino);
 
-      return cumpleEstado && cumpleEdad;
-    });
-  }
+    // Filtrado por Estado
+    const cumpleEstado = this.filtroEstado === 'Todos' || socio.estado === this.filtroEstado.toLowerCase();
+
+    // Filtrado por Edad
+    let cumpleEdad = true;
+    if (this.filtroEdad === '+18') {
+      cumpleEdad = socio.edad >= 18;
+    } else if (this.filtroEdad === '-18') {
+      cumpleEdad = socio.edad < 18;
+    }
+
+    return cumpleBusqueda && cumpleEstado && cumpleEdad;
+  });
+}
+
+
+
 }
