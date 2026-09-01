@@ -1,129 +1,136 @@
-<!-- CONTENIDO PRINCIPAL -->
-<main class="main-content">
+<div class="app-container">
 
-  <!-- HEADER -->
-  <header class="page-header">
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
 
-    <h1>Libros</h1>
+    <!-- HEADER -->
+    <header class="page-header">
+      <h1>Libros</h1>
+      <button class="add-button" (click)="openModal()">
+        <span>+</span>
+        Agregar libro
+      </button>
+    </header>
 
-    <button class="add-button" (click)="openModal()">
-      <span>+</span>
-      Agregar libro
-    </button>
-
-  </header>
-
-
-  <!-- BUSCADOR -->
-  <section class="search-card">
-
-    <div class="search-box">
-
-      <span class="search-icon">⌕</span>
-
-      <input type="text" placeholder="Buscar por título, autor o número de inventario..." />
-
-    </div>
-
-    <span class="book-count">{{ libros.length }} libro(s)</span>
-
-  </section>
-
-
-  <!-- TABLA DINÁMICA -->
-  <section class="books-card">
-
-    <div class="table-header">
-
-      <div>INVENTARIO</div>
-      <div>TÍTULO</div>
-      <div>AUTOR</div>
-      <div>COPIAS</div>
-      <div>ESTADO</div>
-      <div>ACCIONES</div>
-
-    </div>
-
-    @for (libro of libros; track libro.inventario) {
-      <div class="book-row">
-
-        <div class="inventory">{{ libro.inventario }}</div>
-
-        <div class="title">
-          <strong>{{ libro.titulo }}</strong>
-          
-          <!-- Si hay copias prestadas muestra la cantidad; si no, no muestra texto secundario -->
-          @if (libro.copiasTotales - libro.copiasDisponibles > 0) {
-            <span>{{ libro.copiasTotales - libro.copiasDisponibles }} copia(s) en préstamo</span>
-          }
-        </div>
-
-        <div class="author">
-          {{ libro.autor }}
-        </div>
-
-        <div class="copies">
-
-          <button (click)="prestarCopia(libro)">−</button>
-
-          <strong>{{ libro.copiasDisponibles }}/{{ libro.copiasTotales }}</strong>
-
-          <button (click)="devolverCopia(libro)">+</button>
-
-          <span>disponibles</span>
-
-        </div>
-
-        <div>
-          @if (libro.copiasDisponibles > 0) {
-            <span class="status available">Disponible</span>
-          } @else {
-            <span class="status unavailable">Sin copias</span>
-          }
-        </div>
-
-        <div>
-          <button class="view-button">Ver copias</button>
-        </div>
-
+    <!-- BUSCADOR -->
+    <section class="search-card">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          placeholder="Buscar por título, autor o número de inventario..." 
+        />
       </div>
-    }
+      <span class="book-count">{{ librosFiltrados.length }} libro(s)</span>
+    </section>
 
-  </section>
-
-</main>
-
-
-<!-- MODAL AGREGAR LIBRO -->
-@if (isModalOpen) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Agregar libro</h2>
-        <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
+    <!-- TABLA DINÁMICA -->
+    <section class="books-card">
+      <div class="table-header">
+        <div>INVENTARIO</div>
+        <div>TÍTULO</div>
+        <div>AUTOR</div>
+        <div>COPIAS</div>
+        <div>ESTADO</div>
+        <div>ACCIONES</div>
       </div>
 
-      <form (submit)="closeModal()">
-        <div class="form-group">
-          <label>Título</label>
-          <input type="text" placeholder="Ingrese el título" required />
+      @for (libro of librosFiltrados; track libro.id) {
+        <div class="book-row">
+          <div class="inventory">{{ libro.id }}</div>
+
+          <div class="title">
+            <strong>{{ libro.titulo }}</strong>
+            
+            <!-- TEXTO SECUNDARIO DE COPIAS EN PRÉSTAMO RESTAURADO -->
+            @if (libro.copiasTotales - libro.copias > 0) {
+              <span>{{ libro.copiasTotales - libro.copias }} copia(s) en préstamo</span>
+            }
+          </div>
+
+          <div class="author">
+            {{ libro.autor }}
+          </div>
+
+          <div class="copies">
+            <button (click)="prestarCopia(libro)">−</button>
+            <strong>{{ libro.copias }}/{{ libro.copiasTotales }}</strong>
+            <button (click)="devolverCopia(libro)">+</button>
+            <span>disponibles</span>
+          </div>
+
+          <div>
+            @if (libro.copias > 0) {
+              <span class="status available">Disponible</span>
+            } @else {
+              <span class="status unavailable">Sin copias</span>
+            }
+          </div>
+
+          <div>
+            <button class="view-button">Ver copias</button>
+          </div>
+        </div>
+      } @empty {
+        <div style="padding: 40px; text-align: center; color: #8a9aab;">
+          No hay libros registrados. Haz clic en "Agregar libro" para comenzar.
+        </div>
+      }
+    </section>
+
+  </main>
+
+  <!-- MODAL AGREGAR LIBRO -->
+  @if (isModalOpen) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Agregar libro</h2>
+          <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
         </div>
 
-        <div class="form-group">
-          <label>Autor</label>
-          <input type="text" placeholder="Ingrese el autor" required />
-        </div>
+        <form (ngSubmit)="agregarLibro()">
+          <div class="form-group">
+            <label>Título</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevoTitulo" 
+              name="titulo" 
+              placeholder="Ingrese el título" 
+              required 
+            />
+          </div>
 
-        <div class="form-group">
-          <label>Cantidad de copias</label>
-          <input type="number" value="1" min="1" required />
-        </div>
+          <div class="form-group">
+            <label>Autor</label>
+            <input 
+              type="text" 
+              [(ngModel)]="nuevoAutor" 
+              name="autor" 
+              placeholder="Ingrese el autor" 
+              required 
+            />
+          </div>
 
-        <div class="modal-actions">
-          <button type="submit" class="submit-btn">Agregar</button>
-          <button type="button" class="cancel-btn" (click)="closeModal()">Cancelar</button>
-        </div>
-      </form>
+          <div class="form-group">
+            <label>Cantidad de copias</label>
+            <input 
+              type="number" 
+              [(ngModel)]="nuevasCopias" 
+              name="copias" 
+              min="1" 
+              required 
+            />
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="submit-btn">Agregar</button>
+            <button type="button" class="cancel-btn" (click)="closeModal()">Cancelar</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-}
+  }
+
+</div>

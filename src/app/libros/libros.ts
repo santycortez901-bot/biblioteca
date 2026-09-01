@@ -1,34 +1,34 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-interface Libro {
-  inventario: string;
+export interface Libro {
+  id: string;
   titulo: string;
   autor: string;
-  copiasDisponibles: number;
-  copiasTotales: number;
+  copias: number;        // Copias disponibles actualmente
+  copiasTotales: number; // Copias totales registradas
+  estado: string;
 }
 
 @Component({
   selector: 'app-libros',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './libros.html',
   styleUrl: './libros.css'
 })
 export class Libros {
-  isModalOpen = false;
+  isModalOpen: boolean = false;
+  searchTerm: string = '';
+  
+  contador: number = 1;
 
-  // Lista de libros reactiva
-  libros: Libro[] = [
-    { inventario: 'INV001', titulo: 'Cien años de soledad', autor: 'Gabriel García Márquez', copiasDisponibles: 2, copiasTotales: 3 },
-    { inventario: 'INV002', titulo: 'El principito', autor: 'Antoine de Saint-Exupéry', copiasDisponibles: 2, copiasTotales: 2 },
-    { inventario: 'INV003', titulo: '1984', autor: 'George Orwell', copiasDisponibles: 0, copiasTotales: 1 },
-    { inventario: 'INV004', titulo: 'Don Quijote de la Mancha', autor: 'Miguel de Cervantes', copiasDisponibles: 1, copiasTotales: 2 },
-    { inventario: 'INV005', titulo: 'La sombra del viento', autor: 'Carlos Ruiz Zafón', copiasDisponibles: 1, copiasTotales: 2 },
-    { inventario: 'INV006', titulo: 'Rayuela', autor: 'Julio Cortázar', copiasDisponibles: 0, copiasTotales: 1 },
-    { inventario: 'INV007', titulo: 'Ficciones', autor: 'Jorge Luis Borges', copiasDisponibles: 2, copiasTotales: 2 },
-    { inventario: 'INV008', titulo: 'El aleph', autor: 'Jorge Luis Borges', copiasDisponibles: 1, copiasTotales: 1 }
-  ];
+  nuevoTitulo: string = '';
+  nuevoAutor: string = '';
+  nuevasCopias: number = 1;
+
+  libros: Libro[] = [];
 
   openModal() {
     this.isModalOpen = true;
@@ -36,19 +36,69 @@ export class Libros {
 
   closeModal() {
     this.isModalOpen = false;
+    this.limpiarFormulario();
   }
 
-  // Disminuye las copias disponibles (Prestar libro)
+  limpiarFormulario() {
+    this.nuevoTitulo = '';
+    this.nuevoAutor = '';
+    this.nuevasCopias = 1;
+  }
+
+  agregarLibro() {
+    if (this.nuevoTitulo == '' || this.nuevoAutor == '') {
+      alert('Por favor completa el título y el autor');
+      return;
+    }
+
+    let nuevoId = 'INV00' + this.contador;
+    this.contador = this.contador + 1;
+
+    let libroNuevo: Libro = {
+      id: nuevoId,
+      titulo: this.nuevoTitulo,
+      autor: this.nuevoAutor,
+      copias: this.nuevasCopias,
+      copiasTotales: this.nuevasCopias, // Guardamos el total inicial
+      estado: 'disponible'
+    };
+
+    this.libros.push(libroNuevo);
+    this.closeModal();
+  }
+
   prestarCopia(libro: Libro) {
-    if (libro.copiasDisponibles > 0) {
-      libro.copiasDisponibles--;
+    if (libro.copias > 0) {
+      libro.copias = libro.copias - 1;
+      
+      if (libro.copias == 0) {
+        libro.estado = 'sin copias';
+      }
     }
   }
 
-  // Aumenta las copias disponibles (Devolver libro)
   devolverCopia(libro: Libro) {
-    if (libro.copiasDisponibles < libro.copiasTotales) {
-      libro.copiasDisponibles++;
+    if (libro.copias < libro.copiasTotales) {
+      libro.copias = libro.copias + 1;
+      libro.estado = 'disponible';
     }
+  }
+
+  get librosFiltrados(): Libro[] {
+    if (this.searchTerm == '') {
+      return this.libros;
+    }
+
+    let busqueda = this.searchTerm.toLowerCase();
+
+    return this.libros.filter(libro => {
+      let tituloMinuscula = libro.titulo.toLowerCase();
+      let autorMinuscula = libro.autor.toLowerCase();
+      let idMinuscula = libro.id.toLowerCase();
+
+      return tituloMinuscula.includes(busqueda) || 
+             autorMinuscula.includes(busqueda) || 
+             idMinuscula.includes(busqueda);
+    });
   }
 }
