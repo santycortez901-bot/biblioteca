@@ -1,136 +1,147 @@
-<div class="app-container">
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="main-content">
-
+    
     <!-- HEADER -->
     <header class="page-header">
-      <h1>Libros</h1>
-      <button class="add-button" (click)="openModal()">
-        <span>+</span>
-        Agregar libro
+      <h1>Gestión de Libros</h1>
+      <button (click)="openModal()" class="add-button">
+        <span>+</span> Agregar Libro
       </button>
     </header>
 
-    <!-- BUSCADOR -->
-    <section class="search-card">
+    <!-- CARD BUSCADOR -->
+    <div class="search-card">
       <div class="search-box">
-        <span class="search-icon">⌕</span>
         <input 
           type="text" 
-          [(ngModel)]="searchTerm" 
-          placeholder="Buscar por título, autor o número de inventario..." 
+          placeholder="Buscar por título, autor, ID o copia..." 
+          [(ngModel)]="searchTerm"
         />
       </div>
-      <span class="book-count">{{ librosFiltrados.length }} libro(s)</span>
-    </section>
+      <span class="book-count">{{ librosFiltrados.length }} libro(s) encontrado(s)</span>
+    </div>
 
-    <!-- TABLA DINÁMICA -->
-    <section class="books-card">
+    <!-- CARD TABLA -->
+    <div class="books-card">
       <div class="table-header">
-        <div>INVENTARIO</div>
-        <div>TÍTULO</div>
-        <div>AUTOR</div>
-        <div>COPIAS</div>
-        <div>ESTADO</div>
-        <div>ACCIONES</div>
+        <div>ID</div>
+        <div>Título</div>
+        <div>Autor</div>
+        <div>Disponibles</div>
+        <div>Totales</div>
+        <div>Estado</div>
+        <div>Acciones</div>
       </div>
 
-      @for (libro of librosFiltrados; track libro.id) {
-        <div class="book-row">
-          <div class="inventory">{{ libro.id }}</div>
-
-          <div class="title">
-            <strong>{{ libro.titulo }}</strong>
-            
-            <!-- TEXTO SECUNDARIO DE COPIAS EN PRÉSTAMO RESTAURADO -->
-            @if (libro.copiasTotales - libro.copias > 0) {
-              <span>{{ libro.copiasTotales - libro.copias }} copia(s) en préstamo</span>
-            }
-          </div>
-
-          <div class="author">
-            {{ libro.autor }}
-          </div>
-
-          <div class="copies">
-            <button (click)="prestarCopia(libro)">−</button>
-            <strong>{{ libro.copias }}/{{ libro.copiasTotales }}</strong>
-            <button (click)="devolverCopia(libro)">+</button>
-            <span>disponibles</span>
-          </div>
-
-          <div>
-            @if (libro.copias > 0) {
-              <span class="status available">Disponible</span>
-            } @else {
-              <span class="status unavailable">Sin copias</span>
-            }
-          </div>
-
-          <div>
-            <button class="view-button">Ver copias</button>
-          </div>
+      <div class="book-row" *ngFor="let libro of librosFiltrados">
+        <div class="inventory">{{ libro.id }}</div>
+        <div class="title">
+          <strong>{{ libro.titulo }}</strong>
         </div>
-      } @empty {
-        <div style="padding: 40px; text-align: center; color: #8a9aab;">
-          No hay libros registrados. Haz clic en "Agregar libro" para comenzar.
+        <div class="author">{{ libro.autor }}</div>
+        <div class="copies">
+          <strong>{{ libro.copias }}</strong>
         </div>
-      }
-    </section>
+        <div class="copies">
+          <strong>{{ libro.copiasTotales }}</strong>
+        </div>
+        <div>
+          <span class="status" [ngClass]="libro.copias > 0 ? 'available' : 'unavailable'">
+            {{ libro.estado }}
+          </span>
+        </div>
+        <div>
+          <button (click)="verCopias(libro)" class="view-button">Ver Copias</button>
+        </div>
+      </div>
+
+      <div class="book-row" *ngIf="librosFiltrados.length === 0" style="justify-content: center; padding: 20px;">
+        <span class="inventory">No se encontraron libros.</span>
+      </div>
+    </div>
 
   </main>
 
-  <!-- MODAL AGREGAR LIBRO -->
-  @if (isModalOpen) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Agregar libro</h2>
-          <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
-        </div>
+<!-- MODAL: AGREGAR LIBRO -->
+<div class="modal-overlay" *ngIf="isModalOpen">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>Agregar Nuevo Libro</h2>
+      <button (click)="closeModal()" class="close-btn">&times;</button>
+    </div>
+    <form (ngSubmit)="agregarLibro()">
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" [(ngModel)]="nuevoTitulo" name="titulo" required />
+      </div>
+      <div class="form-group">
+        <label>Autor</label>
+        <input type="text" [(ngModel)]="nuevoAutor" name="autor" required />
+      </div>
+      <div class="form-group">
+        <label>Cantidad de Copias</label>
+        <input type="number" [(ngModel)]="nuevasCopias" name="copias" min="1" required />
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="submit-btn">Guardar</button>
+        <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-        <form (ngSubmit)="agregarLibro()">
-          <div class="form-group">
-            <label>Título</label>
-            <input 
-              type="text" 
-              [(ngModel)]="nuevoTitulo" 
-              name="titulo" 
-              placeholder="Ingrese el título" 
-              required 
-            />
-          </div>
+<!-- MODAL: VER COPIAS INDIVIDUALES -->
+<div class="modal-overlay" *ngIf="isCopiasModalOpen && libroSeleccionado">
+  <div class="modal-card copias-card">
+    <div class="modal-header">
+      <div>
+        <h2>Copias del Libro</h2>
+        <p class="nombre-libro">{{ libroSeleccionado.titulo }}</p>
+      </div>
+      <button (click)="cerrarCopias()" class="close-btn">&times;</button>
+    </div>
 
-          <div class="form-group">
-            <label>Autor</label>
-            <input 
-              type="text" 
-              [(ngModel)]="nuevoAutor" 
-              name="autor" 
-              placeholder="Ingrese el autor" 
-              required 
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Cantidad de copias</label>
-            <input 
-              type="number" 
-              [(ngModel)]="nuevasCopias" 
-              name="copias" 
-              min="1" 
-              required 
-            />
-          </div>
-
-          <div class="modal-actions">
-            <button type="submit" class="submit-btn">Agregar</button>
-            <button type="button" class="cancel-btn" (click)="closeModal()">Cancelar</button>
-          </div>
-        </form>
+    <div class="info-libro">
+      <div>
+        <span>AUTOR</span>
+        <strong>{{ libroSeleccionado.autor }}</strong>
+      </div>
+      <div>
+        <span>DISPONIBLES</span>
+        <strong>{{ libroSeleccionado.copias }}</strong>
+      </div>
+      <div>
+        <span>TOTALES</span>
+        <strong>{{ libroSeleccionado.copiasTotales }}</strong>
       </div>
     </div>
-  }
 
-</div>
+    <div class="lista-copias">
+      <div class="copia-row" *ngFor="let copia of libroSeleccionado.listaCopias">
+        <div class="copia-info">
+          <span>CÓDIGO DE COPIA</span>
+          <strong>{{ copia.id }}</strong>
+        </div>
+        <span class="copia-status" [ngClass]="copia.estado === 'Disponible' ? 'disponible' : 'prestada'">
+          {{ copia.estado }}
+        </span>
+        <button 
+          *ngIf="copia.estado === 'Disponible'" 
+          (click)="prestarCopiaIndividual(libroSeleccionado, copia)" 
+          class="accion-copia prestar">
+          Prestar
+        </button>
+        <button 
+          *ngIf="copia.estado === 'Prestada'" 
+          (click)="devolverCopiaIndividual(libroSeleccionado, copia)" 
+          class="accion-copia devolver">
+          Devolver
+        </button>
+      </div>
+    </div>
+
+    <div class="copias-footer">
+      <button (click)="cerrarCopias()" class="cancel-btn">Cerrar</button>
+    </div>
+  </div>
