@@ -1,0 +1,117 @@
+<div class="nuevo-prestamo-container">
+
+  <div class="form-header">
+
+    <div>
+      <h1>Nuevo préstamo</h1>
+      <p>Completá los datos para registrar un préstamo.</p>
+    </div>
+
+  </div>
+
+
+  <form (ngSubmit)="crearPrestamo()">
+
+    <!-- SOCIO -->
+
+    <div class="form-group">
+
+      <label for="socio">
+        Socio
+      </label>
+
+      <input
+        id="socio"
+        type="text"
+        name="socio"
+        [(ngModel)]="socio"
+        placeholder="Nombre del socio"
+        required
+      >
+
+    </div>
+
+
+    <!-- LIBRO -->
+
+    <div class="form-group">
+
+      <label for="libro">
+        Libro
+      </label>
+
+      <input
+        id="libro"
+        type="text"
+        name="libro"
+        [(ngModel)]="libro"
+        placeholder="Nombre del libro"
+        required
+      >
+
+    </div>
+
+
+    <!-- FECHAS -->
+
+    <div class="form-row">
+
+      <div class="form-group">
+
+        <label for="fechaInicio">
+          Fecha de inicio
+        </label>
+
+        <input
+          id="fechaInicio"
+          type="date"
+          name="fechaInicio"
+          [(ngModel)]="fechaInicio"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="fechaVencimiento">
+          Fecha de vencimiento
+        </label>
+
+        <input
+          id="fechaVencimiento"
+          type="date"
+          name="fechaVencimiento"
+          [(ngModel)]="fechaVencimiento"
+          required
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- BOTONES -->
+
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="btn-cancelar"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="submit"
+        class="btn-guardar"
+      >
+        Crear préstamo
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
