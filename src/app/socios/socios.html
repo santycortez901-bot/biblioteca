@@ -1,4 +1,5 @@
-<div class="container">
+<body>
+  <div class="container">
   <!-- Header -->
   <header class="header">
     <h1>Socios</h1>
@@ -8,33 +9,40 @@
   <!-- Toolbar / Search & Filters -->
   <div class="toolbar">
     <div class="search-box">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" placeholder="Buscar por nombre, DNI o carnet...">
+      <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, DNI o carnet...">
     </div>
 
     <div class="filters">
       <div class="filter-group">
-        <button class="filter-btn" [class.active]="filtroEstado === 'Todos'" (click)="FiltroEstado('Todos')">Todos</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'activo'" (click)="FiltroEstado('activo')">Activo</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'bloqueado'" (click)="FiltroEstado('bloqueado')">Bloqueado</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'" (click)="FiltroEstado('inactivo')">Baja</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'Todos'"
+          (click)="FiltroEstado('Todos')">Todos</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'activo'"
+          (click)="FiltroEstado('activo')">Activo</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'bloqueado'"
+          (click)="FiltroEstado('bloqueado')">Bloqueado</button>
+        <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'"
+          (click)="FiltroEstado('inactivo')">Baja</button>
       </div>
 
       <div class="filter-group">
-        <button class="filter-btn dark" [class.active]="filtroEdad === 'Todas edades'" (click)="FiltroEdad('Todas edades')">Todas edades</button>
+        <button class="filter-btn dark" [class.active]="filtroEdad === 'Todas edades'"
+          (click)="FiltroEdad('Todas edades')">Todas edades</button>
         <button class="filter-btn" [class.active]="filtroEdad === '+18'" (click)="FiltroEdad('+18')">+18</button>
         <button class="filter-btn" [class.active]="filtroEdad === '-18'" (click)="FiltroEdad('-18')">-18</button>
       </div>
 
-      <span class="results-count">{{sociosFiltrados.length}} resultados</span>
+      
+      <span class="results-count">{{sociosFiltrados.length}} Resultado(s)</span>
     </div>
   </div>
 
   <!-- Data Table -->
-   @if(sociosFiltrados.length>0){
+  @if(sociosFiltrados.length>0){
   <div class="table-container">
     <table>
       <thead>
@@ -48,8 +56,8 @@
         </tr>
       </thead>
       <tbody>
-          @for(s of sociosFiltrados; track s.id){
-          <tr>
+        @for(s of sociosFiltrados; track s.id){
+        <tr>
           <td data-label="CARNET" class="text-muted">{{s.numCarnet}}</td>
           <td data-label="NOMBRE">
             <div class="user-name">{{s.nombre}}</div>
@@ -61,14 +69,19 @@
             <div class="user-subtext">{{s.email}}</div>
           </td>
           <td data-label="ESTADO"><span class="badge badge-activo">{{s.estado}}</span></td>
-          <td data-label="PRÉSTAMO" class="prestamo-active">{{s.prestamos}}</td>
+          <td data-label="PRÉSTAMO" [class.prestamo-encurso]="s.prestamos === 'Encurso'"
+            [class.prestamo-libre]="s.prestamos === 'Libre'">{{ s.prestamos }}
+          </td>
         </tr>}
       </tbody>
     </table>
   </div>}
-  @else{
-    <div class="no-results">
-    <p>No se encontraron socios que coincidan con los filtros aplicados.</p>
-  </div>
-  }
+  @if (sociosFiltrados.length === 0) {
+          <tr>
+            <td colspan="8" class="sin-resultados">
+              No se encontraron Socios.
+            </td>
+          </tr>
+        }
 </div>
+</body>
