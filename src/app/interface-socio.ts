@@ -8,4 +8,4 @@ export interface Socio {
   estado: 'activo' | 'bloqueado' | 'baja';
   prestamoActivo: boolean;
   vencimientoPrestamo?: string;
-}
+} 
