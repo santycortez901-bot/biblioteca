@@ -1,7 +1,7 @@
 export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido'| 'bloqueado';
 export type PrestamoActual = 'Encurso' | 'Libre' ;
 export interface Socio {
-  id: string;
+  id: number;
   nombre: string;
   dni: string;
   numCarnet: string;
