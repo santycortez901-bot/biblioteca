@@ -221,15 +221,11 @@
 
 
         @if (prestamosFiltrados.length === 0) {
-
         <tr>
-
           <td colspan="8" class="sin-resultados">
             No se encontraron préstamos.
           </td>
-
         </tr>
-
         }
 
       </tbody>
@@ -240,7 +236,5 @@
 
 </div>
 @if (mostrarNuevoPrestamo) {
-
 <app-nprestamo (cerrar)="cerrarNuevoPrestamo()" />
-
 }

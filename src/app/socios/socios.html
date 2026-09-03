@@ -1,87 +1,397 @@
-<body>
+
   <div class="container">
-  <!-- Header -->
-  <header class="header">
-    <h1>Socios</h1>
-    <button class="btn-primary">+ Nuevo socio</button>
-  </header>
 
-  <!-- Toolbar / Search & Filters -->
-  <div class="toolbar">
-    <div class="search-box">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, DNI o carnet...">
-    </div>
+    <!-- HEADER -->
+    <header class="header">
+      <h1>Socios</h1>
 
-    <div class="filters">
-      <div class="filter-group">
-        <button class="filter-btn" [class.active]="filtroEstado === 'Todos'"
-          (click)="FiltroEstado('Todos')">Todos</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'activo'"
-          (click)="FiltroEstado('activo')">Activo</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'bloqueado'"
-          (click)="FiltroEstado('bloqueado')">Bloqueado</button>
-        <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'"
-          (click)="FiltroEstado('inactivo')">Baja</button>
+      <button class="btn-primary" (click)="abrirModal()">
+        + Nuevo socio
+      </button>
+    </header>
+
+
+    <!-- BÚSQUEDA Y FILTROS -->
+    <div class="toolbar">
+
+      <div class="search-box">
+
+        <svg
+          class="search-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2">
+
+          <circle cx="11" cy="11" r="8"></circle>
+          <line
+            x1="21"
+            y1="21"
+            x2="16.65"
+            y2="16.65">
+          </line>
+
+        </svg>
+
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar por nombre, DNI o carnet...">
+
       </div>
 
-      <div class="filter-group">
-        <button class="filter-btn dark" [class.active]="filtroEdad === 'Todas edades'"
-          (click)="FiltroEdad('Todas edades')">Todas edades</button>
-        <button class="filter-btn" [class.active]="filtroEdad === '+18'" (click)="FiltroEdad('+18')">+18</button>
-        <button class="filter-btn" [class.active]="filtroEdad === '-18'" (click)="FiltroEdad('-18')">-18</button>
+
+      <!-- FILTROS -->
+      <div class="filters">
+
+        <!-- FILTRO ESTADO -->
+        <div class="filter-group">
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'Todos'"
+            (click)="FiltroEstado('Todos')">
+            Todos
+          </button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'activo'"
+            (click)="FiltroEstado('activo')">
+            Activo
+          </button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'bloqueado'"
+            (click)="FiltroEstado('bloqueado')">
+            Bloqueado
+          </button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'inactivo'"
+            (click)="FiltroEstado('inactivo')">
+            Baja
+          </button>
+
+        </div>
+
+
+        <!-- FILTRO EDAD -->
+        <div class="filter-group">
+
+          <button
+            class="filter-btn dark"
+            [class.active]="filtroEdad === 'Todas edades'"
+            (click)="FiltroEdad('Todas edades')">
+            Todas edades
+          </button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEdad === '+18'"
+            (click)="FiltroEdad('+18')">
+            +18
+          </button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEdad === '-18'"
+            (click)="FiltroEdad('-18')">
+            -18
+          </button>
+
+        </div>
+
+
+        <!-- CANTIDAD -->
+        <span class="results-count">
+          {{ sociosFiltrados.length }} Resultado(s)
+        </span>
+
       </div>
 
-      
-      <span class="results-count">{{sociosFiltrados.length}} Resultado(s)</span>
     </div>
+
+
+    <!-- TABLA DE SOCIOS -->
+    <div class="table-container">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>CARNET</th>
+            <th>NOMBRE</th>
+            <th>DNI</th>
+            <th>CONTACTO</th>
+            <th>ESTADO</th>
+            <th>PRÉSTAMO</th>
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          @for (s of sociosFiltrados; track s.id) {
+
+            <tr>
+
+              <!-- CARNET -->
+              <td
+                data-label="CARNET"
+                class="text-muted">
+
+                {{ s.numCarnet }}
+
+              </td>
+
+
+              <!-- NOMBRE -->
+              <td data-label="NOMBRE">
+
+                <div class="user-name">
+                  {{ s.nombre }}
+                </div>
+
+                <div class="user-subtext">
+                  {{ s.edad }} años
+                </div>
+
+              </td>
+
+
+              <!-- DNI -->
+              <td data-label="DNI">
+
+                {{ s.dni }}
+
+              </td>
+
+
+              <!-- CONTACTO -->
+              <td data-label="CONTACTO">
+
+                <div>
+                  {{ s.telefono }}
+                </div>
+
+                <div class="user-subtext">
+                  {{ s.email }}
+                </div>
+
+              </td>
+
+
+              <!-- ESTADO -->
+              <td data-label="ESTADO">
+
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'badge-activo': s.estado === 'activo',
+                    'badge-inactivo': s.estado === 'inactivo',
+                    'badge-suspendido': s.estado === 'suspendido',
+                    'badge-bloqueado': s.estado === 'bloqueado'
+                  }">
+
+                  {{ s.estado }}
+
+                </span>
+
+              </td>
+
+
+              <!-- PRÉSTAMO -->
+              <td
+                data-label="PRÉSTAMO"
+                [class.prestamo-encurso]="s.prestamos === 'Encurso'"
+                [class.prestamo-libre]="s.prestamos === 'Libre'">
+
+                {{ s.prestamos }}
+
+              </td>
+
+            </tr>
+
+          }
+
+
+          <!-- SIN RESULTADOS -->
+          @if (sociosFiltrados.length === 0) {
+
+            <tr>
+
+              <td
+                colspan="6"
+                class="sin-resultados">
+
+                No se encontraron Socios.
+
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
   </div>
 
-  <!-- Data Table -->
-  @if(sociosFiltrados.length>0){
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>CARNET</th>
-          <th>NOMBRE</th>
-          <th>DNI</th>
-          <th>CONTACTO</th>
-          <th>ESTADO</th>
-          <th>PRÉSTAMO</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for(s of sociosFiltrados; track s.id){
-        <tr>
-          <td data-label="CARNET" class="text-muted">{{s.numCarnet}}</td>
-          <td data-label="NOMBRE">
-            <div class="user-name">{{s.nombre}}</div>
-            <div class="user-subtext">{{s.edad}}</div>
-          </td>
-          <td data-label="DNI">{{s.dni}}</td>
-          <td data-label="CONTACTO">
-            <div>{{s.telefono}}</div>
-            <div class="user-subtext">{{s.email}}</div>
-          </td>
-          <td data-label="ESTADO"><span class="badge badge-activo">{{s.estado}}</span></td>
-          <td data-label="PRÉSTAMO" [class.prestamo-encurso]="s.prestamos === 'Encurso'"
-            [class.prestamo-libre]="s.prestamos === 'Libre'">{{ s.prestamos }}
-          </td>
-        </tr>}
-      </tbody>
-    </table>
-  </div>}
-  @if (sociosFiltrados.length === 0) {
-          <tr>
-            <td colspan="8" class="sin-resultados">
-              No se encontraron Socios.
-            </td>
-          </tr>
-        }
-</div>
-</body>
+
+
+  <!-- ====================================== -->
+  <!-- MODAL: AGREGAR NUEVO SOCIO -->
+  <!-- ====================================== -->
+
+  <div
+    class="modal-overlay"
+    *ngIf="isModalOpen">
+
+    <div class="modal-card">
+
+
+      <!-- CABECERA DEL MODAL -->
+      <div class="modal-header">
+
+        <h2>Agregar Nuevo Socio</h2>
+
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeModal()">
+
+          &times;
+
+        </button>
+
+      </div>
+
+
+      <!-- FORMULARIO -->
+      <form (ngSubmit)="agregarSocio()">
+
+
+        <!-- NOMBRE -->
+        <div class="form-group">
+
+          <label for="nombre">
+            Nombre y Apellido
+          </label>
+
+          <input
+            id="nombre"
+            type="text"
+            [(ngModel)]="nuevoNombre"
+            name="nombre"
+            required>
+
+        </div>
+
+
+        <!-- EDAD -->
+        <div class="form-group">
+
+          <label for="edad">
+            Edad
+          </label>
+
+          <input
+            id="edad"
+            type="number"
+            [(ngModel)]="nuevaEdad"
+            name="edad"
+            min="1"
+            required>
+
+        </div>
+
+
+        <!-- DNI -->
+        <div class="form-group">
+
+          <label for="dni">
+            DNI
+          </label>
+
+          <input
+            id="dni"
+            type="text"
+            [(ngModel)]="nuevoDni"
+            name="dni"
+            required>
+
+        </div>
+
+
+        <!-- TELÉFONO -->
+        <div class="form-group">
+
+          <label for="telefono">
+            Teléfono
+          </label>
+
+          <input
+            id="telefono"
+            type="tel"
+            [(ngModel)]="nuevoTelefono"
+            name="telefono"
+            required>
+
+        </div>
+
+
+        <!-- EMAIL -->
+        <div class="form-group">
+
+          <label for="email">
+            Correo Electrónico
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            [(ngModel)]="nuevoEmail"
+            name="email"
+            required>
+
+        </div>
+
+
+        <!-- BOTONES -->
+        <div class="modal-actions">
+
+          <button
+            type="submit"
+            class="submit-btn">
+
+            Guardar
+
+          </button>
+
+          <button
+            type="button"
+            class="cancel-btn"
+            (click)="closeModal()">
+
+            Cancelar
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+  ```

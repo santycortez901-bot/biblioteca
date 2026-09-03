@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Socio } from '../models/models/socio';
 import { SocioService } from '../services/socios-service';
 
 @Component({
   selector: 'app-socios',
-  imports: [FormsModule], // Agregamos FormsModule aquí
+  imports: [FormsModule,CommonModule,RouterLink], // Agregamos FormsModule aquí
   templateUrl: './socios.html',
   styleUrl: './socios.css',
 })
