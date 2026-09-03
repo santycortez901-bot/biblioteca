@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-nuevo-prestamo',
   imports: [FormsModule],
-  templateUrl: './nuevo-prestamo.html',
-  styleUrl: './nuevo-prestamo.css'
+  templateUrl: './nprestamo.html',
+  styleUrl: './nprestamo.css'
 })
 export class NuevoPrestamo {
 

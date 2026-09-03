@@ -1,39 +1,41 @@
+<!-- CONTENIDO PRINCIPAL -->
+<main class="main-content">
+  
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-space"></div>
+    <h1>Gestión de Libros</h1>
+    <button (click)="openModal()" class="add-button">
+      <span>+</span> Agregar Libro
+    </button>
+  </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="main-content">
-    
-    <!-- HEADER -->
-    <header class="page-header">
-      <h1>Gestión de Libros</h1>
-      <button (click)="openModal()" class="add-button">
-        <span>+</span> Agregar Libro
-      </button>
-    </header>
+  <!-- CARD BUSCADOR (SIN LUPA DUPLICADA) -->
+  <div class="search-card">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Buscar por título, autor, ID o copia..." 
+        [(ngModel)]="searchTerm"
+      />
+    </div>
+    <span class="book-count">{{ librosFiltrados.length }} libro(s) encontrado(s)</span>
+  </div>
 
-    <!-- CARD BUSCADOR -->
-    <div class="search-card">
-      <div class="search-box">
-        <input 
-          type="text" 
-          placeholder="Buscar por título, autor, ID o copia..." 
-          [(ngModel)]="searchTerm"
-        />
-      </div>
-      <span class="book-count">{{ librosFiltrados.length }} libro(s) encontrado(s)</span>
+  <!-- CARD TABLA -->
+  <div class="books-card">
+    <div class="table-header">
+      <div>ID</div>
+      <div>Título</div>
+      <div>Autor</div>
+      <div>Disponibles</div>
+      <div>Totales</div>
+      <div>Estado</div>
+      <div>Acciones</div>
     </div>
 
-    <!-- CARD TABLA -->
-    <div class="books-card">
-      <div class="table-header">
-        <div>ID</div>
-        <div>Título</div>
-        <div>Autor</div>
-        <div>Disponibles</div>
-        <div>Totales</div>
-        <div>Estado</div>
-        <div>Acciones</div>
-      </div>
-
+    <!-- LISTADO DE LIBROS -->
+    <ng-container *ngIf="librosFiltrados.length > 0">
       <div class="book-row" *ngFor="let libro of librosFiltrados">
         <div class="inventory">{{ libro.id }}</div>
         <div class="title">
@@ -55,13 +57,19 @@
           <button (click)="verCopias(libro)" class="view-button">Ver Copias</button>
         </div>
       </div>
+    </ng-container>
 
-      <div class="book-row" *ngIf="librosFiltrados.length === 0" style="justify-content: center; padding: 20px;">
-        <span class="inventory">No se encontraron libros.</span>
-      </div>
+    <!-- MENSAJES VACÍOS -->
+    <div class="empty-state-row" *ngIf="libros.length === 0">
+      <p>No hay libros cargados en el sistema.</p>
     </div>
 
-  </main>
+    <div class="empty-state-row" *ngIf="libros.length > 0 && librosFiltrados.length === 0">
+      <p>La búsqueda no dio resultados.</p>
+    </div>
+  </div>
+
+</main>
 
 <!-- MODAL: AGREGAR LIBRO -->
 <div class="modal-overlay" *ngIf="isModalOpen">
@@ -91,7 +99,7 @@
   </div>
 </div>
 
-<!-- MODAL: VER COPIAS INDIVIDUALES -->
+<!-- MODAL: VER COPIAS -->
 <div class="modal-overlay" *ngIf="isCopiasModalOpen && libroSeleccionado">
   <div class="modal-card copias-card">
     <div class="modal-header">
@@ -145,3 +153,4 @@
       <button (click)="cerrarCopias()" class="cancel-btn">Cerrar</button>
     </div>
   </div>
+</div>

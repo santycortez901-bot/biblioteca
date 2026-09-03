@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 export interface Copia {
   id: string;
@@ -71,7 +72,12 @@ export class Libros {
   // --- Operaciones de Libros ---
   agregarLibro(): void {
     if (!this.nuevoTitulo.trim() || !this.nuevoAutor.trim() || this.nuevasCopias < 1) {
-      alert('Por favor completa todos los campos correctamente.');
+      Swal.fire({
+        title: 'Campos Incompletos',
+        text: 'Por favor completa todos los campos correctamente.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
@@ -96,6 +102,15 @@ export class Libros {
       libroExistente.copiasTotales += this.nuevasCopias;
       this.actualizarEstadoLibro(libroExistente);
       this.closeModal();
+
+      Swal.fire({
+        title: '¡Copias Agregadas!',
+        text: `Se agregaron ${this.nuevasCopias} nuevas copias a "${libroExistente.titulo}".`,
+        icon: 'success',
+        confirmButtonColor: '#0d9488',
+        timer: 2000,
+        showConfirmButton: false
+      });
       return;
     }
 
@@ -124,37 +139,38 @@ export class Libros {
     this.actualizarEstadoLibro(nuevoLibro);
     this.libros.push(nuevoLibro);
     this.closeModal();
+
+    Swal.fire({
+      title: '¡Libro Agregado!',
+      text: `El libro "${nuevoLibro.titulo}" se ha guardado exitosamente.`,
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    });
   }
 
   // --- Actualizar Estado y Conteo (Calculado) ---
   private actualizarEstadoLibro(libro: Libro): void {
-    // Cuenta dinámicamente las disponibles sin tener que sumar/restar manualmente
     libro.copias = libro.listaCopias.filter(c => c.estado === 'Disponible').length;
     libro.estado = libro.copias === 0 ? 'sin copias' : 'disponible';
   }
 
   // --- Préstamos y Devoluciones ---
-  prestarCopia(libro: Libro): void {
-    const copiaDisponible = libro.listaCopias.find(c => c.estado === 'Disponible');
-    if (!copiaDisponible) return;
-
-    copiaDisponible.estado = 'Prestada';
-    this.actualizarEstadoLibro(libro);
-  }
-
-  devolverCopia(libro: Libro): void {
-    const copiaPrestada = libro.listaCopias.find(c => c.estado === 'Prestada');
-    if (!copiaPrestada) return;
-
-    copiaPrestada.estado = 'Disponible';
-    this.actualizarEstadoLibro(libro);
-  }
-
   prestarCopiaIndividual(libro: Libro, copia: Copia): void {
     if (copia.estado !== 'Disponible') return;
 
     copia.estado = 'Prestada';
     this.actualizarEstadoLibro(libro);
+
+    Swal.fire({
+      title: 'Préstamo Registrado',
+      text: `La copia ${copia.id} de "${libro.titulo}" fue prestada.`,
+      icon: 'info',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    });
   }
 
   devolverCopiaIndividual(libro: Libro, copia: Copia): void {
@@ -162,6 +178,29 @@ export class Libros {
 
     copia.estado = 'Disponible';
     this.actualizarEstadoLibro(libro);
+
+    Swal.fire({
+      title: 'Devolución Exitosa',
+      text: `La copia ${copia.id} vuelve a estar disponible.`,
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  prestarCopia(libro: Libro): void {
+    const copiaDisponible = libro.listaCopias.find(c => c.estado === 'Disponible');
+    if (!copiaDisponible) return;
+
+    this.prestarCopiaIndividual(libro, copiaDisponible);
+  }
+
+  devolverCopia(libro: Libro): void {
+    const copiaPrestada = libro.listaCopias.find(c => c.estado === 'Prestada');
+    if (!copiaPrestada) return;
+
+    this.devolverCopiaIndividual(libro, copiaPrestada);
   }
 
   // --- Getter para Buscador ---
