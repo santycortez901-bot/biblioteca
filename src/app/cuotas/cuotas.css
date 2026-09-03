@@ -86,19 +86,19 @@
 }
 
 .btn-filter {
-  background: #f1f5f9;
+  background-color: #f1f5f9;
+  color: #64748b;
   border: none;
-  padding: 8px 16px;
-  border-radius: 16px;
+  padding: 7px 16px;
+  border-radius: 30px;
   font-size: 13px;
-  font-weight: 500;
-  color: #475569;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-filter.active {
-  background: #2dd4bf;
+  background-color: #23b2a0;
   color: #ffffff;
 }
 
