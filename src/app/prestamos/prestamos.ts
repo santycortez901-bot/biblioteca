@@ -1,140 +1,170 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-type EstadoPrestamo = 'activo' | 'vencido' | 'devuelto';
+import { Nprestamo } from '../nprestamo/nprestamo';
 
-interface Prestamo {
-  id: string;
-  socio: string;
-  libro: string;
-  inventario: string;
-  fechaInicio: string;
-  fechaVencimiento: string;
-  estado: EstadoPrestamo;
-  renovaciones: number;
-}
-
+import {Prestamo, PrestamoService } from '../services/prestamo';
 @Component({
   selector: 'app-prestamos',
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    Nprestamo
+  ],
   templateUrl: './prestamos.html',
   styleUrl: './prestamos.css'
 })
 export class Prestamos {
 
-  prestamos: Prestamo[] = [
-    {
-      id: 'PR001',
-      socio: 'María González',
-      libro: 'Cien años de soledad',
-      inventario: 'INV001',
-      fechaInicio: '01/08/2026',
-      fechaVencimiento: '31/08/2026',
-      estado: 'activo',
-      renovaciones: 0
-    },
-
-    {
-      id: 'PR002',
-      socio: 'Carlos Rodríguez',
-      libro: '1984',
-      inventario: 'INV003',
-      fechaInicio: '20/06/2026',
-      fechaVencimiento: '20/07/2026',
-      estado: 'vencido',
-      renovaciones: 1
-    },
-
-    {
-      id: 'PR003',
-      socio: 'Laura Fernández',
-      libro: 'Don Quijote de la Mancha',
-      inventario: 'INV004',
-      fechaInicio: '05/08/2026',
-      fechaVencimiento: '04/09/2026',
-      estado: 'activo',
-      renovaciones: 1
-    },
-
-    {
-      id: 'PR004',
-      socio: 'Diego Sánchez',
-      libro: 'La sombra del viento',
-      inventario: 'INV005',
-      fechaInicio: '10/07/2026',
-      fechaVencimiento: '09/08/2026',
-      estado: 'vencido',
-      renovaciones: 2
-    },
-
-    {
-      id: 'PR005',
-      socio: 'Florencia Morales',
-      libro: 'Rayuela',
-      inventario: 'INV006',
-      fechaInicio: '12/08/2026',
-      fechaVencimiento: '11/09/2026',
-      estado: 'activo',
-      renovaciones: 0
-    }
-  ];
-
+  prestamos: Prestamo[] = [];
 
   busqueda: string = '';
 
-  filtro: 'todos' | 'activo' | 'vencido' | 'devuelto' = 'todos';
+  filtro:
+    'todos' |
+    'activo' |
+    'vencido' |
+    'devuelto' = 'todos';
 
+  mostrarNuevoPrestamo = false;
+
+
+  constructor(
+    private prestamoService: PrestamoService
+  ) {
+
+    this.actualizarPrestamos();
+
+  }
+
+
+  // ==========================================
+  // ACTUALIZAR LISTA
+  // ==========================================
+
+  actualizarPrestamos(): void {
+
+    this.prestamos =
+      this.prestamoService.obtenerPrestamos();
+
+  }
+
+
+  // ==========================================
+  // FILTRAR
+  // ==========================================
 
   get prestamosFiltrados(): Prestamo[] {
 
-    const texto = this.busqueda.toLowerCase().trim();
+    const texto =
+      this.busqueda.toLowerCase().trim();
+
 
     return this.prestamos.filter(prestamo => {
 
       const coincideBusqueda =
-        prestamo.id.toLowerCase().includes(texto) ||
-        prestamo.socio.toLowerCase().includes(texto) ||
-        prestamo.libro.toLowerCase().includes(texto) ||
-        prestamo.inventario.toLowerCase().includes(texto);
+
+        prestamo.id
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        prestamo.socio
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        prestamo.libro
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        prestamo.inventario
+          .toLowerCase()
+          .includes(texto);
+
 
       const coincideFiltro =
-        this.filtro === 'todos' ||
+
+        this.filtro === 'todos'
+
+        ||
+
         prestamo.estado === this.filtro;
 
+
       return coincideBusqueda && coincideFiltro;
+
     });
+
   }
 
 
+  // ==========================================
+  // CAMBIAR FILTRO
+  // ==========================================
+
   cambiarFiltro(
-    filtro: 'todos' | 'activo' | 'vencido' | 'devuelto'
+    filtro:
+      'todos' |
+      'activo' |
+      'vencido' |
+      'devuelto'
   ): void {
 
     this.filtro = filtro;
+
   }
 
+
+  // ==========================================
+  // RENOVAR
+  // ==========================================
 
   renovarPrestamo(prestamo: Prestamo): void {
 
-    if (prestamo.renovaciones >= 2) {
-      return;
-    }
+    this.prestamoService.renovarPrestamo(
+      prestamo.id
+    );
 
-    prestamo.renovaciones++;
+    this.actualizarPrestamos();
 
   }
 
+
+  // ==========================================
+  // DEVOLVER
+  // ==========================================
 
   devolverPrestamo(prestamo: Prestamo): void {
 
-    prestamo.estado = 'devuelto';
+    this.prestamoService.devolverPrestamo(
+      prestamo.id
+    );
+
+    this.actualizarPrestamos();
 
   }
 
 
-  nuevoPrestamo(): void {
+  // ==========================================
+  // NUEVO PRÉSTAMO
+  // ==========================================
 
-    console.log('Nuevo préstamo');
+  abrirNuevoPrestamo(): void {
+
+    this.mostrarNuevoPrestamo = true;
+
+  }
+
+
+  cerrarNuevoPrestamo(): void {
+
+    this.mostrarNuevoPrestamo = false;
+
+    this.actualizarPrestamos();
 
   }
 

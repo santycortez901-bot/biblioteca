@@ -6,11 +6,8 @@
 
     <h1>Préstamos</h1>
 
-    <button
-      class="btn-nuevo"
-      (click)="nuevoPrestamo()"
-    >
-      <span class="plus">+</span>
+    <button type="button" class="btn-nuevo" (click)="abrirNuevoPrestamo()">
+      <span>+</span>
       Nuevo préstamo
     </button>
 
@@ -25,49 +22,29 @@
 
       <span class="search-icon">⌕</span>
 
-      <input
-        type="text"
-        placeholder="Buscar por socio, libro o ID de inventario..."
-        [(ngModel)]="busqueda"
-      >
+      <input type="text" placeholder="Buscar por socio, libro o ID de inventario..." [(ngModel)]="busqueda">
 
     </div>
 
 
     <div class="filters">
 
-      <button
-        class="filter"
-        [class.active]="filtro === 'todos'"
-        (click)="cambiarFiltro('todos')"
-      >
+      <button class="filter" [class.active]="filtro === 'todos'" (click)="cambiarFiltro('todos')">
         Todos
       </button>
 
 
-      <button
-        class="filter"
-        [class.active]="filtro === 'activo'"
-        (click)="cambiarFiltro('activo')"
-      >
+      <button class="filter" [class.active]="filtro === 'activo'" (click)="cambiarFiltro('activo')">
         Al día
       </button>
 
 
-      <button
-        class="filter"
-        [class.active]="filtro === 'vencido'"
-        (click)="cambiarFiltro('vencido')"
-      >
+      <button class="filter" [class.active]="filtro === 'vencido'" (click)="cambiarFiltro('vencido')">
         Vencidos
       </button>
 
 
-      <button
-        class="filter"
-        [class.active]="filtro === 'devuelto'"
-        (click)="cambiarFiltro('devuelto')"
-      >
+      <button class="filter" [class.active]="filtro === 'devuelto'" (click)="cambiarFiltro('devuelto')">
         Devueltos
       </button>
 
@@ -109,162 +86,149 @@
 
         @for (prestamo of prestamosFiltrados; track prestamo.id) {
 
-          <tr>
+        <tr>
 
-            <!-- ID -->
+          <!-- ID -->
 
-            <td>
+          <td>
 
-              <span class="prestamo-id">
-                {{ prestamo.id }}
+            <span class="prestamo-id">
+              {{ prestamo.id }}
+            </span>
+
+          </td>
+
+
+          <!-- SOCIO -->
+
+          <td>
+
+            <div class="socio">
+
+              <span class="socio-nombre">
+                {{ prestamo.socio }}
               </span>
 
-            </td>
+              @if (prestamo.estado !== 'devuelto') {
 
-
-            <!-- SOCIO -->
-
-            <td>
-
-              <div class="socio">
-
-                <span class="socio-nombre">
-                  {{ prestamo.socio }}
-                </span>
-
-                @if (prestamo.estado !== 'devuelto') {
-
-                  <span class="socio-estado">
-                    activo
-                  </span>
-
-                }
-
-              </div>
-
-            </td>
-
-
-            <!-- LIBRO -->
-
-            <td>
-
-              <div class="libro">
-
-                <span class="libro-nombre">
-                  {{ prestamo.libro }}
-                </span>
-
-                <span class="inventario">
-                  {{ prestamo.inventario }}
-                </span>
-
-              </div>
-
-            </td>
-
-
-            <!-- INICIO -->
-
-            <td>
-
-              <span class="fecha">
-                {{ prestamo.fechaInicio }}
+              <span class="socio-estado">
+                activo
               </span>
 
-            </td>
+              }
+
+            </div>
+
+          </td>
 
 
-            <!-- VENCIMIENTO -->
+          <!-- LIBRO -->
 
-            <td>
+          <td>
 
-              <span class="fecha vencimiento">
-                {{ prestamo.fechaVencimiento }}
+            <div class="libro">
+
+              <span class="libro-nombre">
+                {{ prestamo.libro }}
               </span>
 
-            </td>
-
-
-            <!-- ESTADO -->
-
-            <td>
-
-              <span
-                class="estado"
-                [class.estado-activo]="prestamo.estado === 'activo'"
-                [class.estado-vencido]="prestamo.estado === 'vencido'"
-                [class.estado-devuelto]="prestamo.estado === 'devuelto'"
-              >
-                {{ prestamo.estado }}
+              <span class="inventario">
+                {{ prestamo.inventario }}
               </span>
 
-            </td>
+            </div>
+
+          </td>
 
 
-            <!-- RENOVACIONES -->
+          <!-- INICIO -->
 
-            <td>
+          <td>
 
-              <span class="renovaciones">
-                {{ prestamo.renovaciones }}/2
-              </span>
+            <span class="fecha">
+              {{ prestamo.fechaInicio }}
+            </span>
 
-            </td>
+          </td>
 
 
-            <!-- ACCIONES -->
+          <!-- VENCIMIENTO -->
 
-            <td>
+          <td>
 
-              <div class="acciones">
+            <span class="fecha vencimiento">
+              {{ prestamo.fechaVencimiento }}
+            </span>
 
-                @if (prestamo.renovaciones < 2 && prestamo.estado !== 'devuelto') {
+          </td>
 
-                  <button
-                    class="btn-renovar"
-                    (click)="renovarPrestamo(prestamo)"
-                  >
-                    <span>↻</span>
-                    Renovar
-                  </button>
+
+          <!-- ESTADO -->
+
+          <td>
+
+            <span class="estado" [class.estado-activo]="prestamo.estado === 'activo'"
+              [class.estado-vencido]="prestamo.estado === 'vencido'"
+              [class.estado-devuelto]="prestamo.estado === 'devuelto'">
+              {{ prestamo.estado }}
+            </span>
+
+          </td>
+
+
+          <!-- RENOVACIONES -->
+
+          <td>
+
+            <span class="renovaciones">
+              {{ prestamo.renovaciones }}/2
+            </span>
+
+          </td>
+
+
+          <!-- ACCIONES -->
+
+          <td>
+
+            <div class="acciones">
+
+              @if (prestamo.renovaciones < 2 && prestamo.estado !=='devuelto' ) { <button class="btn-renovar"
+                (click)="renovarPrestamo(prestamo)">
+                <span>↻</span>
+                Renovar
+                </button>
 
                 }
 
 
                 @if (prestamo.estado !== 'devuelto') {
 
-                  <button
-                    class="btn-devolver"
-                    (click)="devolverPrestamo(prestamo)"
-                  >
-                    <span>✓</span>
-                    Devolver
-                  </button>
+                <button class="btn-devolver" (click)="devolverPrestamo(prestamo)">
+                  <span>✓</span>
+                  Devolver
+                </button>
 
                 }
 
-              </div>
+            </div>
 
-            </td>
+          </td>
 
-          </tr>
+        </tr>
 
         }
 
 
         @if (prestamosFiltrados.length === 0) {
 
-          <tr>
+        <tr>
 
-            <td
-              colspan="8"
-              class="sin-resultados"
-            >
-              No se encontraron préstamos.
-            </td>
+          <td colspan="8" class="sin-resultados">
+            No se encontraron préstamos.
+          </td>
 
-          </tr>
+        </tr>
 
         }
 
@@ -275,3 +239,8 @@
   </div>
 
 </div>
+@if (mostrarNuevoPrestamo) {
+
+<app-nprestamo (cerrar)="cerrarNuevoPrestamo()" />
+
+}
