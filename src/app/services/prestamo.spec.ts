@@ -1,16 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { Prestamos } from './prestamos';
 
-import { Prestamo } from './prestamo';
+describe('Prestamos', () => {
+  let component: Prestamos;
 
-describe('Prestamo', () => {
-  let service: Prestamo;
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [Prestamos]
+    }).compileComponents();
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Prestamo);
+    const fixture = TestBed.createComponent(Prestamos);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 });

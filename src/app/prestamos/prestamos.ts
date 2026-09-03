@@ -7,8 +7,10 @@ import {
   Prestamo,
   PrestamoService
 } from '../services/prestamo';
+
 import { Socio } from '../models/models/socio';
-import {SocioService} from '../services/socios-service';
+
+import { SocioService } from '../services/socios-service';
 
 @Component({
   selector: 'app-prestamos',
@@ -97,6 +99,7 @@ export class Prestamos {
       return coincideBusqueda && coincideFiltro;
 
     });
+
   }
 
   cambiarFiltro(
@@ -144,4 +147,5 @@ export class Prestamos {
     this.actualizarPrestamos();
 
   }
+
 }

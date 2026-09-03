@@ -1,8 +1,8 @@
+```html
 <div class="modal-overlay">
 
   <div class="modal">
 
-    <!-- CABECERA -->
     <div class="modal-header">
 
       <h2>Nuevo préstamo</h2>
@@ -10,18 +10,17 @@
       <button
         type="button"
         class="btn-cerrar"
-        (click)="cerrarModal()"
-      >
+        (click)="cerrarModal()">
         ×
       </button>
 
     </div>
 
 
-    <!-- FORMULARIO -->
     <form (ngSubmit)="crearPrestamo()">
 
       <!-- SOCIO -->
+
       <div class="form-group">
 
         <label for="socio">
@@ -32,13 +31,11 @@
           id="socio"
           name="socio"
           [(ngModel)]="idSocio"
-          required
-        >
+          required>
 
           <option
             value=""
-            disabled
-          >
+            disabled>
             Seleccione un socio
           </option>
 
@@ -56,6 +53,7 @@
 
 
       <!-- LIBRO -->
+
       <div class="form-group">
 
         <label for="libro">
@@ -68,13 +66,13 @@
           name="libro"
           [(ngModel)]="libro"
           placeholder="Ingrese el título del libro"
-          required
-        >
+          required>
 
       </div>
 
 
       <!-- INVENTARIO -->
+
       <div class="form-group">
 
         <label for="inventario">
@@ -87,16 +85,17 @@
           name="inventario"
           [(ngModel)]="inventario"
           placeholder="Ej: INV007"
-          required
-        >
+          required>
 
       </div>
 
 
-      <!-- FECHAS -->
+      <!-- FECHAS AUTOMÁTICAS -->
+
       <div class="form-row">
 
         <!-- FECHA DE INICIO -->
+
         <div class="form-group">
 
           <label for="fechaInicio">
@@ -108,13 +107,14 @@
             type="date"
             name="fechaInicio"
             [(ngModel)]="fechaInicio"
-            disabled
-          >
+            readonly
+            required>
 
         </div>
 
 
         <!-- FECHA DE VENCIMIENTO -->
+
         <div class="form-group">
 
           <label for="fechaVencimiento">
@@ -126,29 +126,35 @@
             type="date"
             name="fechaVencimiento"
             [(ngModel)]="fechaVencimiento"
-            disabled
-          >
+            readonly
+            required>
 
         </div>
 
       </div>
 
 
+      <!-- AVISO -->
+
+      <p class="fecha-info">
+        El préstamo tiene una duración de 30 días.
+      </p>
+
+
       <!-- BOTONES -->
+
       <div class="modal-actions">
 
         <button
           type="submit"
-          class="btn-crear"
-        >
+          class="btn-crear">
           Crear préstamo
         </button>
 
         <button
           type="button"
           class="btn-cancelar"
-          (click)="cerrarModal()"
-        >
+          (click)="cerrarModal()">
           Cancelar
         </button>
 
@@ -159,3 +165,4 @@
   </div>
 
 </div>
+```

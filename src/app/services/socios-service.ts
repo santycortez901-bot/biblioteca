@@ -47,4 +47,5 @@ export class SocioService {
   agregarSocio(socio: Socio): void {
     this.socios.push(socio);
   }
+
 }

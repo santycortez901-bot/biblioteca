@@ -6,14 +6,23 @@ export type EstadoPrestamo =
   'devuelto';
 
 export interface Prestamo {
+
   id: string;
+
   idSocio: string;
+
   libro: string;
+
   inventario: string;
+
   fechaInicio: string;
+
   fechaVencimiento: string;
+
   estado: EstadoPrestamo;
+
   renovaciones: number;
+
 }
 
 @Injectable({
@@ -117,4 +126,5 @@ export class PrestamoService {
 
     prestamo.estado = 'devuelto';
   }
+
 }
