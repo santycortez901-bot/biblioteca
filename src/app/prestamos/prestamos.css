@@ -215,9 +215,7 @@
 
 table {
   width: 100%;
-
   min-width: 1000px;
-
   border-collapse: collapse;
 }
 
@@ -270,11 +268,8 @@ tbody tr:hover {
 
 td {
   padding: 8px 16px;
-
   border-bottom: 1px solid #f0f2f4;
-
   font-size: 12px;
-
   color: #344b61;
 }
 
@@ -289,7 +284,6 @@ tbody tr:last-child td {
 
 .prestamo-id {
   color: #7d91a7;
-
   font-size: 11px;
 }
 
@@ -414,7 +408,6 @@ tbody tr:last-child td {
 
 .renovaciones {
   color: #142d44;
-
   font-size: 12px;
 }
 

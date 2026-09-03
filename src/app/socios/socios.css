@@ -212,7 +212,7 @@ tr:last-child td {
 }
 
 
-/* Badges y estados */
+/* Badges e identificadores de estado */
 .badge {
   display: inline-block;
   padding: 4px 12px;
@@ -222,17 +222,26 @@ tr:last-child td {
   text-transform: lowercase;
 }
 
+/* Activo -> Verde */
 .badge-activo {
   background-color: #dcfce7;
   color: #15803d;
 }
 
-.badge-bloqueado {
-  background-color: #fef3c7;
-  color: #b45309;
+/* Inactivo -> Azul */
+.badge-inactivo {
+  background-color: #dbeafe;
+  color: #1e40af;
 }
 
-.badge-baja {
+/* Suspendido -> Naranja */
+.badge-suspendido {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+/* Bloqueado -> Rojo */
+.badge-bloqueado {
   background-color: #fee2e2;
   color: #dc2626;
 }
@@ -253,6 +262,13 @@ td[data-label="PRÉSTAMO"] {
   color: #23b2a0;
 }
 
+.sin-resultados{
+  height: 100px;
+  text-align: center;
+  color: #8291a2;
+  font-size: 13px;
+
+}
 
 /* ==========================================
    MEDIA QUERIES (RESPONSIVO)
@@ -347,12 +363,148 @@ td[data-label="PRÉSTAMO"] {
     font-size: 12px;
   }
 }
-/* ==========================================
-   MENSAJE SIN RESULTADOS
-   ========================================== */
-.sin-resultados {
-  height: 100px;
-  text-align: center;
-  color: #8291a2;
+
+/* ==========================================================================
+   ESTILOS VENTANA MODAL (AGREGAR SOCIO)
+   ========================================================================== */
+
+/* Fondo oscuro translúcido que cubre toda la pantalla */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.55); /* Capa oscura tenue */
+  backdrop-filter: blur(4px); /* Efecto desfoque de fondo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+/* Tarjeta flotante del formulario */
+.modal-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Encabezado del modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Agrupamiento de campos de texto */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
   font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-group input {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #0d9488; /* Verde/Teal del sistema */
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+/* Botones de acción del formulario */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.submit-btn {
+  background-color: #0d9488;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #0f766e;
+}
+
+.cancel-btn {
+  background-color: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* Animación suave al abrir */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
