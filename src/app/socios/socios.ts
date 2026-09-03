@@ -4,12 +4,11 @@ import { SocioService } from '../services/socios-service';
 
 @Component({
   selector: 'app-socios',
-  imports: [],
+  imports: [FormsModule], // Agregamos FormsModule aquí
   templateUrl: './socios.html',
   styleUrl: './socios.css',
 })
 export class Socios {
-
   filtroEstado: string = 'Todos';
 
   filtroEdad: string = 'Todas edades';
@@ -32,24 +31,22 @@ export class Socios {
   }
 
   get sociosFiltrados(): Socio[] {
-
     return this.socios.filter(socio => {
+      // Filtrado por Estado
+      const cumpleEstado = this.filtroEstado === 'Todos' || socio.estado === this.filtroEstado.toLowerCase();
 
-      const cumpleEstado =
-        this.filtroEstado === 'Todos' ||
-        socio.estado === this.filtroEstado.toLowerCase();
-
+      // Filtrado por Edad
       let cumpleEdad = true;
-
       if (this.filtroEdad === '+18') {
         cumpleEdad = socio.edad >= 18;
-      }
-
-      else if (this.filtroEdad === '-18') {
+      } else if (this.filtroEdad === '-18') {
         cumpleEdad = socio.edad < 18;
       }
 
-      return cumpleEstado && cumpleEdad;
-    });
-  }
+    return cumpleBusqueda && cumpleEstado && cumpleEdad;
+  });
+}
+
+
+
 }

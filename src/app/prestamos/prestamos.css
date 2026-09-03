@@ -525,6 +525,14 @@ tbody tr:last-child td {
   transform: translateY(-1px);
 }
 
+/* Líneas 467 a 472 */
+.sin-resultados {
+  height: 100px;
+  text-align: center;
+  color: #8291a2;
+  font-size: 13px;
+}
+
 .btn-renovar span {
   font-size: 14px;
 }
