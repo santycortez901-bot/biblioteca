@@ -6,4 +6,5 @@ export interface Prestamo {id: string;
   fechaInicio: string;
   fechaVencimiento: string;
   estado: EstadoPrestamo;
-  renovaciones: number;}
+  renovaciones: number;
+}

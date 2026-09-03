@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 
-export type EstadoPrestamo = 'activo' | 'vencido' | 'devuelto';
+export type EstadoPrestamo =
+  'activo' |
+  'vencido' |
+  'devuelto';
 
 export interface Prestamo {
   id: string;
-  socio: string;
+  idSocio: string;
   libro: string;
   inventario: string;
   fechaInicio: string;
@@ -22,7 +25,7 @@ export class PrestamoService {
 
     {
       id: 'PR001',
-      socio: 'María González',
+      idSocio: 'S001',
       libro: 'Cien años de soledad',
       inventario: 'INV001',
       fechaInicio: '01/08/2026',
@@ -33,7 +36,7 @@ export class PrestamoService {
 
     {
       id: 'PR002',
-      socio: 'Carlos Rodríguez',
+      idSocio: 'S002',
       libro: '1984',
       inventario: 'INV003',
       fechaInicio: '20/06/2026',
@@ -44,7 +47,7 @@ export class PrestamoService {
 
     {
       id: 'PR003',
-      socio: 'Laura Fernández',
+      idSocio: 'S001',
       libro: 'Don Quijote de la Mancha',
       inventario: 'INV004',
       fechaInicio: '05/08/2026',
@@ -55,7 +58,7 @@ export class PrestamoService {
 
     {
       id: 'PR004',
-      socio: 'Diego Sánchez',
+      idSocio: 'S002',
       libro: 'La sombra del viento',
       inventario: 'INV005',
       fechaInicio: '10/07/2026',
@@ -66,7 +69,7 @@ export class PrestamoService {
 
     {
       id: 'PR005',
-      socio: 'Florencia Morales',
+      idSocio: 'S001',
       libro: 'Rayuela',
       inventario: 'INV006',
       fechaInicio: '12/08/2026',
@@ -77,16 +80,13 @@ export class PrestamoService {
 
   ];
 
-
   obtenerPrestamos(): Prestamo[] {
     return this.prestamos;
   }
 
-
   agregarPrestamo(prestamo: Prestamo): void {
     this.prestamos.push(prestamo);
   }
-
 
   renovarPrestamo(id: string): void {
 
@@ -105,7 +105,6 @@ export class PrestamoService {
     prestamo.renovaciones++;
   }
 
-
   devolverPrestamo(id: string): void {
 
     const prestamo = this.prestamos.find(
@@ -118,5 +117,4 @@ export class PrestamoService {
 
     prestamo.estado = 'devuelto';
   }
-
 }

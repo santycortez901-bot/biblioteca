@@ -28,14 +28,29 @@
           Socio
         </label>
 
-        <input
+        <select
           id="socio"
-          type="text"
           name="socio"
-          [(ngModel)]="socio"
-          placeholder="Ingrese el nombre del socio"
+          [(ngModel)]="idSocio"
           required
         >
+
+          <option
+            value=""
+            disabled
+          >
+            Seleccione un socio
+          </option>
+
+          @for (socio of socios; track socio.id) {
+
+            <option [value]="socio.id">
+              {{ socio.nombre }}
+            </option>
+
+          }
+
+        </select>
 
       </div>
 
@@ -81,6 +96,7 @@
       <!-- FECHAS -->
       <div class="form-row">
 
+        <!-- FECHA DE INICIO -->
         <div class="form-group">
 
           <label for="fechaInicio">
@@ -92,12 +108,13 @@
             type="date"
             name="fechaInicio"
             [(ngModel)]="fechaInicio"
-            required
+            disabled
           >
 
         </div>
 
 
+        <!-- FECHA DE VENCIMIENTO -->
         <div class="form-group">
 
           <label for="fechaVencimiento">
@@ -109,7 +126,7 @@
             type="date"
             name="fechaVencimiento"
             [(ngModel)]="fechaVencimiento"
-            required
+            disabled
           >
 
         </div>
