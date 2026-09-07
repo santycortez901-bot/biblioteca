@@ -1,9 +1,9 @@
-<body>
+<div class="body">
   <div class="container">
     <!-- Header -->
     <header class="header">
       <h1>Socios</h1>
-      <button class="btn-primary">+ Nuevo socio</button>
+      <button class="btn-primary" (click)="openModal()">+ Nuevo socio</button>
     </header>
 
     <!-- Toolbar / Search & Filters -->
@@ -93,7 +93,7 @@
     </div>
   </div>
   
-  <!-- MODAL: AGREGAR SOCIO -->
+ <!-- MODAL: AGREGAR SOCIO -->
 <div class="modal-overlay" *ngIf="isModalOpen">
   <div class="modal-card">
     <div class="modal-header">
@@ -101,37 +101,98 @@
       <button (click)="closeModal()" class="close-btn">&times;</button>
     </div>
     
-    <form (ngSubmit)="agregarSocio()">
+    <form #socioForm="ngForm" (ngSubmit)="socioForm.valid && agregarSocio()">
+
+      <!-- Nombre: Mínimo 2 palabras -->
       <div class="form-group">
         <label>Nombre y Apellido</label>
-        <input type="text" [(ngModel)]="nuevoNombre" name="nombre" required />
+        <input 
+          type="text" 
+          [(ngModel)]="nuevoNombre" 
+          name="nombre" 
+          #nombre="ngModel"
+          pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$" 
+          placeholder="Ej: Juan Pérez"
+          required />
+        <div *ngIf="nombre.invalid && nombre.touched" class="alert-error">
+          <small *ngIf="nombre.errors?.['required']">El nombre es obligatorio.</small>
+          <small *ngIf="nombre.errors?.['pattern']">Ingresá nombre y apellido (mínimo 2 palabras).</small>
+        </div>
       </div>
 
+      <!-- Edad: Mínimo 4 años -->
       <div class="form-group">
         <label>Edad</label>
-        <input type="number" [(ngModel)]="nuevaEdad" name="edad" min="1" required />
+        <input 
+          type="number" 
+          [(ngModel)]="nuevaEdad" 
+          name="edad" 
+          #edad="ngModel"
+          min="4" 
+          placeholder="Mínimo 4"
+          required />
+        <div *ngIf="edad.invalid && edad.touched" class="alert-error">
+          <small *ngIf="edad.errors?.['required']">La edad es obligatoria.</small>
+          <small *ngIf="edad.errors?.['min']">La edad mínima permitida es 4 años.</small>
+        </div>
       </div>
 
+      <!-- DNI: Mínimo 7 dígitos numéricos -->
       <div class="form-group">
         <label>DNI</label>
-        <input type="text" [(ngModel)]="nuevoDni" name="dni" required />
+        <input 
+          type="text" 
+          [(ngModel)]="nuevoDni" 
+          name="dni" 
+          #dni="ngModel"
+          pattern="^[0-9]{7,}$" 
+          placeholder="Mínimo 7 números"
+          required />
+        <div *ngIf="dni.invalid && dni.touched" class="alert-error">
+          <small *ngIf="dni.errors?.['required']">El DNI es obligatorio.</small>
+          <small *ngIf="dni.errors?.['pattern']">El DNI debe tener al menos 7 dígitos numéricos.</small>
+        </div>
       </div>
 
+      <!-- Teléfono: Un '+' al principio seguido de 12 dígitos -->
       <div class="form-group">
         <label>Teléfono</label>
-        <input type="tel" [(ngModel)]="nuevoTelefono" name="telefono" required />
+        <input 
+          type="tel" 
+          [(ngModel)]="nuevoTelefono" 
+          name="telefono" 
+          #telefono="ngModel"
+          pattern="^\+[0-9]{12}$" 
+          placeholder="Ej: +5491112345678"
+          required />
+        <div *ngIf="telefono.invalid && telefono.touched" class="alert-error">
+          <small *ngIf="telefono.errors?.['required']">El teléfono es obligatorio.</small>
+          <small *ngIf="telefono.errors?.['pattern']">Formato incorrecto. Debe ser '+' seguido de 12 números.</small>
+        </div>
       </div>
 
+      <!-- Email: Solo dominio @gmail.com o @hotmail.com -->
       <div class="form-group">
-        <label>Correo Electrónico (Gmail)</label>
-        <input type="email" [(ngModel)]="nuevoEmail" name="email" required />
+        <label>Correo Electrónico</label>
+        <input 
+          type="email" 
+          [(ngModel)]="nuevoEmail" 
+          name="email" 
+          #email="ngModel"
+          pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$" 
+          placeholder="usuario@gmail.com o @hotmail.com"
+          required />
+        <div *ngIf="email.invalid && email.touched" class="alert-error">
+          <small *ngIf="email.errors?.['required']">El correo es obligatorio.</small>
+          <small *ngIf="email.errors?.['pattern']">El correo debe finalizar en @gmail.com o @hotmail.com.</small>
+        </div>
       </div>
 
       <div class="modal-actions">
-        <button type="submit" class="submit-btn">Guardar</button>
+        <button type="submit" [disabled]="!socioForm.valid" class="submit-btn">Guardar</button>
         <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
       </div>
     </form>
-  </div>
 </div>
-</body>
+</div>
+<!-- div del body -->
