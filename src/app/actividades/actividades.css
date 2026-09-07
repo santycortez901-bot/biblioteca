@@ -6,17 +6,25 @@
 }
 
 body {
-  background-color: #f1f5f9;
-  padding: 40px;
-  color: #334155;
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 18px 70px;
+  box-sizing: border-box;
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #102b43;
 }
 
 .actividad-container {
-  max-width: 1200px;
   margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
-h2 {
+h1 {
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 20px;
@@ -159,6 +167,22 @@ h2 {
   background-color: #f3e8ff;
   color: #9333ea;
 }
+
+.badge-libro {
+  background-color: #e2cfbb;
+  color: #b6670d;
+}
+
+.badge-eliminacion {
+  background-color: #ffe8e8;
+  color: #ea3333;
+}
+
+.badge-edicion {
+  background-color: #ffe8fd;
+  color: #ea33d2;
+}
+
 
 /* Badges de Usuario e ID */
 .badge-user {
