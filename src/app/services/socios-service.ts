@@ -9,7 +9,7 @@ export class SocioService {
   private socios: Socio[] = [
 
     {
-      id: 'S001',
+      id: 1,
       nombre: 'Julieta Chiara',
       dni: '48123169',
       numCarnet: 'c-001',
@@ -21,7 +21,7 @@ export class SocioService {
     },
 
     {
-      id: 'S002',
+      id: 2,
       nombre: 'Ignacio Maldonado',
       dni: '48123329',
       numCarnet: 'c-002',
@@ -40,7 +40,7 @@ export class SocioService {
 
   obtenerSocioPorId(id: string): Socio | undefined {
     return this.socios.find(
-      socio => socio.id === id
+      socio => socio.id === Number(id)
     );
   }
 
