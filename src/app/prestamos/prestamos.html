@@ -106,7 +106,7 @@
             <div class="socio">
 
               <span class="socio-nombre">
-                {{ prestamo.socio }}
+                {{ obtenerSocio(prestamo.idSocio)?.nombre }}
               </span>
 
               @if (prestamo.estado !== 'devuelto') {
