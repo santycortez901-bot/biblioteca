@@ -3,7 +3,15 @@ import { FormsModule } from '@angular/forms';
 
 import { Nprestamo } from '../nprestamo/nprestamo';
 
-import {Prestamo, PrestamoService } from '../services/prestamo';
+import {
+  Prestamo,
+  PrestamoService
+} from '../services/prestamo';
+
+import { Socio } from '../models/models/socio';
+
+import { SocioService } from '../services/socios-service';
+
 @Component({
   selector: 'app-prestamos',
   imports: [
@@ -27,19 +35,12 @@ export class Prestamos {
 
   mostrarNuevoPrestamo = false;
 
-
   constructor(
-    private prestamoService: PrestamoService
+    private prestamoService: PrestamoService,
+    private socioService: SocioService
   ) {
-
     this.actualizarPrestamos();
-
   }
-
-
-  // ==========================================
-  // ACTUALIZAR LISTA
-  // ==========================================
 
   actualizarPrestamos(): void {
 
@@ -48,29 +49,35 @@ export class Prestamos {
 
   }
 
+  obtenerSocio(idSocio: string): Socio | undefined {
 
-  // ==========================================
-  // FILTRAR
-  // ==========================================
+    return this.socioService.obtenerSocioPorId(
+      idSocio
+    );
+
+  }
 
   get prestamosFiltrados(): Prestamo[] {
 
     const texto =
       this.busqueda.toLowerCase().trim();
 
-
     return this.prestamos.filter(prestamo => {
 
-      const coincideBusqueda =
+      const socio =
+        this.obtenerSocio(prestamo.idSocio);
 
+      const nombreSocio =
+        socio?.nombre.toLowerCase() ?? '';
+
+      const coincideBusqueda =
         prestamo.id
           .toLowerCase()
           .includes(texto)
 
         ||
 
-        prestamo.socio
-          .toLowerCase()
+        nombreSocio
           .includes(texto)
 
         ||
@@ -85,26 +92,15 @@ export class Prestamos {
           .toLowerCase()
           .includes(texto);
 
-
       const coincideFiltro =
-
-        this.filtro === 'todos'
-
-        ||
-
+        this.filtro === 'todos' ||
         prestamo.estado === this.filtro;
-
 
       return coincideBusqueda && coincideFiltro;
 
     });
 
   }
-
-
-  // ==========================================
-  // CAMBIAR FILTRO
-  // ==========================================
 
   cambiarFiltro(
     filtro:
@@ -118,11 +114,6 @@ export class Prestamos {
 
   }
 
-
-  // ==========================================
-  // RENOVAR
-  // ==========================================
-
   renovarPrestamo(prestamo: Prestamo): void {
 
     this.prestamoService.renovarPrestamo(
@@ -132,11 +123,6 @@ export class Prestamos {
     this.actualizarPrestamos();
 
   }
-
-
-  // ==========================================
-  // DEVOLVER
-  // ==========================================
 
   devolverPrestamo(prestamo: Prestamo): void {
 
@@ -148,17 +134,11 @@ export class Prestamos {
 
   }
 
-
-  // ==========================================
-  // NUEVO PRÉSTAMO
-  // ==========================================
-
   abrirNuevoPrestamo(): void {
 
     this.mostrarNuevoPrestamo = true;
 
   }
-
 
   cerrarNuevoPrestamo(): void {
 

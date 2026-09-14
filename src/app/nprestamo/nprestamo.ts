@@ -6,6 +6,10 @@ import {
   PrestamoService
 } from '../services/prestamo';
 
+import { Socio } from '../models/models/socio';
+
+import { SocioService } from '../services/socios-service';
+
 @Component({
   selector: 'app-nprestamo',
   imports: [FormsModule],
@@ -16,10 +20,9 @@ export class Nprestamo {
 
   @Output() cerrar = new EventEmitter<void>();
 
+  socios: Socio[] = [];
 
-  // Datos del formulario
-
-  socio: string = '';
+  idSocio: string = '';
 
   libro: string = '';
 
@@ -29,24 +32,21 @@ export class Nprestamo {
 
   fechaVencimiento: string = '';
 
-
   constructor(
-    private prestamoService: PrestamoService
+    private prestamoService: PrestamoService,
+    private socioService: SocioService
   ) {
 
-    // Fecha actual
+    this.socios =
+      this.socioService.obtenerSocios();
 
     const hoy = new Date();
-
-
-    // 30 días después
 
     const vencimiento = new Date(hoy);
 
     vencimiento.setDate(
       vencimiento.getDate() + 30
     );
-
 
     this.fechaInicio =
       this.formatearFecha(hoy);
@@ -55,11 +55,6 @@ export class Nprestamo {
       this.formatearFecha(vencimiento);
 
   }
-
-
-  // ==========================================
-  // FORMATEAR FECHA
-  // ==========================================
 
   private formatearFecha(fecha: Date): string {
 
@@ -73,20 +68,14 @@ export class Nprestamo {
       fecha.getDate()
     ).padStart(2, '0');
 
-
     return `${año}-${mes}-${dia}`;
 
   }
 
-
-  // ==========================================
-  // CREAR PRÉSTAMO
-  // ==========================================
-
   crearPrestamo(): void {
 
     if (
-      !this.socio.trim() ||
+      !this.idSocio ||
       !this.libro.trim() ||
       !this.inventario.trim()
     ) {
@@ -97,24 +86,14 @@ export class Nprestamo {
 
     }
 
-
-    // Generar ID automáticamente
-
     const prestamos =
       this.prestamoService.obtenerPrestamos();
-
 
     const numero =
       prestamos.length + 1;
 
-
     const id =
       `PR${String(numero).padStart(3, '0')}`;
-
-
-    // Convertir las fechas de YYYY-MM-DD
-    // a DD/MM/YYYY para que coincidan
-    // con tus préstamos actuales
 
     const fechaInicio =
       this.convertirFecha(this.fechaInicio);
@@ -122,12 +101,11 @@ export class Nprestamo {
     const fechaVencimiento =
       this.convertirFecha(this.fechaVencimiento);
 
-
     const nuevoPrestamo: Prestamo = {
 
       id: id,
 
-      socio: this.socio.trim(),
+      idSocio: this.idSocio,
 
       libro: this.libro.trim(),
 
@@ -143,43 +121,25 @@ export class Nprestamo {
 
     };
 
-
-    // Guardar en el servicio
-
     this.prestamoService.agregarPrestamo(
       nuevoPrestamo
     );
-
-
-    // Cerrar modal
 
     this.cerrar.emit();
 
   }
 
-
-  // ==========================================
-  // CONVERTIR FECHA
-  // ==========================================
-
   private convertirFecha(fecha: string): string {
 
     const partes = fecha.split('-');
-
 
     if (partes.length !== 3) {
       return fecha;
     }
 
-
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
 
   }
-
-
-  // ==========================================
-  // CERRAR MODAL
-  // ==========================================
 
   cerrarModal(): void {
 

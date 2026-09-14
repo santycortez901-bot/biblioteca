@@ -1,103 +1,71 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Socio } from '../models/models/socio';
-import { FormsModule } from '@angular/forms'; // Importante para usar [(ngModel)]
-import { CommonModule } from '@angular/common'; // <--- Importar aquí
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Socio, EstadoSocio, PrestamoActual } from '../models/models/socio';
 
 @Component({
   selector: 'app-socios',
-  imports: [FormsModule,CommonModule,RouterLink], // Agregamos FormsModule aquí
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './socios.html',
-  styleUrl: './socios.css',
+  styleUrl: './socios.css'
 })
 export class Socios {
-  // Control de la modal
-  isModalOpen: boolean = false;
+  isModalOpen = false;
+  contadorSocio = 1;
 
+  // Variables para Búsqueda y Filtros
   busqueda: string = '';
   filtroEstado: string = 'Todos';
   filtroEdad: string = 'Todas edades';
-  socios: Socio[] = [
-    {
-      id: 1,
-      nombre: "Julieta Chiara",
-      dni: '48123169',
-      numCarnet: 'c-001',
-      edad: 19,
-      email: "julichi2345@gmail.com",
-      telefono: '2991234567',
-      estado: 'activo',
-      prestamos:'Encurso'
-    },{
-      id: 2,
-      nombre: "Ignacio Maldonado",
-      dni:'48123329',
-      numCarnet: 'c-002',
-      edad: 19,
-      email: "nachota12@gmail.com",
-      telefono: '2993399772',
-      estado: 'bloqueado',
-      prestamos:'Libre'
-    },{
-      id: 3,
-      nombre: "Lucio Candarle",
-      dni:'48673322',
-      numCarnet: 'c-003',
-      edad: 18,
-      email: "lulu99@gmail.com",
-      telefono: '2994557766',
-      estado: 'inactivo',
-      prestamos:'Libre'
-    },{id: 4,
-      nombre: "Santiago Cortez",
-      dni:'47471099',
-      numCarnet: 'c-004',
-      edad: 20,
-      email: "reymegatonton@gmail.com",
-      telefono: '2990099123',
-      estado: 'suspendido',
-      prestamos:'Encurso'}
-  ];
 
-  FiltroEstado(estado: string): void {
-    this.filtroEstado = estado;
-  }
-  FiltroEdad(edad: string): void {
-    this.filtroEdad = edad;
-  }
-
-  get sociosFiltrados(): Socio[] {
-  // Preparamos el texto de búsqueda en minúsculas y sin espacios extra
-  const termino = this.busqueda.toLowerCase().trim();
-
-  return this.socios.filter(socio => {
-    // Filtrado por Búsqueda (coincidencia en nombre, DNI o carnet)
-    const cumpleBusqueda = !termino || 
-      socio.nombre.toLowerCase().includes(termino) ||
-      socio.dni.toLowerCase().includes(termino) ||
-      socio.numCarnet.toLowerCase().includes(termino);
-
-    // Filtrado por Estado
-    const cumpleEstado = this.filtroEstado === 'Todos' || socio.estado === this.filtroEstado.toLowerCase();
-
-    // Filtrado por Edad
-    let cumpleEdad = true;
-    if (this.filtroEdad === '+18') {
-      cumpleEdad = socio.edad >= 18;
-    } else if (this.filtroEdad === '-18') {
-      cumpleEdad = socio.edad < 18;
-    }
-
-    return cumpleBusqueda && cumpleEstado && cumpleEdad;
-  });
-
-}
-// Variables del formulario
+  // Variables del Formulario
   nuevoNombre: string = '';
   nuevaEdad: number | null = null;
   nuevoDni: string = '';
   nuevoTelefono: string = '';
   nuevoEmail: string = '';
+
+  socios: Socio[] = [];
+
+  // --- Métodos para cambiar los filtros activos ---
+  FiltroEstado(estado: string): void {
+    this.filtroEstado = estado;
+  }
+
+  FiltroEdad(edad: string): void {
+    this.filtroEdad = edad;
+  }
+
+  // --- Getter combinando Búsqueda + Filtro Estado + Filtro Edad ---
+  get sociosFiltrados(): Socio[] {
+    const termino = this.busqueda.trim().toLowerCase();
+
+    return this.socios.filter(socio => {
+      // 1. Filtro por Búsqueda (Nombre, DNI o Carnet)
+      const cumpleBusqueda =
+        !termino ||
+        socio.nombre.toLowerCase().includes(termino) ||
+        socio.dni.toLowerCase().includes(termino) ||
+        socio.numCarnet.toLowerCase().includes(termino);
+
+      // 2. Filtro por Estado (Todos, Activo, Bloqueado, Baja/Inactivo)
+      const cumpleEstado =
+        this.filtroEstado === 'Todos' ||
+        socio.estado.toLowerCase() === this.filtroEstado.toLowerCase();
+
+      // 3. Filtro por Edad (Todas edades, +18, -18)
+      let cumpleEdad = true;
+      if (this.filtroEdad === '+18') {
+        cumpleEdad = socio.edad >= 18;
+      } else if (this.filtroEdad === '-18') {
+        cumpleEdad = socio.edad < 18;
+      }
+
+      // Retorna verdadero solo si cumple con los 3 criterios
+      return cumpleBusqueda && cumpleEstado && cumpleEdad;
+    });
+  }
 
   openModal(): void {
     this.isModalOpen = true;
@@ -116,23 +84,62 @@ export class Socios {
     this.nuevoEmail = '';
   }
 
-agregarSocio(): void {
-  if (!this.nuevoNombre || !this.nuevoDni || !this.nuevaEdad) return;
+  agregarSocio(): void {
+    // Reglas de validación en TS
+    const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
+    const regexDni = /^[0-9]{7,}$/;
+    const regexTelefono = /^\+[0-9]{12}$/;
+    const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
 
-  const nuevoSocio: Socio = {
-    id: this.socios.length + 1,
-    numCarnet: `c-00${this.socios.length + 1}`,
-    nombre: this.nuevoNombre,
-    edad: Number(this.nuevaEdad),
-    dni: this.nuevoDni,
-    telefono: this.nuevoTelefono,
-    email: this.nuevoEmail,
-    estado: 'inactivo',
-    prestamos: 'Libre'
-  };
+    if (!this.nuevoNombre || !regexNombre.test(this.nuevoNombre.trim())) {
+      alert('Error en Nombre: Debe contener al menos dos palabras.');
+      return;
+    }
 
-  this.socios.push(nuevoSocio);
+    if (!this.nuevaEdad || this.nuevaEdad < 4) {
+      alert('Error en Edad: Debe ser de al menos 4 años.');
+      return;
+    }
 
-  this.closeModal();
-}
+    if (!this.nuevoDni || !regexDni.test(this.nuevoDni.trim())) {
+      alert('Error en DNI: Debe tener un mínimo de 7 dígitos.');
+      return;
+    }
+
+    if (!this.nuevoTelefono || !regexTelefono.test(this.nuevoTelefono.trim())) {
+      alert('Error en Teléfono: Debe iniciar con "+" seguido de 12 dígitos.');
+      return;
+    }
+
+    if (!this.nuevoEmail || !regexEmail.test(this.nuevoEmail.trim())) {
+      alert('Error en Correo: Debe ser @gmail.com o @hotmail.com.');
+      return;
+    }
+
+    // Verificación de duplicados por DNI
+    const dniLimpio = this.nuevoDni.trim();
+    if (this.socios.some(s => s.dni.trim() === dniLimpio)) {
+      alert('Error: Ya existe un socio registrado con este número de DNI.');
+      return;
+    }
+
+    // Crear el nuevo socio
+    const idSecuencia = this.contadorSocio.toString().padStart(3, '0');
+
+    const nuevoSocio: Socio = {
+      id: Number(this.contadorSocio),
+      numCarnet: `c-${idSecuencia}`,
+      nombre: this.nuevoNombre.trim(),
+      edad: Number(this.nuevaEdad),
+      dni: dniLimpio,
+      telefono: this.nuevoTelefono.trim(),
+      email: this.nuevoEmail.trim(),
+      estado: 'activo' ,
+      prestamos: 'Libre'
+    };
+
+    this.socios.push(nuevoSocio);
+    this.contadorSocio++;
+    this.closeModal();
+  }
 }

@@ -1,83 +1,274 @@
-<div class="actividad-container">
-  <h2>Actividades</h2>
+<body>
+  <div class="actividad-container">
+
+  <h1>Actividades</h1>
+
 
   <!-- Barra de Filtros y Búsqueda -->
+
   <div class="toolbar-card">
+
+
+    <!-- BUSCADOR -->
+
     <div class="search-box">
-      <input type="text" placeholder="Historial" />
+
+      <input
+        type="text"
+        placeholder="Historial"
+        [(ngModel)]="textoBusqueda"
+        (input)="buscar()"
+      />
+
     </div>
+
 
     <div class="date-filter-group">
-    <div class="date-input-wrapper">
-      <label for="fecha-desde">Fecha</label>
-      <input type="date" id="fecha-desde" class="date-input" />
+
+
+      <!-- FECHA -->
+
+      <div class="date-input-wrapper">
+
+        <label for="fecha-desde">
+          Fecha
+        </label>
+
+        <input
+          type="date"
+          id="fecha-desde"
+          class="date-input"
+          [(ngModel)]="fechaSeleccionada"
+          (change)="filtrarPorFecha()"
+        />
+
+      </div>
+
+
+      <!-- FILTROS -->
+
+      <div class="filters">
+
+
+        <!-- TODOS -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('todos')"
+          (click)="filtrarPorTipo('todos')"
+        >
+          Todos
+        </button>
+
+
+        <!-- PRÉSTAMOS -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('prestamo')"
+          (click)="filtrarPorTipo('prestamo')"
+        >
+          Préstamos
+        </button>
+
+
+        <!-- CUOTAS -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('cuota')"
+          (click)="filtrarPorTipo('cuota')"
+        >
+          Cuotas
+        </button>
+
+
+        <!-- SOCIOS -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('socio')"
+          (click)="filtrarPorTipo('socio')"
+        >
+          Socios
+        </button>
+
+
+        <!-- LIBROS -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('libro')"
+          (click)="filtrarPorTipo('libro')"
+        >
+          Libros
+        </button>
+
+
+        <!-- ELIMINACIONES -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('eliminacion')"
+          (click)="filtrarPorTipo('eliminacion')"
+        >
+          Eliminaciones
+        </button>
+
+
+        <!-- EDICIONES -->
+
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('edicion')"
+          (click)="filtrarPorTipo('edicion')"
+        >
+          Ediciones
+        </button>
+
+      </div>
+
+
+      <!-- CANTIDAD DE REGISTROS -->
+
+      <div class="selector-container">
+
+        <span class="records-count">
+
+          {{ actividadesFiltradas.length }} registro(s)
+
+        </span>
+
+      </div>
+
     </div>
 
-    <div class="filters">
-      <button class="filter-btn active">Todos</button>
-      <button class="filter-btn">Préstamos</button>
-      <button class="filter-btn">Cuotas</button>
-      <button class="filter-btn">Socios</button>
-      <button class="filter-btn">Libros</button>
-      <button class="filter-btn">Eliminaciones</button>
-      <button class="filter-btn">Ediciones</button>
-      
-    </div>
 
-    <div class="selector-container">
-      <span class="records-count">16 registro(s)</span>
-    </div>
   </div>
+
 
   <!-- Tabla de Resultados -->
+
   <div class="table-card">
+
     <table class="activity-table">
+
+
       <thead>
+
         <tr>
+
           <th>TIPO</th>
+
           <th>DESCRIPCIÓN</th>
+
           <th>FECHA Y HORA</th>
+
           <th>USUARIO</th>
+
           <th>ID RELACIONADO</th>
+
         </tr>
+
       </thead>
+
+
       <tbody>
-        <tr>
-          <td><span class="badge badge-login">login</span></td>
-          <td>Inicio de sesión del sistema</td>
-          <td>28/08/2026 12:00</td>
-          <td><span class="badge-user">admin</span></td>
-          <td class="empty-id">&mdash;</td>
+
+
+        <!-- ================================= -->
+        <!-- FOR DE ACTIVIDADES -->
+        <!-- ================================= -->
+
+        <tr
+          *ngFor="let actividad of actividadesFiltradas"
+        >
+
+
+          <!-- TIPO -->
+
+          <td>
+
+            <span
+              class="badge"
+              [ngClass]="'badge-' + actividad.tipo"
+            >
+
+              {{ actividad.tipo }}
+
+            </span>
+
+          </td>
+
+
+          <!-- DESCRIPCIÓN -->
+
+          <td>
+
+            {{ actividad.descripcion }}
+
+          </td>
+
+
+          <!-- FECHA Y HORA -->
+
+          <td>
+
+            {{ actividad.fecha }}
+
+          </td>
+
+
+          <!-- USUARIO -->
+
+          <td>
+
+            <span class="badge-user">
+
+              {{ actividad.user }}
+
+            </span>
+
+          </td>
+
+
+          <!-- ID RELACIONADO -->
+
+          <td
+            [class.empty-id]="!actividad.idrelacionado"
+            [class.id-code]="actividad.idrelacionado"
+          >
+
+            {{ actividad.idrelacionado || '—' }}
+
+          </td>
+
+
         </tr>
-        <tr>
-          <td><span class="badge badge-login">login</span></td>
-          <td>Inicio de sesión del sistema</td>
-          <td>19/08/2026 10:30</td>
-          <td><span class="badge-user">admin</span></td>
-          <td class="empty-id">&mdash;</td>
+
+
+        <!-- ================================= -->
+        <!-- SI NO HAY RESULTADOS -->
+        <!-- ================================= -->
+
+        <tr
+          *ngIf="actividadesFiltradas.length === 0"
+        >
+
+          <td colspan="5">
+
+            No se encontraron actividades.
+
+          </td>
+
         </tr>
-        <tr>
-          <td><span class="badge badge-prestamo">prestamo</span></td>
-          <td>Nuevo préstamo: Rayuela &rarr; Florencia Morales</td>
-          <td>19/08/2026 09:15</td>
-          <td><span class="badge-user">admin</span></td>
-          <td class="id-code">PR005</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-cuota">cuota</span></td>
-          <td>Cuota cobrada: María González &mdash; Julio 2026 ($1.200)</td>
-          <td>18/08/2026 16:20</td>
-          <td><span class="badge-user">admin</span></td>
-          <td class="id-code">S001</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-socio">socio</span></td>
-          <td>Nuevo socio registrado: Pablo Torres (CAR010)</td>
-          <td>18/08/2026 14:45</td>
-          <td><span class="badge-user">admin</span></td>
-          <td class="id-code">S010</td>
-        </tr>
+
+
       </tbody>
+
     </table>
+
   </div>
+
 </div>
+</body>

@@ -1,7 +1,7 @@
 /* ==========================================
    RESET Y ESTILOS GLOBALES
    ========================================== */
-body {
+.body {
   width: 100%;
   min-height: 100vh;
   padding: 24px 18px 70px;
@@ -270,6 +270,13 @@ td[data-label="PRÉSTAMO"] {
 
 }
 
+.alert-error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+}
 /* ==========================================
    MEDIA QUERIES (RESPONSIVO)
    ========================================== */
@@ -508,3 +515,4 @@ td[data-label="PRÉSTAMO"] {
     transform: scale(1);
   }
 }
+
