@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Prestamos } from './prestamos';
+import { Prestamos } from '../prestamos/prestamos';
 
 describe('Prestamos', () => {
   let component: Prestamos;
