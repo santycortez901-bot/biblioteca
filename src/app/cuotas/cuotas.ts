@@ -54,15 +54,27 @@ export class Cuotas {
   // Como tu servicio actual modifica directamente los datos y no devuelve una lista, 
   // solo le pasamos el 'id' (1 argumento) y modificamos el estado de forma interna.
   cobrar(id: string): void {
+    // 1. Mostramos la barra de confirmación (devuelve true si eligen Aceptar o false si eligen Cancelar)
+    const confirmarCobro = confirm('¿Estás seguro de que deseas cobrar esta cuota?');
+
+    // 2. Si el usuario cancela la operación, cortamos la ejecución de la función con un return
+    if (!confirmarCobro) {
+      return; 
+    }
+
+    // 3. Si el usuario confirmó, ejecutamos el proceso de cobro en el servicio
     this.cuotaService.cobrarCuota(id); 
     
-    // Cambiamos el estado localmente para que la pantalla se actualice al instante
+    // 4. Actualizamos el estado localmente para refrescar la lista de la pantalla en tiempo real
     this.cuotas = this.cuotas.map(cuota => {
       if (cuota.id === id) {
         return { ...cuota, estado: 'pagada' };
       }
       return cuota;
     });
+
+    // 5. Mostramos la alerta final indicando que la acción se completó con éxito
+    alert('¡Cuota cobrada con éxito!');
   }
 
   notificarSocio(cuota: Cuota): void {
