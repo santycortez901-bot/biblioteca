@@ -4,6 +4,16 @@
   box-sizing: border-box;
 }
 
+.body {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px 18px 70px;
+  box-sizing: border-box;
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #102b43;
+}
+
 :host {
   display: block;
   width: 100%;
@@ -14,36 +24,32 @@
 
 /* CONTENEDOR PRINCIPAL */
 .main-content {
-  width: 100%;
-  min-height: 100vh;
-  padding: 32px 36px;
-  background: #f1f5f9;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
 /* HEADER */
-.page-header {
+.header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
 }
 
-.header-space { 
-  width: 150px; 
-}
-
 .page-header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 700;
   color: #0f172a;
-  text-align: center;
-  flex: 1;
+  
 }
 
 .add-button {
   border: none;
-  background: #0d9488;
+  background: #23b2a0;
   color: #ffffff;
   height: 40px;
   padding: 0 22px;
@@ -58,7 +64,9 @@
 }
 
 .add-button:hover { 
-  background: #0f766e; 
+  background-color: #1c9687;
+  transform: translateY(-1px);
+
 }
 
 /* CARDS & BUSCADOR */
@@ -194,13 +202,13 @@
 
 .status.unavailable { 
   background: #ffe4e6; 
-  color: #e11d48; 
+  color: #c2410c; 
 }
 
 .view-button {
   border: none;
   background: #e0f2fe;
-  color: #0369a1;
+  color: #1e40af;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 14px;
