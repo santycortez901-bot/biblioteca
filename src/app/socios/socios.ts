@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Socio, EstadoSocio, PrestamoActual } from '../models/models/socio';
-
+import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-socios',
   standalone: true,
@@ -11,6 +11,21 @@ import { Socio, EstadoSocio, PrestamoActual } from '../models/models/socio';
   styleUrl: './socios.css'
 })
 export class Socios {
+ 
+  constructor(private route: ActivatedRoute) {}
+  
+  ngOnInit(): void {
+
+  this.route.queryParams.subscribe(params => {
+
+    if (params['openModal'] === 'true') {
+      this.openModal();
+    }
+
+  });
+
+}
+
   isModalOpen = false;
   contadorSocio = 1;
 
