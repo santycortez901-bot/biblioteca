@@ -21,52 +21,47 @@
   </div>
 
   <!-- CARD TABLA -->
-  <div class="books-card">
-    <div class="table-header">
-      <div>ID</div>
-      <div>Título</div>
-      <div>Autor</div>
-      <div>Disponibles</div>
-      <div>Totales</div>
-      <div>Estado</div>
-      <div>Acciones</div>
-    </div>
+  <div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+      <th>ID</th>
+      <th>Título</th>
+      <th>Autor</th>
+      <th>Disponibles</th>
+      <th>Totales</th>
+      <th>Estado</th>
+      <th>Acciones</th>
+      </tr>
+    </thead>
 
     <!-- LISTADO DE LIBROS -->
-    <ng-container *ngIf="librosFiltrados.length > 0">
-      <div class="book-row" *ngFor="let libro of librosFiltrados">
-        <div class="inventory">{{ libro.id }}</div>
-        <div class="title">
-          <strong>{{ libro.titulo }}</strong>
-        </div>
-        <div class="author">{{ libro.autor }}</div>
-        <div class="copies">
-          <strong>{{ libro.copias }}</strong>
-        </div>
-        <div class="copies">
-          <strong>{{ libro.copiasTotales }}</strong>
-        </div>
-        <div>
-          <span class="status" [ngClass]="libro.copias > 0 ? 'available' : 'unavailable'">
-            {{ libro.estado }}
-          </span>
-        </div>
-        <div>
-          <button (click)="verCopias(libro)" class="view-button">Ver Copias</button>
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- MENSAJES VACÍOS -->
-    <div class="empty-state-row" *ngIf="libros.length === 0">
-      <p>No hay libros cargados en el sistema.</p>
-    </div>
-
-    <div class="empty-state-row" *ngIf="libros.length > 0 && librosFiltrados.length === 0">
-      <p>La búsqueda no dio resultados.</p>
-    </div>
-  </div>
-
+    <tbody>
+      @if (librosFiltrados.length > 0){
+      @for(libro of librosFiltrados; track libro.id){
+      <tr>
+        <td class="text-muted">{{ libro.id }}</td>
+        <td class="title"><strong>{{ libro.titulo }}</strong></td>
+        <td class="author">{{ libro.autor }}</td>
+        <td class="copies"><strong>{{ libro.copias }}</strong></td>
+        <td class="copies"><strong>{{ libro.copiasTotales }}</strong></td>
+        <td><span class="status" [ngClass]="libro.copias > 0 ? 'available' : 'unavailable'"> {{ libro.estado }}
+        </span></td>
+        <td><button (click)="verCopias(libro)" class="view-button">Ver Copias</button> </td> 
+      </tr>
+      }
+    }
+   
+    @if (librosFiltrados.length === 0){ 
+      <tr>
+        <td colspan="8" class="sin-resultados">
+          <p>No hay libros cargados en el sistema.</p>
+        </td>
+      </tr>
+    }
+    </tbody>
+    </table>
+   </div> 
 </main>
 
 <!-- MODAL: AGREGAR LIBRO -->
