@@ -3,7 +3,7 @@
   <!-- Encabezado -->
   <div class="encabezado">
     <h1>Inicio</h1>
-    <span>martes, 18 de agosto de 2026</span>
+    <span>{{ fechaActual }}</span>
   </div>
 
   <!-- Estadísticas -->
@@ -72,7 +72,7 @@
   <!-- Acciones rápidas -->
   <div class="acciones">
 
-    <div class="accion nuevo-prestamo">
+    <div class="accion nuevo-prestamo"  >
       <div class="accion-icono">＋</div>
 
       <div>
@@ -81,7 +81,7 @@
       </div>
     </div>
 
-    <div class="accion cobrar-cuota">
+    <div class="accion cobrar-cuota" routerLink='/cuotas'>
       <div class="accion-icono">▤</div>
 
       <div>
@@ -90,7 +90,7 @@
       </div>
     </div>
 
-    <div class="accion cargar-socio">
+    <div class="accion cargar-socio" (click)="cargarSocio()">
       <div class="accion-icono">♙+</div>
 
       <div>

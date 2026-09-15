@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
 import { Nprestamo } from '../nprestamo/nprestamo';
 
 import {
@@ -23,6 +22,9 @@ import { SocioService } from '../services/socios-service';
 })
 export class Prestamos {
 
+  
+
+
   prestamos: Prestamo[] = [];
 
   busqueda: string = '';
@@ -37,10 +39,15 @@ export class Prestamos {
 
   constructor(
     private prestamoService: PrestamoService,
-    private socioService: SocioService
+    private socioService: SocioService,
+  
   ) {
     this.actualizarPrestamos();
   }
+
+   
+  
+ 
 
   actualizarPrestamos(): void {
 
