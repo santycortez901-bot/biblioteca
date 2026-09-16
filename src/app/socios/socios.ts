@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Socio, EstadoSocio, PrestamoActual } from '../models/models/socio';
+import { SocioServicio } from '../services/socio';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-socios',
@@ -95,45 +97,76 @@ export class Socios {
   }
 
   agregarSocio(): void {
-    // Validaciones de formulario
+    // Regex de validación
     const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
     const regexDni = /^[0-9]{7,}$/;
     const regexTelefono = /^\+[0-9]{12}$/;
     const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
 
+    // Validaciones con SweetAlert2
     if (!this.nuevoNombre || !regexNombre.test(this.nuevoNombre.trim())) {
-      alert('Error en Nombre: Debe contener al menos dos palabras.');
+      Swal.fire({
+        title: 'Nombre Inválido',
+        text: 'El nombre debe contener al menos dos palabras.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
     if (!this.nuevaEdad || this.nuevaEdad < 4) {
-      alert('Error en Edad: Debe ser de al menos 4 años.');
+      Swal.fire({
+        title: 'Edad Inválida',
+        text: 'La edad debe ser de al menos 4 años.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
     if (!this.nuevoDni || !regexDni.test(this.nuevoDni.trim())) {
-      alert('Error en DNI: Debe tener un mínimo de 7 dígitos.');
+      Swal.fire({
+        title: 'DNI Inválido',
+        text: 'El DNI debe tener un mínimo de 7 dígitos numéricos.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
     if (!this.nuevoTelefono || !regexTelefono.test(this.nuevoTelefono.trim())) {
-      alert('Error en Teléfono: Debe iniciar con "+" seguido de 12 dígitos.');
+      Swal.fire({
+        title: 'Teléfono Inválido',
+        text: 'El teléfono debe iniciar con "+" seguido de 12 dígitos.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
     if (!this.nuevoEmail || !regexEmail.test(this.nuevoEmail.trim())) {
-      alert('Error en Correo: Debe ser @gmail.com o @hotmail.com.');
+      Swal.fire({
+        title: 'Correo Inválido',
+        text: 'El correo debe ser de dominio @gmail.com o @hotmail.com.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
-    // Verificación de duplicados sobre la lista traída del servicio
+    // Duplicados
     const dniLimpio = this.nuevoDni.trim();
     if (this.socios.some(s => s.dni.trim() === dniLimpio)) {
-      alert('Error: Ya existe un socio registrado con este número de DNI.');
+      Swal.fire({
+        title: 'Socio Duplicado',
+        text: 'Ya existe un socio registrado con este número de DNI.',
+        icon: 'error',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
-    // El servicio genera el ID e incrementa el contador de manera segura
+    // Creación y delegación al servicio
     const nuevoSocio: Omit<Socio, 'id' | 'numCarnet'> = {
       nombre: this.nuevoNombre.trim(),
       edad: Number(this.nuevaEdad),
@@ -144,12 +177,19 @@ export class Socios {
       prestamos: 'Libre'
     };
 
-    // 3. Delegamos el guardado al servicio
     this.socioServicio.agregarSocio(nuevoSocio as Socio);
-
-    // Actualizamos el arreglo local y cerramos modal
     this.obtenerSocios();
     this.closeModal();
+
+    // Alerta de éxito al guardar
+    Swal.fire({
+      title: '¡Socio Registrado!',
+      text: `El socio "${nuevoSocio.nombre}" se ha guardado exitosamente.`,
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    });
   }
   
 }

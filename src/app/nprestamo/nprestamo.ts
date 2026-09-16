@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 import {
   Prestamo,
@@ -8,7 +9,7 @@ import {
 
 import { Socio } from '../models/models/socio';
 
-import { SocioService } from '../services/socios-service';
+import { SocioServicio } from '../services/socio';
 
 @Component({
   selector: 'app-nprestamo',
@@ -34,11 +35,11 @@ export class Nprestamo {
 
   constructor(
     private prestamoService: PrestamoService,
-    private socioService: SocioService
+    private socioService: SocioServicio
   ) {
 
     this.socios =
-      this.socioService.obtenerSocios();
+      this.socioService.tenerSocios();
 
     const hoy = new Date();
 
@@ -73,60 +74,57 @@ export class Nprestamo {
   }
 
   crearPrestamo(): void {
-
+    // 1. Validación de campos requeridos
     if (
       !this.idSocio ||
       !this.libro.trim() ||
-      !this.inventario.trim()
+      !this.inventario.trim() ||
+      !this.fechaInicio ||
+      !this.fechaVencimiento
     ) {
-
-      alert('Completá todos los campos.');
-
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor, completá todos los campos del formulario.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
-
     }
 
-    const prestamos =
-      this.prestamoService.obtenerPrestamos();
+    // 2. Generación del ID y armado del objeto
+    const prestamos = this.prestamoService.obtenerPrestamos();
+    const numero = prestamos.length + 1;
+    const id = `PR${String(numero).padStart(3, '0')}`;
 
-    const numero =
-      prestamos.length + 1;
-
-    const id =
-      `PR${String(numero).padStart(3, '0')}`;
-
-    const fechaInicio =
-      this.convertirFecha(this.fechaInicio);
-
-    const fechaVencimiento =
-      this.convertirFecha(this.fechaVencimiento);
+    const fechaInicio = this.convertirFecha(this.fechaInicio);
+    const fechaVencimiento = this.convertirFecha(this.fechaVencimiento);
 
     const nuevoPrestamo: Prestamo = {
-
       id: id,
-
       idSocio: this.idSocio,
-
       libro: this.libro.trim(),
-
       inventario: this.inventario.trim(),
-
       fechaInicio: fechaInicio,
-
       fechaVencimiento: fechaVencimiento,
-
       estado: 'activo',
-
       renovaciones: 0
-
     };
 
-    this.prestamoService.agregarPrestamo(
-      nuevoPrestamo
-    );
+    // 3. Guardado del préstamo y actualización del socio
+    this.prestamoService.agregarPrestamo(nuevoPrestamo);
+    this.socioService.actualizarEstadoPrestamo(this.idSocio, 'Encurso');
 
-    this.cerrar.emit();
-
+    // 4. Cartel de éxito y cierre del modal
+    Swal.fire({
+      title: '¡Prestamo Creado!',
+      text: 'Se creó un nuevo préstamo con éxito.',
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    }).then(() => {
+      this.cerrar.emit();
+    });
   }
 
   private convertirFecha(fecha: string): string {

@@ -26,4 +26,9 @@ private socios: Socio[] = [];
     this.socios.push(nuevoSocio);
     this.contadorSocio++;
   }
+
+  actualizarEstadoPrestamo(idSocio: number | string, nuevoEstado: 'Libre' | 'Encurso'): void {
+    const socio = this.socios.find(s => s.id === Number(idSocio));
+    if (socio) {socio.prestamos = nuevoEstado;}
+  }
 }

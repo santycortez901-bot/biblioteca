@@ -26,101 +26,69 @@
 
     </div>
 
-
     <div class="filters">
 
-      <button class="filter" [class.active]="filtro === 'todos'" (click)="cambiarFiltro('todos')">
-        Todos
-      </button>
+  <button class="filter" [class.active]="filtro === 'todos'" (click)="cambiarFiltro('todos')">
+    Todos
+  </button>
 
+  <button class="filter" [class.active]="filtro === 'activo'" (click)="cambiarFiltro('activo')">
+    Al día
+  </button>
 
-      <button class="filter" [class.active]="filtro === 'activo'" (click)="cambiarFiltro('activo')">
-        Al día
-      </button>
+  <button class="filter" [class.active]="filtro === 'vencido'" (click)="cambiarFiltro('vencido')">
+    Vencidos
+  </button>
 
+  <!-- SE ELIMINA EL BOTÓN DE DEVUELTOS QUE ESTABA ACÁ -->
 
-      <button class="filter" [class.active]="filtro === 'vencido'" (click)="cambiarFiltro('vencido')">
-        Vencidos
-      </button>
+  <span class="records">
+    {{ prestamosFiltrados.length }} Registro(s)
+  </span>
 
-
-      <button class="filter" [class.active]="filtro === 'devuelto'" (click)="cambiarFiltro('devuelto')">
-        Devueltos
-      </button>
-
-
-      <span class="records">
-        {{ prestamosFiltrados.length }} Registro(s)
-      </span>
-
-    </div>
+</div>
 
   </div>
 
-
   <!-- TABLA -->
-
   <div class="table-container">
-
     <table>
-
       <thead>
-
         <tr>
-
           <th>ID</th>
           <th>SOCIO</th>
           <th>LIBRO</th>
           <th>INICIO</th>
           <th>VENCIMIENTO</th>
           <th>ESTADO</th>
-          <th>RENOV.</th>
+          <th>RENOVAR</th>
           <th>ACCIONES</th>
-
         </tr>
-
       </thead>
-
-
       <tbody>
-
         @for (prestamo of prestamosFiltrados; track prestamo.id) {
-
         <tr>
-
           <!-- ID -->
-
           <td>
-
             <span class="prestamo-id">
               {{ prestamo.id }}
             </span>
-
           </td>
-
-
           <!-- SOCIO -->
 
           <td>
-
             <div class="socio">
-
               <span class="socio-nombre">
-                {{ obtenerSocio(prestamo.idSocio)?.nombre }}
+                {{ obtenerSocio(+prestamo.idSocio)?.nombre }}
               </span>
-
               @if (prestamo.estado !== 'devuelto') {
-
-              <span class="socio-estado">
-                activo
-              </span>
-
+                <span class="socio-estado">
+                  {{ obtenerSocio(+prestamo.idSocio)?.estado }}
+                </span>
               }
-
             </div>
 
           </td>
-
 
           <!-- LIBRO -->
 
@@ -196,7 +164,7 @@
               @if (prestamo.renovaciones < 2 && prestamo.estado !=='devuelto' ) { <button class="btn-renovar"
                 (click)="renovarPrestamo(prestamo)">
                 <span>↻</span>
-                Renovar
+                Renovar Whatsapp
                 </button>
 
                 }
