@@ -1,21 +1,22 @@
 <!-- CONTENIDO PRINCIPAL -->
- <div class="body">
+<div class="body">
 <main class="main-content">
   
   <!-- HEADER -->
   <header class="header">
-    <h1>Gestión de Libros</h1>
-    <button (click)="openModal()" class="add-button"><span>+</span> Agregar Libro</button>
+    <h1>Libros</h1>
+    <button (click)="openModal()" class="add-button">+ Agregar Libro</button>
   </header>
 
   <!-- CARD BUSCADOR (SIN LUPA DUPLICADA) -->
   <div class="search-card">
     <div class="search-box">
-      <input 
-        type="text" 
-        placeholder="Buscar por título, autor, ID o copia..." 
-        [(ngModel)]="searchTerm"
-      />
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      <input type="text" placeholder="Buscar por título, autor, ID o copia..." [(ngModel)]="searchTerm"/>
     </div>
     <span class="book-count">{{ librosFiltrados.length }} libro(s) encontrado(s)</span>
   </div>
