@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Socio, EstadoSocio, PrestamoActual } from '../models/models/socio';
-import { ActivatedRoute } from '@angular/router';
+
 @Component({
   selector: 'app-socios',
   standalone: true,
@@ -11,23 +11,7 @@ import { ActivatedRoute } from '@angular/router';
   styleUrl: './socios.css'
 })
 export class Socios {
- 
-  constructor(private route: ActivatedRoute) {}
-  
-  ngOnInit(): void {
-
-  this.route.queryParams.subscribe(params => {
-
-    if (params['openModal'] === 'true') {
-      this.openModal();
-    }
-
-  });
-
-}
-
   isModalOpen = false;
-  contadorSocio = 1;
 
   // Variables para Búsqueda y Filtros
   busqueda: string = '';
@@ -42,6 +26,18 @@ export class Socios {
   nuevoEmail: string = '';
 
   socios: Socio[] = [];
+
+  // 1. Inyectamos el servicio en el constructor
+  constructor(private socioServicio: SocioServicio) {}
+
+  // 2. Cargamos los datos del servicio cuando se inicia el componente
+  ngOnInit(): void {
+    this.obtenerSocios();
+  }
+
+  obtenerSocios(): void {
+    this.socios = this.socioServicio.tenerSocios();
+  }
 
   // --- Métodos para cambiar los filtros activos ---
   FiltroEstado(estado: string): void {
@@ -77,7 +73,6 @@ export class Socios {
         cumpleEdad = socio.edad < 18;
       }
 
-      // Retorna verdadero solo si cumple con los 3 criterios
       return cumpleBusqueda && cumpleEstado && cumpleEdad;
     });
   }
@@ -100,7 +95,7 @@ export class Socios {
   }
 
   agregarSocio(): void {
-    // Reglas de validación en TS
+    // Validaciones de formulario
     const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
     const regexDni = /^[0-9]{7,}$/;
     const regexTelefono = /^\+[0-9]{12}$/;
@@ -131,30 +126,30 @@ export class Socios {
       return;
     }
 
-    // Verificación de duplicados por DNI
+    // Verificación de duplicados sobre la lista traída del servicio
     const dniLimpio = this.nuevoDni.trim();
     if (this.socios.some(s => s.dni.trim() === dniLimpio)) {
       alert('Error: Ya existe un socio registrado con este número de DNI.');
       return;
     }
 
-    // Crear el nuevo socio
-    const idSecuencia = this.contadorSocio.toString().padStart(3, '0');
-
-    const nuevoSocio: Socio = {
-      id: Number(this.contadorSocio),
-      numCarnet: `c-${idSecuencia}`,
+    // El servicio genera el ID e incrementa el contador de manera segura
+    const nuevoSocio: Omit<Socio, 'id' | 'numCarnet'> = {
       nombre: this.nuevoNombre.trim(),
       edad: Number(this.nuevaEdad),
       dni: dniLimpio,
       telefono: this.nuevoTelefono.trim(),
       email: this.nuevoEmail.trim(),
-      estado: 'activo' ,
+      estado: 'activo',
       prestamos: 'Libre'
     };
 
-    this.socios.push(nuevoSocio);
-    this.contadorSocio++;
+    // 3. Delegamos el guardado al servicio
+    this.socioServicio.agregarSocio(nuevoSocio as Socio);
+
+    // Actualizamos el arreglo local y cerramos modal
+    this.obtenerSocios();
     this.closeModal();
   }
+  
 }

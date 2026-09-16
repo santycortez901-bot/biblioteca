@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
   box-sizing: border-box;
@@ -14,53 +13,42 @@
   color: #102b43;
 }
 
-:host {
-  display: block;
-  width: 100%;
-  min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #1e293b;
-}
-
 /* CONTENEDOR PRINCIPAL */
 .main-content {
   margin: 0 auto;
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   box-sizing: border-box;
 }
 
 /* HEADER */
 .header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  gap: 16px;
 }
 
 .page-header h1 {
   margin: 0;
   font-size: 25px;
   font-weight: 700;
-  color: #0f172a;
+  color: #102b43;
   
 }
 
 .add-button {
-  border: none;
-  background: #23b2a0;
+ background-color: #23b2a0;
   color: #ffffff;
-  height: 40px;
-  padding: 0 22px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .add-button:hover { 
@@ -73,41 +61,47 @@
 .search-card, .books-card {
   background: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
   width: 100%;
 }
 
 .search-card {
-  padding: 12px 16px;
+  padding: 18px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .search-box {
-  flex: 1;
-  height: 42px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+   position: relative;
+   width: 100%;
 }
 
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+} 
 .search-box:focus-within {
   border-color: #0d9488;
   box-shadow: 0 0 0 1px #0d9488;
+  border-radius: 12px;
 }
 
 .search-box input {
   width: 100%;
-  border: none;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  background-color: #f8fafc;
+  color:#0f172a;
   outline: none;
-  font-size: 13px;
-  color: #334155;
-  background: transparent;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .search-box input::placeholder { 

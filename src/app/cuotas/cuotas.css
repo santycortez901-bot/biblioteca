@@ -1,22 +1,19 @@
 /* Layout General - Ajustado para pegarse a la barra lateral */
-.cuotas-container {
-  padding: 24px;
-  background-color: #f0f4f8;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #334155;
+.body {
+   width: 100%;
   min-height: 100vh;
+  padding: 24px 18px 70px;
   box-sizing: border-box;
-  
-  /* Se elimina el margen sobrante para pegarse al menú lateral */
-  margin-left: 0; 
-  width: 100%;
+  background: #eef3f7;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #102b43;
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .header h1 {
@@ -43,6 +40,7 @@
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
+  margin-top: 10px;
 }
 
 /* Toolbar y Filtros */
