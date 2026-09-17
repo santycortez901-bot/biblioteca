@@ -5,6 +5,7 @@ import { Prestamo } from '../models/models/prestamo';
   providedIn: 'root'
 })
 export class PrestamoService {
+
   private prestamos: Prestamo[] = [];
 
   constructor() {}
@@ -19,6 +20,7 @@ export class PrestamoService {
 
   devolverPrestamo(id: string): void {
     const prestamo = this.prestamos.find(p => p.id === id);
+
     if (prestamo) {
       prestamo.estado = 'devuelto';
     }
@@ -26,13 +28,26 @@ export class PrestamoService {
 
   renovarPrestamo(id: string): void {
     const prestamo = this.prestamos.find(p => p.id === id);
-    if (prestamo) {
+
+    if (prestamo && prestamo.renovaciones < 2) {
+
       prestamo.renovaciones += 1;
-      
+
       const fechaActual = new Date(prestamo.fechaVencimiento);
+
       fechaActual.setDate(fechaActual.getDate() + 7);
-      
-      prestamo.fechaVencimiento = fechaActual.toISOString().split('T')[0];
+
+      prestamo.fechaVencimiento =
+        fechaActual.toISOString().split('T')[0];
+    }
+  }
+
+  suspenderPrestamo(id: string, motivo: string): void {
+    const prestamo = this.prestamos.find(p => p.id === id);
+
+    if (prestamo) {
+      prestamo.estado = 'suspendido';
+      prestamo.motivoSuspension = motivo;
     }
   }
 }
