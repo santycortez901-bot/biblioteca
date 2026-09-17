@@ -195,6 +195,7 @@ export class Prestamos {
       title: '¿Estás seguro?',
       text: `¿Deseas marcar como devuelto el préstamo de "${prestamo.libro}"?`,
       icon: 'warning',
+      draggable: true,
       showCancelButton: true,
       confirmButtonColor: '#0d9488',
       cancelButtonColor: '#ef4444',
@@ -218,6 +219,7 @@ export class Prestamos {
           title: '¡Devuelto!',
           text: 'El préstamo ha sido devuelto correctamente.',
           icon: 'success',
+          draggable: true,
           confirmButtonColor: '#0d9488',
           timer: 2000,
           showConfirmButton: false
