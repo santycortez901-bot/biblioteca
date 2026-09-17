@@ -28,10 +28,18 @@ export class Prestamos {
 
   filtro: 'todos' | 'activo' | 'atrasado' = 'todos';
 
+
+  // =========================
   // MODAL NUEVO PRÉSTAMO
+  // =========================
+
   isModalOpen = false;
 
+
+  // =========================
   // FORMULARIO
+  // =========================
+
   socioSeleccionadoId: number | null = null;
 
   libro: string = '';
@@ -42,7 +50,11 @@ export class Prestamos {
 
   fechaVencimiento: string = '';
 
+
+  // =========================
   // MODAL SUSPENSIÓN
+  // =========================
+
   isSuspensionModalOpen = false;
 
   prestamoASuspender: Prestamo | null = null;
@@ -54,37 +66,50 @@ export class Prestamos {
     private prestamoService: PrestamoService,
     private socioService: SocioServicio
   ) {
+
     this.actualizarPrestamos();
+
   }
 
 
+  // =========================
   // SOCIOS DISPONIBLES
+  // =========================
 
   get sociosDisponibles(): Socio[] {
+
     return this.socioService
       .tenerSocios()
       .filter(s => s.estado === 'activo');
+
   }
 
 
+  // =========================
   // ACTUALIZAR PRÉSTAMOS
+  // =========================
 
   actualizarPrestamos(): void {
 
-    this.prestamos = this.prestamoService
-      .obtenerPrestamos()
-      .filter(p => p.estado !== 'devuelto');
+    this.prestamos =
+      this.prestamoService
+        .obtenerPrestamos()
+        .filter(p => p.estado !== 'devuelto');
 
   }
 
 
-  // FILTROS
+  // =========================
+  // FILTRAR PRÉSTAMOS
+  // =========================
 
   get prestamosFiltrados(): Prestamo[] {
 
-    const texto = this.busqueda
-      .toLowerCase()
-      .trim();
+    const texto =
+      this.busqueda
+        .toLowerCase()
+        .trim();
+
 
     return this.prestamos.filter(p => {
 
@@ -92,17 +117,43 @@ export class Prestamos {
         return false;
       }
 
+
       const coincideBusqueda =
-        p.id.toLowerCase().includes(texto) ||
-        p.socio.toLowerCase().includes(texto) ||
-        p.libro.toLowerCase().includes(texto) ||
-        p.inventario.toLowerCase().includes(texto);
+
+        p.id
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        p.socio
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        p.libro
+          .toLowerCase()
+          .includes(texto)
+
+        ||
+
+        p.inventario
+          .toLowerCase()
+          .includes(texto);
+
 
       const coincideFiltro =
+
         this.filtro === 'todos' ||
+
         p.estado === this.filtro;
 
-      return coincideBusqueda && coincideFiltro;
+
+      return (
+        coincideBusqueda &&
+        coincideFiltro
+      );
 
     });
 
@@ -118,7 +169,9 @@ export class Prestamos {
   }
 
 
+  // =========================
   // OBTENER SOCIO
+  // =========================
 
   obtenerSocio(
     identificador: number | string
@@ -135,7 +188,9 @@ export class Prestamos {
   }
 
 
+  // =========================
   // FECHAS
+  // =========================
 
   private obtenerFechaFormateada(
     diasAgregar: number = 0
@@ -147,22 +202,31 @@ export class Prestamos {
       fecha.getDate() + diasAgregar
     );
 
-    const año = fecha.getFullYear();
 
-    const mes = String(
-      fecha.getMonth() + 1
-    ).padStart(2, '0');
+    const año =
+      fecha.getFullYear();
 
-    const dia = String(
-      fecha.getDate()
-    ).padStart(2, '0');
+
+    const mes =
+      String(
+        fecha.getMonth() + 1
+      ).padStart(2, '0');
+
+
+    const dia =
+      String(
+        fecha.getDate()
+      ).padStart(2, '0');
+
 
     return `${año}-${mes}-${dia}`;
 
   }
 
 
-  // ABRIR MODAL
+  // =========================
+  // ABRIR MODAL NUEVO
+  // =========================
 
   openModal(): void {
 
@@ -178,13 +242,16 @@ export class Prestamos {
     this.fechaInicio =
       this.obtenerFechaFormateada(0);
 
+
     this.fechaVencimiento =
       this.obtenerFechaFormateada(30);
 
   }
 
 
+  // =========================
   // LIMPIAR FORMULARIO
+  // =========================
 
   limpiarFormulario(): void {
 
@@ -201,7 +268,9 @@ export class Prestamos {
   }
 
 
+  // =========================
   // CERRAR MODAL
+  // =========================
 
   closeModal(): void {
 
@@ -212,7 +281,9 @@ export class Prestamos {
   }
 
 
+  // =========================
   // CREAR PRÉSTAMO
+  // =========================
 
   crearPrestamo(): void {
 
@@ -225,10 +296,16 @@ export class Prestamos {
     ) {
 
       Swal.fire({
+
         title: 'Campos incompletos',
-        text: 'Por favor, completá todos los campos requeridos.',
+
+        text:
+          'Por favor, completá todos los campos requeridos.',
+
         icon: 'warning',
+
         confirmButtonColor: '#0d9488'
+
       });
 
       return;
@@ -236,12 +313,14 @@ export class Prestamos {
     }
 
 
-    const socioObj = this.socioService
-      .tenerSocios()
-      .find(
-        s =>
-          s.id === Number(this.socioSeleccionadoId)
-      );
+    const socioObj =
+      this.socioService
+        .tenerSocios()
+        .find(
+          s =>
+            s.id ===
+            Number(this.socioSeleccionadoId)
+        );
 
 
     if (!socioObj) {
@@ -250,7 +329,8 @@ export class Prestamos {
 
 
     const listaActual =
-      this.prestamoService.obtenerPrestamos();
+      this.prestamoService
+        .obtenerPrestamos();
 
 
     const numero =
@@ -273,9 +353,11 @@ export class Prestamos {
 
       fechaInicio: this.fechaInicio,
 
-      fechaVencimiento: this.fechaVencimiento,
+      fechaVencimiento:
+        this.fechaVencimiento,
 
-      estado: 'activo' as EstadoPrestamo,
+      estado:
+        'activo' as EstadoPrestamo,
 
       renovaciones: 0
 
@@ -283,7 +365,9 @@ export class Prestamos {
 
 
     this.prestamoService
-      .agregarPrestamo(nuevoPrestamo);
+      .agregarPrestamo(
+        nuevoPrestamo
+      );
 
 
     this.socioService
@@ -299,20 +383,32 @@ export class Prestamos {
 
 
     Swal.fire({
+
       title: '¡Préstamo Creado!',
-      text: 'Se creó el préstamo con éxito.',
+
+      text:
+        'Se creó el préstamo con éxito.',
+
       icon: 'success',
+
       confirmButtonColor: '#0d9488',
+
       timer: 2000,
+
       showConfirmButton: false
+
     });
 
   }
 
 
-  // RENOVAR
+  // =========================
+  // RENOVAR PRÉSTAMO
+  // =========================
 
-  renovarPrestamo(prestamo: Prestamo): void {
+  renovarPrestamo(
+    prestamo: Prestamo
+  ): void {
 
     if (prestamo.renovaciones >= 2) {
       return;
@@ -323,12 +419,16 @@ export class Prestamos {
       this.socioService
         .tenerSocios()
         .find(
-          s => s.nombre === prestamo.socio
+          s =>
+            s.nombre ===
+            prestamo.socio
         );
 
 
     this.prestamoService
-      .renovarPrestamo(prestamo.id);
+      .renovarPrestamo(
+        prestamo.id
+      );
 
 
     this.actualizarPrestamos();
@@ -336,7 +436,9 @@ export class Prestamos {
 
     const prestamoActualizado =
       this.prestamos.find(
-        p => p.id === prestamo.id
+        p =>
+          p.id ===
+          prestamo.id
       ) || prestamo;
 
 
@@ -351,7 +453,10 @@ export class Prestamos {
 
       let tel =
         socioObj.telefono
-          .replace(/[^0-9]/g, '');
+          .replace(
+            /[^0-9]/g,
+            ''
+          );
 
 
       if (
@@ -360,14 +465,18 @@ export class Prestamos {
       ) {
 
         tel =
-          '549' + tel.slice(2);
+          '549' +
+          tel.slice(2);
 
-      } else if (
+      }
+
+      else if (
         !tel.startsWith('54')
       ) {
 
         tel =
-          '549' + tel;
+          '549' +
+          tel;
 
       }
 
@@ -386,7 +495,9 @@ export class Prestamos {
   }
 
 
-  // DEVOLVER
+  // =========================
+  // DEVOLVER PRÉSTAMO
+  // =========================
 
   devolverPrestamo(
     prestamo: Prestamo
@@ -394,7 +505,8 @@ export class Prestamos {
 
     Swal.fire({
 
-      title: '¿Estás seguro?',
+      title:
+        '¿Estás seguro?',
 
       text:
         `¿Deseas marcar como devuelto el préstamo de "${prestamo.libro}"?`,
@@ -409,9 +521,11 @@ export class Prestamos {
 
       cancelButtonColor: '#ef4444',
 
-      confirmButtonText: 'Sí, devolver',
+      confirmButtonText:
+        'Sí, devolver',
 
-      cancelButtonText: 'Cancelar'
+      cancelButtonText:
+        'Cancelar'
 
     }).then(result => {
 
@@ -421,7 +535,9 @@ export class Prestamos {
           this.socioService
             .tenerSocios()
             .find(
-              s => s.nombre === prestamo.socio
+              s =>
+                s.nombre ===
+                prestamo.socio
             );
 
 
@@ -447,7 +563,8 @@ export class Prestamos {
 
         Swal.fire({
 
-          title: '¡Devuelto!',
+          title:
+            '¡Devuelto!',
 
           text:
             'El préstamo ha sido devuelto correctamente.',
@@ -456,7 +573,8 @@ export class Prestamos {
 
           draggable: true,
 
-          confirmButtonColor: '#0d9488',
+          confirmButtonColor:
+            '#0d9488',
 
           timer: 2000,
 
@@ -471,38 +589,46 @@ export class Prestamos {
   }
 
 
-  // ================================
-  // SUSPENSIÓN
-  // ================================
+  // =========================
+  // ABRIR SUSPENSIÓN
+  // =========================
 
   abrirModalSuspension(
     prestamo: Prestamo
   ): void {
-
-    if (prestamo.renovaciones < 2) {
-      return;
-    }
 
     this.prestamoASuspender =
       prestamo;
 
     this.motivoSuspension = '';
 
-    this.isSuspensionModalOpen = true;
+    this.isSuspensionModalOpen =
+      true;
 
   }
 
+
+  // =========================
+  // CERRAR SUSPENSIÓN
+  // =========================
 
   cerrarModalSuspension(): void {
 
-    this.isSuspensionModalOpen = false;
+    this.isSuspensionModalOpen =
+      false;
 
-    this.prestamoASuspender = null;
+    this.prestamoASuspender =
+      null;
 
-    this.motivoSuspension = '';
+    this.motivoSuspension =
+      '';
 
   }
 
+
+  // =========================
+  // CONFIRMAR SUSPENSIÓN
+  // =========================
 
   confirmarSuspension(): void {
 
@@ -511,18 +637,22 @@ export class Prestamos {
     }
 
 
-    if (!this.motivoSuspension.trim()) {
+    if (
+      !this.motivoSuspension.trim()
+    ) {
 
       Swal.fire({
 
-        title: 'Motivo requerido',
+        title:
+          'Motivo requerido',
 
         text:
           'Debés ingresar el motivo de la suspensión.',
 
         icon: 'warning',
 
-        confirmButtonColor: '#0d9488'
+        confirmButtonColor:
+          '#0d9488'
 
       });
 
@@ -533,8 +663,11 @@ export class Prestamos {
 
     this.prestamoService
       .suspenderPrestamo(
+
         this.prestamoASuspender.id,
+
         this.motivoSuspension.trim()
+
       );
 
 
@@ -545,14 +678,16 @@ export class Prestamos {
 
     Swal.fire({
 
-      title: 'Préstamo suspendido',
+      title:
+        'Préstamo suspendido',
 
       text:
         'La suspensión se registró correctamente.',
 
       icon: 'success',
 
-      confirmButtonColor: '#0d9488',
+      confirmButtonColor:
+        '#0d9488',
 
       timer: 2000,
 

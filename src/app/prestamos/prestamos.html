@@ -11,7 +11,9 @@
       <button
         (click)="openModal()"
         class="btn-nuevo">
+
         + Nuevo Préstamo
+
       </button>
 
     </div>
@@ -110,7 +112,10 @@
 
         <tbody>
 
-          @for (prestamo of prestamosFiltrados; track prestamo.id) {
+          @for (
+            prestamo of prestamosFiltrados;
+            track prestamo.id
+          ) {
 
           <tr>
 
@@ -199,10 +204,22 @@
 
               <span
                 class="estado"
-                [class.estado-activo]="prestamo.estado === 'activo'"
-                [class.estado-vencido]="prestamo.estado === 'atrasado'"
-                [class.estado-devuelto]="prestamo.estado === 'devuelto'"
-                [class.estado-suspendido]="prestamo.estado === 'suspendido'">
+
+                [class.estado-activo]="
+                  prestamo.estado === 'activo'
+                "
+
+                [class.estado-vencido]="
+                  prestamo.estado === 'atrasado'
+                "
+
+                [class.estado-devuelto]="
+                  prestamo.estado === 'devuelto'
+                "
+
+                [class.estado-suspendido]="
+                  prestamo.estado === 'suspendido'
+                ">
 
                 {{ prestamo.estado }}
 
@@ -230,6 +247,7 @@
 
               <div class="acciones">
 
+
                 <!-- RENOVAR -->
 
                 @if (
@@ -254,7 +272,6 @@
                 <!-- SUSPENDER -->
 
                 @if (
-                  prestamo.renovaciones >= 2 &&
                   prestamo.estado !== 'devuelto' &&
                   prestamo.estado !== 'suspendido'
                 ) {
@@ -300,7 +317,9 @@
           }
 
 
-          @if (prestamosFiltrados.length === 0) {
+          @if (
+            prestamosFiltrados.length === 0
+          ) {
 
           <tr>
 
@@ -326,7 +345,7 @@
 
 
   <!-- ================================= -->
-  <!-- MODAL: NUEVO PRÉSTAMO -->
+  <!-- MODAL NUEVO PRÉSTAMO -->
   <!-- ================================= -->
 
   <div
@@ -352,7 +371,10 @@
 
       <form
         #prestamoForm="ngForm"
-        (ngSubmit)="prestamoForm.valid && crearPrestamo()">
+        (ngSubmit)="
+          prestamoForm.valid &&
+          crearPrestamo()
+        ">
 
 
         <!-- SOCIO -->
@@ -378,7 +400,9 @@
 
 
             <option
-              *ngFor="let socio of sociosDisponibles"
+              *ngFor="
+                let socio of sociosDisponibles
+              "
               [value]="socio.id">
 
               {{ socio.nombre }}
@@ -390,7 +414,10 @@
 
 
           <div
-            *ngIf="socioModel.invalid && socioModel.touched"
+            *ngIf="
+              socioModel.invalid &&
+              socioModel.touched
+            "
             class="alert-error">
 
             <small>
@@ -418,7 +445,10 @@
 
 
           <div
-            *ngIf="libroModel.invalid && libroModel.touched"
+            *ngIf="
+              libroModel.invalid &&
+              libroModel.touched
+            "
             class="alert-error">
 
             <small>
@@ -446,7 +476,10 @@
 
 
           <div
-            *ngIf="inventarioModel.invalid && inventarioModel.touched"
+            *ngIf="
+              inventarioModel.invalid &&
+              inventarioModel.touched
+            "
             class="alert-error">
 
             <small>
@@ -521,7 +554,7 @@
 
 
   <!-- ================================= -->
-  <!-- MODAL: SUSPENDER PRÉSTAMO -->
+  <!-- MODAL SUSPENDER -->
   <!-- ================================= -->
 
   <div
@@ -548,7 +581,9 @@
 
       <div class="form-group">
 
-        <label>Motivo de suspensión</label>
+        <label>
+          Motivo de suspensión
+        </label>
 
         <textarea
           [(ngModel)]="motivoSuspension"
