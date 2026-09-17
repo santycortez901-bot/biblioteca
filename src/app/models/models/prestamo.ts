@@ -1,5 +1,11 @@
-export type EstadoPrestamo = 'activo' | 'devuelto' | 'atrasado';
-export interface Prestamo {id: string;
+export type EstadoPrestamo =
+  'activo' |
+  'atrasado' |
+  'devuelto' |
+  'suspendido';
+
+export interface Prestamo {
+  id: string;
   socio: string;
   libro: string;
   inventario: string;
@@ -7,4 +13,5 @@ export interface Prestamo {id: string;
   fechaVencimiento: string;
   estado: EstadoPrestamo;
   renovaciones: number;
+  motivoSuspension?: string;
 }
