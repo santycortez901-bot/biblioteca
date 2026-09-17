@@ -31,4 +31,11 @@ private socios: Socio[] = [];
     const socio = this.socios.find(s => s.id === Number(idSocio));
     if (socio) {socio.prestamos = nuevoEstado;}
   }
+
+  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pendiente' | 'pagada' | 'vencida'): void {
+    const socio = this.socios.find(s => s.id === Number(idSocio));
+    if (socio) { 
+      socio.cuota = nuevoEstado; 
+    }
+  }
 }

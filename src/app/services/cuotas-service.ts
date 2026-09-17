@@ -1,41 +1,47 @@
 import { Injectable } from '@angular/core';
 import { Cuota } from '../models/models/cuota';
+import { SocioServicio } from './socio';
+import { Socio } from '../models/models/socio';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CuotasService {
-  // Lista de datos iniciales (Hardcoded)
-  private cuotas: Cuota[] = [
-    { id: 'SOC-001', nombreSocio: 'Nacho Maldonado', dni: '40123456', estado: 'pendiente', numSocio: 5491123456789 },
-    { id: 'SOC-002', nombreSocio: 'María Belén Gómez', dni: '38987654', estado: 'pagada', numSocio: 5491198765432 },
-    { id: 'SOC-003', nombreSocio: 'Lucas Fernández', dni: '41555666', estado: 'vencida', numSocio: 5491155554444 },
-    { id: 'SOC-004', nombreSocio: 'Sofia Rodríguez', dni: '39222333', estado: 'vencida', numSocio: 5491133332222 },
-    { id: 'SOC-005', nombreSocio: 'Gonzalo Pérez', dni: '42888999', estado: 'pendiente', numSocio: 5491144448888 },
-    { id: 'SOC-006', nombreSocio: 'Valentina Martínez', dni: '37444111', estado: 'vencida', numSocio: 5491177771111 }
-  ];
+   // Inyectamos el servicio de socios para poder usar sus funciones
+  constructor(private socioServicio: SocioServicio) {}
 
-  constructor() {}
-
-  // Obtener todas las cuotas
-  getCuotas(): Cuota[] {
-    return [...this.cuotas];
+  // Las cuotas ahora son directamente la lista de socios que tiene el SocioServicio
+  obtenerCuotas(): Socio[] {
+    return this.socioServicio.tenerSocios();
   }
 
-  // Funcionalidad Botón "Cobrar": Cambia el estado a 'pagada'
-  cobrarCuota(id: string): void {
-    this.cuotas = this.cuotas.map(cuota => {
-      if (cuota.id === id) {
-        return { ...cuota, estado: 'pagada' };
-      }
-      return cuota;
-    });
+  // Llama a la función del SocioServicio para cambiar el estado a 'pagada'
+  cobrarCuota(idSocio: number | string): void {
+    this.socioServicio.actualizarEstadoCuota(idSocio, 'pagada');
   }
 
-  // Funcionalidad Botón Recordatorio: Abre un chat de WhatsApp con un mensaje automático
-  enviarRecordatorioWhatsApp(cuota: Cuota): void {
-    const mensaje = `Hola ${cuota.nombreSocio}, te recordamos que tu cuota se encuentra en estado: ${cuota.estado.toUpperCase()}.`;
-    const url = `https://wa.me{cuota.numSocio}?text=${encodeURIComponent(mensaje)}`;
+  // Envía el recordatorio usando las propiedades unificadas del socio
+  enviarRecordatorioWhatsApp(socio: Socio): void {
+    const mensaje = `Hola ${socio.nombre}, te recordamos que tu cuota se encuentra en estado: ${socio.cuota.toUpperCase()}.`;
+    const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
+  }
+
+  darDeBaja(id: number): void {
+    const confirmarBaja = confirm('¿Estás seguro de que deseas dar de baja a este socio?');
+    if (confirmarBaja) {
+      // Cambiar el estado del socio a 'inactivo'
+      
+      const socio = this.socioServicio.tenerSocios().find(s => s.id === id); 
+      if (socio) {
+        socio.estado = 'inactivo';
+        const mensaje = `Hola ${socio.nombre}, le avisamos que su estado ha sido cambiado a "inactivo". Si desea reactivar su membresía, por favor póngase en contacto con nosotros.`;
+        const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
+        window.open(url, '_blank');
+      }
+    }else {
+      alert('Operación cancelada. El socio no ha sido dado de baja.');
+    }
+
   }
 }

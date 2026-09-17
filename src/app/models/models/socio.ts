@@ -1,5 +1,6 @@
 export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido'| 'bloqueado';
 export type PrestamoActual = 'Encurso' | 'Libre' ;
+export type EstadoCuota = 'pagada' | 'pendiente' | 'vencida';
 export interface Socio {
   id: number;
   nombre: string;
@@ -9,5 +10,6 @@ export interface Socio {
   email: string;
   telefono: string;
   estado: EstadoSocio;
-  prestamos: PrestamoActual
+  prestamos: PrestamoActual;
+  cuota: EstadoCuota
   ;}
