@@ -6,7 +6,6 @@ import { Prestamos } from './prestamos/prestamos';
 import { Socios } from './socios/socios';
 import { Cuotas } from './cuotas/cuotas';
 import { Actividades } from './actividades/actividades';
-import { Nprestamo } from './nprestamo/nprestamo';
 
 
 export const routes: Routes = [
@@ -18,5 +17,4 @@ export const routes: Routes = [
   { path: 'socios', component: Socios },
   { path: 'cuotas', component: Cuotas },
   { path: 'actividades', component: Actividades },
-  { path: 'nprestamo', component: Nprestamo}
 ];
