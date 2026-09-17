@@ -1,25 +1,33 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Nprestamo } from '../nprestamo/nprestamo';
 import Swal from 'sweetalert2';
-import { Prestamo, PrestamoService } from '../services/prestamo';
+import { Prestamo, EstadoPrestamo } from '../models/models/prestamo';
+import { PrestamoService } from '../services/prestamo';
 import { Socio } from '../models/models/socio';
 import { SocioServicio } from '../services/socio';
 
 @Component({
   selector: 'app-prestamos',
-  imports: [FormsModule, Nprestamo],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './prestamos.html',
   styleUrl: './prestamos.css'
 })
 export class Prestamos {
-
   prestamos: Prestamo[] = [];
   busqueda: string = '';
+  filtro: 'todos' | 'activo' | 'atrasado' = 'todos';
 
-  filtro: 'todos' | 'activo' | 'vencido' | 'vencido' = 'todos';
+  // Control del Modal
+  isModalOpen = false;
 
-  mostrarNuevoPrestamo = false;
+  // Variables del Formulario
+  socioSeleccionadoId: number | null = null;
+  libro: string = '';
+  inventario: string = '';
+  fechaInicio: string = '';
+  fechaVencimiento: string = '';
 
   constructor(
     private prestamoService: PrestamoService,
@@ -28,120 +36,193 @@ export class Prestamos {
     this.actualizarPrestamos();
   }
 
+  // Lista de socios activos para desplegar en el select del modal
+  get sociosDisponibles(): Socio[] {
+    return this.socioService.tenerSocios().filter(s => s.estado === 'activo');
+  }
+
   actualizarPrestamos(): void {
     this.prestamos = this.prestamoService
       .obtenerPrestamos()
       .filter(p => p.estado !== 'devuelto');
   }
 
-  obtenerSocio(idSocio: number): Socio | undefined {
-    return this.socioService.tenerSocios().find(socio => socio.id === idSocio);
-  }
-
   get prestamosFiltrados(): Prestamo[] {
     const texto = this.busqueda.toLowerCase().trim();
 
-    return this.prestamos.filter(prestamo => {
-      // Exclusión estricta de devueltos
-      if (prestamo.estado === 'devuelto') {
-        return false;
-      }
-      const socio = this.obtenerSocio(Number(prestamo.idSocio));
-      const nombreSocio = socio?.nombre.toLowerCase() ?? '';
+    return this.prestamos.filter(p => {
+      if (p.estado === 'devuelto') return false;
 
       const coincideBusqueda =
-        prestamo.id.toLowerCase().includes(texto) ||
-        nombreSocio.includes(texto) ||
-        prestamo.libro.toLowerCase().includes(texto) ||
-        prestamo.inventario.toLowerCase().includes(texto);
+        p.id.toLowerCase().includes(texto) ||
+        p.socio.toLowerCase().includes(texto) ||
+        p.libro.toLowerCase().includes(texto) ||
+        p.inventario.toLowerCase().includes(texto);
 
       const coincideFiltro =
-        this.filtro === 'todos' ||
-        prestamo.estado === this.filtro;
+        this.filtro === 'todos' || p.estado === this.filtro;
 
       return coincideBusqueda && coincideFiltro;
     });
   }
 
-  cambiarFiltro(filtro: 'todos' | 'activo' | 'vencido' | 'vencido'): void {
+  cambiarFiltro(filtro: 'todos' | 'activo' | 'atrasado'): void {
     this.filtro = filtro;
   }
 
-  // MODIFICADO: Abre WhatsApp con el mensaje precargado
-  renovarPrestamo(prestamo: Prestamo): void {
-    const socio = this.obtenerSocio(Number(prestamo.idSocio));
+  // Método auxiliar opcional para obtener un socio por ID o Nombre si se requiere en plantilla
+  obtenerSocio(identificador: number | string): Socio | undefined {
+    return this.socioService
+      .tenerSocios()
+      .find(s => s.id === identificador || s.nombre === identificador);
+  }
 
-    if (!socio || !socio.telefono) {
-      alert('No se encontró el teléfono del socio.');
+  // Formatea un objeto Date a string YYYY-MM-DD para el input date
+  private obtenerFechaFormateada(diasAgregar: number = 0): string {
+    const fecha = new Date();
+    fecha.setDate(fecha.getDate() + diasAgregar);
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  }
+
+  openModal(): void {
+    this.isModalOpen = true;
+    this.establecerFechasAutomaticas();
+  }
+
+  establecerFechasAutomaticas(): void {
+    this.fechaInicio = this.obtenerFechaFormateada(0);      // Hoy
+    this.fechaVencimiento = this.obtenerFechaFormateada(30); // Hoy + 30 días
+  }
+
+  limpiarFormulario(): void {
+    this.socioSeleccionadoId = null;
+    this.libro = '';
+    this.inventario = '';
+    this.fechaInicio = '';
+    this.fechaVencimiento = '';
+  }
+    
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.limpiarFormulario();
+  }
+
+  crearPrestamo(): void {
+    if (
+      !this.socioSeleccionadoId ||
+      !this.libro.trim() ||
+      !this.inventario.trim() ||
+      !this.fechaInicio ||
+      !this.fechaVencimiento
+    ) {
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor, completá todos los campos requeridos.',
+        icon: 'warning',
+        confirmButtonColor: '#0d9488'
+      });
       return;
     }
 
-    // Incrementar renovaciones en el servicio
+    const socioObj = this.socioService
+      .tenerSocios()
+      .find(s => s.id === Number(this.socioSeleccionadoId));
+
+    if (!socioObj) return;
+
+    const listaActual = this.prestamoService.obtenerPrestamos();
+    const numero = listaActual.length + 1;
+    const idGenerado = `PR${String(numero).padStart(3, '0')}`;
+
+    const nuevoPrestamo: Prestamo = {
+      id: idGenerado,
+      socio: socioObj.nombre,
+      libro: this.libro.trim(),
+      inventario: this.inventario.trim(),
+      fechaInicio: this.fechaInicio,
+      fechaVencimiento: this.fechaVencimiento,
+      estado: 'activo' as EstadoPrestamo,
+      renovaciones: 0
+    };
+
+    this.prestamoService.agregarPrestamo(nuevoPrestamo);
+    this.socioService.actualizarEstadoPrestamo(socioObj.id, 'Encurso');
+
+    this.actualizarPrestamos();
+    this.closeModal();
+
+    Swal.fire({
+      title: '¡Préstamo Creado!',
+      text: 'Se creó el préstamo con éxito.',
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  renovarPrestamo(prestamo: Prestamo): void {
+    const socioObj = this.socioService
+      .tenerSocios()
+      .find(s => s.nombre === prestamo.socio);
+
     this.prestamoService.renovarPrestamo(prestamo.id);
     this.actualizarPrestamos();
 
-    // Construir la URL de WhatsApp Web / App
-    const mensaje = encodeURIComponent(
-      `Hola ${socio.nombre}, se ha renovado con éxito tu préstamo del libro "${prestamo.libro}". Tu nueva fecha de vencimiento es ${prestamo.fechaVencimiento}.`
-    );
+    // Recupera el préstamo recién actualizado para leer la nueva fecha de vencimiento
+    const prestamoActualizado = this.prestamos.find(p => p.id === prestamo.id) || prestamo;
 
-    // 1. Limpiamos cualquier +, espacio o guion que pueda haber quedado
-      let tel = socio.telefono.replace(/[^0-9]/g, '');
+    if (socioObj && socioObj.telefono) {
+      const mensaje = `Hola ${socioObj.nombre}, se ha renovado con éxito tu préstamo del libro "${prestamoActualizado.libro}". Tu nueva fecha de vencimiento es ${prestamoActualizado.fechaVencimiento}.`;
+      let tel = socioObj.telefono.replace(/[^0-9]/g, '');
 
-    // 2. Si el número empieza con "54" pero no tiene el "9" (ej: 54299...), se lo insertamos
-    if (tel.startsWith('54') && !tel.startsWith('549')) {
-      tel = '549' + tel.slice(2);
-    } 
-    // 3. Si por algún motivo se guardó solo como "299...", le agregamos "549" adelante
-    else if (!tel.startsWith('54')) {
-      tel = '549' + tel;
+      if (tel.startsWith('54') && !tel.startsWith('549')) {
+        tel = '549' + tel.slice(2);
+      } else if (!tel.startsWith('54')) {
+        tel = '549' + tel;
+      }
+
+      const url = `https://wa.me/${tel}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
     }
-
-    // 4. Codificamos el mensaje y abrimos la ventana
-    const mensajeCodificado = encodeURIComponent(mensaje);
-    const url = `https://wa.me/${tel}?text=${mensajeCodificado}`;
-
-    window.open(url, '_blank');
-}
+  }
 
   devolverPrestamo(prestamo: Prestamo): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `¿Deseas marcar como devuelto el préstamo de "${prestamo.libro}"? Esta acción actualizará el registro.`,
+      text: `¿Deseas marcar como devuelto el préstamo de "${prestamo.libro}"?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#0d9488',
       cancelButtonColor: '#ef4444',
       confirmButtonText: 'Sí, devolver',
       cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    }).then(result => {
       if (result.isConfirmed) {
-        // 1. Marcar estado del préstamo como devuelto en el servicio
+        const socioObj = this.socioService
+          .tenerSocios()
+          .find(s => s.nombre === prestamo.socio);
+
         this.prestamoService.devolverPrestamo(prestamo.id);
 
-        // 2. Liberar al socio para que su estado pase a 'Libre'
-        this.socioService.actualizarEstadoPrestamo(prestamo.idSocio, 'Libre');
+        if (socioObj) {
+          this.socioService.actualizarEstadoPrestamo(socioObj.id, 'Libre');
+        }
 
-        // 3. Eliminar el préstamo de la lista local para que desaparezca la fila
-        this.prestamos = this.prestamos.filter(p => p.id !== prestamo.id);
+        this.actualizarPrestamos();
 
-        // 4. Cartel de éxito con SweetAlert2
         Swal.fire({
           title: '¡Devuelto!',
-          text: 'El préstamo ha sido marcado como devuelto correctamente.',
+          text: 'El préstamo ha sido devuelto correctamente.',
           icon: 'success',
           confirmButtonColor: '#0d9488',
           timer: 2000,
           showConfirmButton: false
         });
-      }})}
-
-  abrirNuevoPrestamo(): void {
-    this.mostrarNuevoPrestamo = true;
-  }
-
-  cerrarNuevoPrestamo(): void {
-    this.mostrarNuevoPrestamo = false;
-    this.actualizarPrestamos();
+      }
+    });
   }
 }

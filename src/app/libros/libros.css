@@ -37,13 +37,13 @@
 }
 
 .add-button {
- background-color: #23b2a0;
+  background-color: #23b2a0;
   color: #ffffff;
   border: none;
   padding: 10px 20px;
   border-radius: 30px;
   font-size: 14px;
-  font-weight: 600px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s ease, transform 0.1s ease;
