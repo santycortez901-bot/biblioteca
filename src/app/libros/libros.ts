@@ -1,22 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
-
-export interface Copia {
-  id: string;
-  estado: 'Disponible' | 'Prestada';
-}
-
-export interface Libro {
-  id: string;
-  titulo: string;
-  autor: string;
-  copias: number;
-  copiasTotales: number;
-  estado: string;
-  listaCopias: Copia[];
-}
+import { LibroService, Libro, Copia } from '../services/libro-service';
 
 @Component({
   selector: 'app-libros',
@@ -25,25 +12,31 @@ export interface Libro {
   templateUrl: './libros.html',
   styleUrl: './libros.css'
 })
-export class Libros {
-  // Modales y selección
+export class Libros implements OnInit, OnDestroy {
+  private libroService = inject(LibroService);
+  private sub: Subscription = new Subscription();
+
   isModalOpen = false;
   isCopiasModalOpen = false;
   libroSeleccionado: Libro | null = null;
 
-  // Buscador e Inventario
   searchTerm = '';
-  contador = 1;
-
-  // Formulario
   nuevoTitulo = '';
   nuevoAutor = '';
   nuevasCopias = 1;
 
-  // Lista de libros
   libros: Libro[] = [];
 
-  // --- Modales ---
+  ngOnInit(): void {
+    this.sub = this.libroService.libros$.subscribe(data => {
+      this.libros = data;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
   openModal(): void {
     this.isModalOpen = true;
   }
@@ -69,7 +62,6 @@ export class Libros {
     this.libroSeleccionado = null;
   }
 
-  // --- Operaciones de Libros ---
   agregarLibro(): void {
     if (!this.nuevoTitulo.trim() || !this.nuevoAutor.trim() || this.nuevasCopias < 1) {
       Swal.fire({
@@ -94,7 +86,7 @@ export class Libros {
       for (let i = 1; i <= this.nuevasCopias; i++) {
         const numeroCopia = (cantidadActual + i).toString().padStart(2, '0');
         libroExistente.listaCopias.push({
-          id: libroExistente.id + '-' + numeroCopia,
+          id: `${libroExistente.id}-${numeroCopia}`,
           estado: 'Disponible'
         });
       }
@@ -114,14 +106,13 @@ export class Libros {
       return;
     }
 
-    const nuevoId = 'INV' + this.contador.toString().padStart(3, '0');
-    this.contador++;
-
+    const nuevoId = 'INV' + (this.libros.length + 1).toString().padStart(3, '0');
     const listaCopias: Copia[] = [];
+
     for (let i = 1; i <= this.nuevasCopias; i++) {
       const numeroCopia = i.toString().padStart(2, '0');
       listaCopias.push({
-        id: nuevoId + '-' + numeroCopia,
+        id: `${nuevoId}-${numeroCopia}`,
         estado: 'Disponible'
       });
     }
@@ -150,18 +141,15 @@ export class Libros {
     });
   }
 
-  // --- Actualizar Estado y Conteo (Calculado) ---
   private actualizarEstadoLibro(libro: Libro): void {
     libro.copias = libro.listaCopias.filter(c => c.estado === 'Disponible').length;
     libro.estado = libro.copias === 0 ? 'sin copias' : 'disponible';
   }
 
-  // --- Préstamos y Devoluciones ---
   prestarCopiaIndividual(libro: Libro, copia: Copia): void {
     if (copia.estado !== 'Disponible') return;
 
-    copia.estado = 'Prestada';
-    this.actualizarEstadoLibro(libro);
+    this.libroService.prestarCopia(libro.id, copia.id);
 
     Swal.fire({
       title: 'Préstamo Registrado',
@@ -176,8 +164,7 @@ export class Libros {
   devolverCopiaIndividual(libro: Libro, copia: Copia): void {
     if (copia.estado !== 'Prestada') return;
 
-    copia.estado = 'Disponible';
-    this.actualizarEstadoLibro(libro);
+    this.libroService.devolverCopiaPorInventario(copia.id);
 
     Swal.fire({
       title: 'Devolución Exitosa',
@@ -192,18 +179,15 @@ export class Libros {
   prestarCopia(libro: Libro): void {
     const copiaDisponible = libro.listaCopias.find(c => c.estado === 'Disponible');
     if (!copiaDisponible) return;
-
     this.prestarCopiaIndividual(libro, copiaDisponible);
   }
 
   devolverCopia(libro: Libro): void {
     const copiaPrestada = libro.listaCopias.find(c => c.estado === 'Prestada');
     if (!copiaPrestada) return;
-
     this.devolverCopiaIndividual(libro, copiaPrestada);
   }
 
-  // --- Getter para Buscador ---
   get librosFiltrados(): Libro[] {
     const busqueda = this.searchTerm.trim().toLowerCase();
     if (!busqueda) return this.libros;
