@@ -261,7 +261,10 @@ export class Socios implements OnInit {
 
       estado: 'activo',
 
-      prestamos: 'Libre'
+      prestamos: 'Libre',
+
+      cuota:  'pagada'
+
     };
 
     // Guardar mediante el servicio
