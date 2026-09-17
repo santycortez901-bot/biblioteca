@@ -68,4 +68,9 @@ export class Cuotas {
   notificarSocio(socio: Socio): void {
     this.cuotaService.enviarRecordatorioWhatsApp(socio);
   }
+
+  darDeBaja(id: number): void {
+    this.cuotaService.darDeBaja(id);
+
+  }
 }
