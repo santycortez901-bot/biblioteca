@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Socio } from '../models/models/socio';
 import { SocioServicio } from '../services/socio';
 import { ActivatedRoute } from '@angular/router';
+import { ActividadServicio } from '../services/actividade-service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -38,9 +39,10 @@ export class Socios implements OnInit {
   //NO TOCAR JULIETA ELUNEY CHIARA, NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
   // UN SOLO CONSTRUCTOR
   constructor(
-    private route: ActivatedRoute,
-    private socioServicio: SocioServicio
-  ) {}
+  private route: ActivatedRoute,
+  private socioServicio: SocioServicio,
+  private actividadServicio: ActividadServicio
+) {}
 
   // UN SOLO ngOnInit
   ngOnInit(): void {
@@ -109,6 +111,8 @@ export class Socios implements OnInit {
   openModal(): void {
     this.isModalOpen = true;
   }
+
+  
 
   closeModal(): void {
     this.isModalOpen = false;
@@ -269,6 +273,14 @@ export class Socios implements OnInit {
 
     // Guardar mediante el servicio
     this.socioServicio.agregarSocio(nuevoSocio as Socio);
+    
+    this.actividadServicio.agregarActividad({
+      tipo: 'socio',
+      descripcion: `Nuevo socio registrado: ${nuevoSocio.nombre}`,
+      fecha: this.obtenerFechaActual(),
+      user: 'admin',
+      idrelacionado: dniLimpio
+});
 
     // Actualizar lista
     this.obtenerSocios();
@@ -289,5 +301,19 @@ export class Socios implements OnInit {
       showConfirmButton: false
     });
   }
+
+  obtenerFechaActual(): string {
+
+  const ahora = new Date();
+
+  const dia = ahora.getDate().toString().padStart(2, '0');
+  const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
+  const año = ahora.getFullYear();
+
+  const hora = ahora.getHours().toString().padStart(2, '0');
+  const minutos = ahora.getMinutes().toString().padStart(2, '0');
+
+  return `${dia}/${mes}/${año} ${hora}:${minutos}`;
+}
 }
 

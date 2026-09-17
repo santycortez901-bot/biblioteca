@@ -26,7 +26,7 @@
     </div>
 
     <div class="tarjeta estadistica activos" routerLink='/socios'>
-      
+
       <div class="icono">♙</div>
       <div>
         <strong>7</strong>
@@ -49,7 +49,7 @@
     </div>
 
     <div class="filtros">
-      
+
       <button class="filtro activo">DNI / APELLIDO / Nº CARNET</button>
       <button class="filtro">N° INVENTARIO / ID</button>
     </div>
@@ -57,10 +57,7 @@
     <div class="campo-busqueda">
       <span>⌕</span>
 
-      <input
-        type="text"
-        placeholder="Ej: CAR001"
-      />
+      <input type="text" placeholder="Ej: CAR001" />
 
       <button class="btn-buscar">
         Buscar
@@ -72,7 +69,7 @@
   <!-- Acciones rápidas -->
   <div class="acciones">
 
-    <div class="accion nuevo-prestamo"  >
+    <div class="accion nuevo-prestamo">
       <div class="accion-icono">＋</div>
 
       <div>
@@ -114,68 +111,32 @@
 
     <div class="actividad-lista">
 
-      <div class="actividad-item">
-        <span class="badge login">login</span>
+      <div class="actividad-lista">
 
-        <span class="descripcion">
-          Inicio de sesión del sistema
-        </span>
+        @for (actividad of actividadesRecientes; track actividad.fecha) {
 
-        <span class="fecha">
-          26/08/2026 12:29
-        </span>
+        <div class="actividad-item">
 
-        <span class="usuario">
-          admin
-        </span>
-      </div>
+          <span class="badge" [class]="actividad.tipo">
+            {{ actividad.tipo }}
+          </span>
 
-      <div class="actividad-item">
-        <span class="badge login">login</span>
+          <span class="descripcion">
+            {{ actividad.descripcion }}
+          </span>
 
-        <span class="descripcion">
-          Inicio de sesión del sistema
-        </span>
+          <span class="fecha">
+            {{ actividad.fecha }}
+          </span>
 
-        <span class="fecha">
-          19/08/2026 10:30
-        </span>
+          <span class="usuario">
+            {{ actividad.user }}
+          </span>
 
-        <span class="usuario">
-          admin
-        </span>
-      </div>
+        </div>
 
-      <div class="actividad-item">
-        <span class="badge prestamo">prestamo</span>
+      }
 
-        <span class="descripcion">
-          Nuevo préstamo: Rayuela → Florencia Morales
-        </span>
-
-        <span class="fecha">
-          19/08/2026 09:15
-        </span>
-
-        <span class="usuario">
-          admin
-        </span>
-      </div>
-
-      <div class="actividad-item">
-        <span class="badge cuota">cuota</span>
-
-        <span class="descripcion">
-          Cuota cobrada: María González — Julio 2026 ($1.200)
-        </span>
-
-        <span class="fecha">
-          18/08/2026 16:20
-        </span>
-
-        <span class="usuario">
-          admin
-        </span>
       </div>
 
     </div>
