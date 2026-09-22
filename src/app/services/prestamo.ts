@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Prestamo } from '../models/models/prestamo';
 import { LibroService } from './libro-service';
 
@@ -6,96 +6,44 @@ import { LibroService } from './libro-service';
   providedIn: 'root'
 })
 export class PrestamoService {
-
+  private libroService = inject(LibroService);
   private prestamos: Prestamo[] = [];
-
-  constructor(
-    private libroService: LibroService
-  ) {}
 
   obtenerPrestamos(): Prestamo[] {
     return this.prestamos;
   }
 
   agregarPrestamo(nuevoPrestamo: Prestamo & { libroId?: string }): boolean {
-
-    const libroId =
-      nuevoPrestamo.libroId ||
-      this.libroService.libros.find(
-        l =>
-          l.titulo.toLowerCase() ===
-          nuevoPrestamo.libro.toLowerCase()
-      )?.id ||
-      '';
+    const libroId = nuevoPrestamo.libroId || this.libroService.libros.find(
+      l => l.titulo.toLowerCase() === nuevoPrestamo.libro.toLowerCase()
+    )?.id || '';
 
     // Modifica automáticamente la copia física a 'Prestada'
-    const exito = this.libroService.prestarCopia(
-      libroId,
-      nuevoPrestamo.inventario
-    );
-
+    const exito = this.libroService.prestarCopia(libroId, nuevoPrestamo.inventario);
+    
     if (exito) {
       this.prestamos.push(nuevoPrestamo);
       return true;
     }
-
     return false;
   }
 
   devolverPrestamo(id: string): void {
-
-    const prestamo = this.prestamos.find(
-      p => p.id === id
-    );
-
+    const prestamo = this.prestamos.find(p => p.id === id);
     if (prestamo) {
-
       prestamo.estado = 'devuelto';
-
       // Devuelve automáticamente la copia física a 'Disponible'
-      this.libroService.devolverCopiaPorInventario(
-        prestamo.inventario
-      );
+      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
     }
   }
 
   renovarPrestamo(id: string): void {
-
-    const prestamo = this.prestamos.find(
-      p => p.id === id
-    );
-
-    if (prestamo && prestamo.renovaciones < 2) {
-
-      prestamo.renovaciones += 1;
-
-      const fechaActual = new Date(
-        prestamo.fechaVencimiento
-      );
-
-      fechaActual.setDate(
-        fechaActual.getDate() + 7
-      );
-
-      prestamo.fechaVencimiento =
-        fechaActual.toISOString().split('T')[0];
-    }
-  }
-
-  suspenderPrestamo(
-    id: string,
-    motivo: string
-  ): void {
-
-    const prestamo = this.prestamos.find(
-      p => p.id === id
-    );
-
+    const prestamo = this.prestamos.find(p => p.id === id);
     if (prestamo) {
-
-      prestamo.estado = 'suspendido';
-
-      prestamo.motivoSuspension = motivo;
+      prestamo.renovaciones += 1;
+      const fechaActual = new Date(prestamo.fechaVencimiento);
+      fechaActual.setDate(fechaActual.getDate() + 7);
+      prestamo.fechaVencimiento = fechaActual.toISOString().split('T')[0];
     }
   }
 }
