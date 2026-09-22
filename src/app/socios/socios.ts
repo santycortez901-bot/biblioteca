@@ -128,7 +128,9 @@ export class Socios implements OnInit {
       email: this.nuevoEmail.trim(),
       estado: 'activo' as EstadoSocio,
       prestamos: 'Libre',
-      cuota: 'al dia' as EstadoCuota
+
+      cuota:  'pendiente'
+
     };
 
     if (typeof (this.socioServicio as any).agregarSocio === 'function') {

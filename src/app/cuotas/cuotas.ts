@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Socio } from '../models/models/socio';
 import { CuotasService } from '../services/cuotas-service';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-cuotas',
@@ -52,17 +53,28 @@ export class Cuotas {
   cobrar(id: number): void {
     const confirmarCobro = confirm('¿Estás seguro de que deseas cobrar esta cuota?');
 
-    if (!confirmarCobro) {
+    if (confirmarCobro) {
+      const socioCobrar = this.cuotas.find(socio => socio.id === id);
+
+      // 1. Modifica el estado en el servicio central de socios
+      this.cuotaService.cobrarCuota(id);
+
+      Swal.fire({
+          title: '¡Cuota Pagada!',
+          text: `La cuota del socio "${socioCobrar?.nombre}" se ha cobrado exitosamente.`,
+          icon: 'success',
+          confirmButtonColor: '#0d9488',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        this.cargarCuotas();
+    }else{
       return; 
     }
-
-    // 1. Modifica el estado en el servicio central de socios
-    this.cuotaService.cobrarCuota(id); 
     
-    // 2. Recarga los datos para refrescar la pantalla instantáneamente
-    this.cargarCuotas();
+    
 
-    alert('¡Cuota cobrada con éxito!');
+    
   }
 
   notificarSocio(socio: Socio): void {
