@@ -263,7 +263,7 @@ export class Socios implements OnInit {
 
       prestamos: 'Libre',
 
-      cuota:  'pendiente'
+      cuota:  'pagada'
 
     };
 
