@@ -337,27 +337,49 @@
 }
 
 .badge {
-  width: fit-content;
-  padding: 5px 10px;
-  border-radius: 15px;
-  font-size: 10px;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 600;
 }
 
-.badge.login {
-  background: #e4efff;
-  color: #3978e8;
+
+.badge-login {
+  background-color: #e0f2fe;
+  color: #0284c7;
 }
 
-.badge.prestamo {
-  background: #dff7f5;
-  color: #159e96;
+.badge-prestamo {
+  background-color: #ccfbf1;
+  color: #0d9488;
 }
 
-.badge.cuota {
-  background: #fff0dc;
-  color: #ed8b18;
+.badge-cuota {
+  background-color: #ffedd5;
+  color: #ea580c;
 }
+
+.badge-socio {
+  background-color: #f3e8ff;
+  color: #9333ea;
+}
+
+.badge-libro {
+  background-color: #e2cfbb;
+  color: #b6670d;
+}
+
+.badge-eliminacion {
+  background-color: #ffe8e8;
+  color: #ea3333;
+}
+
+.badge-edicion {
+  background-color: #ffe8fd;
+  color: #ea33d2;
+}
+
 
 
 /* =========================
