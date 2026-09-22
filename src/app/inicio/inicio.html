@@ -111,33 +111,34 @@
 
     <div class="actividad-lista">
 
+      
       <div class="actividad-lista">
 
-        @for (actividad of actividadesRecientes; track actividad.fecha) {
+  @for (actividad of actividadesRecientes; track actividad.fecha) {
 
-        <div class="actividad-item">
+    <div class="actividad-item">
 
-          <span class="badge-{{ actividad.tipo }}">
-            {{ actividad.tipo }}
-          </span>
+      <span class="badge badge-{{ actividad.tipo }}">
+        {{ actividad.tipo }}
+      </span>
 
-          <span class="descripcion">
-            {{ actividad.descripcion }}
-          </span>
+      <span class="descripcion">
+        {{ actividad.descripcion }}
+      </span>
 
-          <span class="fecha">
-            {{ actividad.fecha }}
-          </span>
+      <span class="fecha">
+        {{ actividad.fecha }}
+      </span>
 
-          <span class="usuario">
-            {{ actividad.user }}
-          </span>
+      <span class="usuario">
+        {{ actividad.user }}
+      </span>
 
-        </div>
+    </div>
 
-      }
+  }
 
-      </div>
+</div>
 
     </div>
 
