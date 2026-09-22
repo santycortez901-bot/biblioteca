@@ -46,4 +46,13 @@ export class PrestamoService {
       prestamo.fechaVencimiento = fechaActual.toISOString().split('T')[0];
     }
   }
+
+  // NUEVO MÉTODO: Actualiza el nombre del socio en todos sus préstamos asociados
+  actualizarNombreSocio(nombreAnterior: string, nuevoNombre: string): void {
+    this.prestamos.forEach(p => {
+      if (p.socio.trim().toLowerCase() === nombreAnterior.trim().toLowerCase()) {
+        p.socio = nuevoNombre;
+      }
+    });
+  }
 }
