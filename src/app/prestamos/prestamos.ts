@@ -630,71 +630,60 @@ export class Prestamos {
   // CONFIRMAR SUSPENSIÓN
   // =========================
 
-  confirmarSuspension(): void {
+ confirmarSuspension(): void {
 
-    if (!this.prestamoASuspender) {
-      return;
-    }
+  if (!this.prestamoASuspender) {
+    return;
+  }
 
-
-    if (
-      !this.motivoSuspension.trim()
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Motivo requerido',
-
-        text:
-          'Debés ingresar el motivo de la suspensión.',
-
-        icon: 'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    this.prestamoService
-      .suspenderPrestamo(
-
-        this.prestamoASuspender.id,
-
-        this.motivoSuspension.trim()
-
-      );
-
-
-    this.actualizarPrestamos();
-
-    this.cerrarModalSuspension();
-
+  if (!this.motivoSuspension.trim()) {
 
     Swal.fire({
-
-      title:
-        'Préstamo suspendido',
-
-      text:
-        'La suspensión se registró correctamente.',
-
-      icon: 'success',
-
-      confirmButtonColor:
-        '#0d9488',
-
-      timer: 2000,
-
-      showConfirmButton: false
-
+      title: 'Motivo requerido',
+      text: 'Debés ingresar el motivo de la suspensión.',
+      icon: 'warning',
+      confirmButtonColor: '#0d9488'
     });
 
+    return;
   }
+
+  // Suspender el préstamo
+  this.prestamoService.suspenderPrestamo(
+    this.prestamoASuspender.id,
+    this.motivoSuspension.trim()
+  );
+
+  // Buscar el socio correspondiente al préstamo
+  const socioObj = this.socioService
+    .tenerSocios()
+    .find(
+      s => s.nombre === this.prestamoASuspender!.socio
+    );
+
+  // Suspender también al socio
+  if (socioObj) {
+    this.socioService.actualizarEstadoSocio(
+      socioObj.id,
+      'suspendido'
+    );
+  }
+
+  // Actualizar la lista
+  this.actualizarPrestamos();
+
+  // Cerrar modal
+  this.cerrarModalSuspension();
+
+  // Mostrar confirmación
+  Swal.fire({
+    title: 'Préstamo suspendido',
+    text: 'El préstamo y el socio fueron suspendidos correctamente.',
+    icon: 'success',
+    confirmButtonColor: '#0d9488',
+    timer: 2000,
+    showConfirmButton: false
+  });
+}
 
 }

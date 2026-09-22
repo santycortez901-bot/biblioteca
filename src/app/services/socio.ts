@@ -1,21 +1,25 @@
 import { Injectable } from '@angular/core';
-import { Socio } from '../models/models/socio'; 
+import { Socio } from '../models/models/socio';
 
 @Injectable({
   providedIn: 'root',
 })
-
 export class SocioServicio {
-private socios: Socio[] = [];
+
+  private socios: Socio[] = [];
   private contadorSocio = 1;
 
   tenerSocios(): Socio[] {
     return this.socios;
   }
 
-  // Omit omite id y numCarnet en la entrada
-  agregarSocio(socioData: Omit<Socio, 'id' | 'numCarnet'>): void {
-    const idSecuencia = this.contadorSocio.toString().padStart(3, '0');
+  agregarSocio(
+    socioData: Omit<Socio, 'id' | 'numCarnet'>
+  ): void {
+
+    const idSecuencia = this.contadorSocio
+      .toString()
+      .padStart(3, '0');
 
     const nuevoSocio: Socio = {
       ...socioData,
@@ -24,11 +28,39 @@ private socios: Socio[] = [];
     };
 
     this.socios.push(nuevoSocio);
+
     this.contadorSocio++;
   }
 
-  actualizarEstadoPrestamo(idSocio: number | string, nuevoEstado: 'Libre' | 'Encurso'): void {
-    const socio = this.socios.find(s => s.id === Number(idSocio));
-    if (socio) {socio.prestamos = nuevoEstado;}
+  actualizarEstadoPrestamo(
+    idSocio: number | string,
+    nuevoEstado: 'Libre' | 'Encurso'
+  ): void {
+
+    const socio = this.socios.find(
+      s => s.id === Number(idSocio)
+    );
+
+    if (socio) {
+      socio.prestamos = nuevoEstado;
+    }
+  }
+
+  actualizarEstadoSocio(
+    idSocio: number | string,
+    nuevoEstado:
+      | 'activo'
+      | 'inactivo'
+      | 'suspendido'
+      | 'bloqueado'
+  ): void {
+
+    const socio = this.socios.find(
+      s => s.id === Number(idSocio)
+    );
+
+    if (socio) {
+      socio.estado = nuevoEstado;
+    }
   }
 }
