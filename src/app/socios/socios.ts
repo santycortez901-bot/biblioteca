@@ -1,290 +1,685 @@
-
 import { Component, OnInit } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
+
 import { Socio } from '../models/models/socio';
+
 import { SocioServicio } from '../services/socio';
+
 import { ActivatedRoute } from '@angular/router';
+
 import Swal from 'sweetalert2';
 
+
 @Component({
+
   selector: 'app-socios',
+
   standalone: true,
-  imports: [CommonModule, FormsModule],
+
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+
   templateUrl: './socios.html',
+
   styleUrl: './socios.css'
+
 })
+
+
 export class Socios implements OnInit {
 
   isModalOpen = false;
 
+
   // Variables para Búsqueda y Filtros
+
   busqueda: string = '';
+
   filtroEstado: string = 'Todos';
+
   filtroEdad: string = 'Todas edades';
 
+
   // Variables del Formulario
+
   nuevoNombre: string = '';
+
   nuevaEdad: number | null = null;
+
   nuevoDni: string = '';
+
   nuevoTelefono: string = '';
+
   nuevoEmail: string = '';
 
+
   // Lista de socios
+
   socios: Socio[] = [];
 
 
+  // NO TOCAR JULIETA ELUNEY CHIARA,
+  // NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
 
-  //NO TOCAR JULIETA ELUNEY CHIARA, NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
   // UN SOLO CONSTRUCTOR
+
   constructor(
+
     private route: ActivatedRoute,
+
     private socioServicio: SocioServicio
+
   ) {}
 
+
   // UN SOLO ngOnInit
+
   ngOnInit(): void {
 
     // Cargar socios
+
     this.obtenerSocios();
 
-    // Abrir modal automáticamente si viene el parámetro
-    this.route.queryParams.subscribe(params => {
-      if (params['openModal'] === 'true') {
-        this.openModal();
+
+    // Abrir modal automáticamente
+    // si viene el parámetro
+
+    this.route.queryParams.subscribe(
+
+      params => {
+
+        if (
+          params['openModal'] === 'true'
+        ) {
+
+          this.openModal();
+
+        }
+
       }
-    });
+
+    );
+
   }
 
-  // HASTA ACA, DESPUES DE ESTO, HACE LA VRG Q QUIERAS, GRACIAS
+
+  // HASTA ACA, DESPUES DE ESTO,
+  // HACE LA VRG Q QUIERAS, GRACIAS
 
 
   obtenerSocios(): void {
-    this.socios = this.socioServicio.tenerSocios();
+
+    this.socios =
+      this.socioServicio
+        .tenerSocios();
+
   }
 
-  // --- Métodos para cambiar los filtros activos ---
 
-  FiltroEstado(estado: string): void {
-    this.filtroEstado = estado;
+  // =========================
+  // FILTROS
+  // =========================
+
+  FiltroEstado(
+    estado: string
+  ): void {
+
+    this.filtroEstado =
+      estado;
+
   }
 
-  FiltroEdad(edad: string): void {
-    this.filtroEdad = edad;
+
+  FiltroEdad(
+    edad: string
+  ): void {
+
+    this.filtroEdad =
+      edad;
+
   }
 
-  // --- Getter combinando Búsqueda + Filtro Estado + Filtro Edad ---
+
+  // =========================
+  // SOCIOS FILTRADOS
+  // =========================
 
   get sociosFiltrados(): Socio[] {
 
-    const termino = this.busqueda.trim().toLowerCase();
+    const termino =
+      this.busqueda
+        .trim()
+        .toLowerCase();
 
-    return this.socios.filter(socio => {
 
-      // 1. Filtro por búsqueda
-      const cumpleBusqueda =
-        !termino ||
-        socio.nombre.toLowerCase().includes(termino) ||
-        socio.dni.toLowerCase().includes(termino) ||
-        socio.numCarnet.toLowerCase().includes(termino);
+    return this.socios.filter(
 
-      // 2. Filtro por Estado
-      const cumpleEstado =
-        this.filtroEstado === 'Todos' ||
-        socio.estado.toLowerCase() === this.filtroEstado.toLowerCase();
+      socio => {
 
-      // 3. Filtro por Edad
-      let cumpleEdad = true;
+        // 1. Filtro por búsqueda
 
-      if (this.filtroEdad === '+18') {
-        cumpleEdad = socio.edad >= 18;
-      } else if (this.filtroEdad === '-18') {
-        cumpleEdad = socio.edad < 18;
+        const cumpleBusqueda =
+
+          !termino ||
+
+          socio.nombre
+            .toLowerCase()
+            .includes(termino)
+
+          ||
+
+          socio.dni
+            .toLowerCase()
+            .includes(termino)
+
+          ||
+
+          socio.numCarnet
+            .toLowerCase()
+            .includes(termino);
+
+
+        // 2. Filtro por Estado
+
+        const cumpleEstado =
+
+          this.filtroEstado === 'Todos' ||
+
+          socio.estado
+            .toLowerCase() ===
+
+          this.filtroEstado
+            .toLowerCase();
+
+
+        // 3. Filtro por Edad
+
+        let cumpleEdad = true;
+
+
+        if (
+          this.filtroEdad === '+18'
+        ) {
+
+          cumpleEdad =
+            socio.edad >= 18;
+
+        }
+
+        else if (
+          this.filtroEdad === '-18'
+        ) {
+
+          cumpleEdad =
+            socio.edad < 18;
+
+        }
+
+
+        return (
+          cumpleBusqueda &&
+          cumpleEstado &&
+          cumpleEdad
+        );
+
       }
 
-      return cumpleBusqueda && cumpleEstado && cumpleEdad;
-    });
+    );
+
   }
+
+
+  // =========================
+  // MODAL
+  // =========================
 
   openModal(): void {
-    this.isModalOpen = true;
+
+    this.isModalOpen =
+      true;
+
   }
+
 
   closeModal(): void {
-    this.isModalOpen = false;
+
+    this.isModalOpen =
+      false;
+
     this.limpiarFormulario();
+
   }
 
+
   limpiarFormulario(): void {
+
     this.nuevoNombre = '';
+
     this.nuevaEdad = null;
+
     this.nuevoDni = '';
+
     this.nuevoTelefono = '';
+
     this.nuevoEmail = '';
+
   }
+
+
+  // =========================
+  // AGREGAR SOCIO
+  // =========================
 
   agregarSocio(): void {
 
+
     // Regex de validación
+
     const regexNombre =
       /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
 
-    const regexDni = /^[0-9]{7,}$/;
 
-    // Corregido: + seguido de 12 dígitos
-    const regexTelefono = /^\+[0-9]{12}$/;
+    const regexDni =
+      /^[0-9]{7,}$/;
 
-    // Corregido: gmail.com o hotmail.com
+
+    const regexTelefono =
+      /^\+[0-9]{12}$/;
+
+
     const regexEmail =
       /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN NOMBRE
-    // -------------------------
+    // =========================
 
     if (
+
       !this.nuevoNombre ||
-      !regexNombre.test(this.nuevoNombre.trim())
+
+      !regexNombre.test(
+        this.nuevoNombre.trim()
+      )
+
     ) {
+
       Swal.fire({
-        title: 'Nombre Inválido',
-        text: 'El nombre debe contener al menos dos palabras.',
-        icon: 'warning',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'Nombre Inválido',
+
+        text:
+          'El nombre debe contener al menos dos palabras.',
+
+        icon:
+          'warning',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN EDAD
-    // -------------------------
+    // =========================
 
-    if (!this.nuevaEdad || this.nuevaEdad < 4) {
+    if (
+
+      !this.nuevaEdad ||
+
+      this.nuevaEdad < 4
+
+    ) {
+
       Swal.fire({
-        title: 'Edad Inválida',
-        text: 'La edad debe ser de al menos 4 años.',
-        icon: 'warning',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'Edad Inválida',
+
+        text:
+          'La edad debe ser de al menos 4 años.',
+
+        icon:
+          'warning',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN DNI
-    // -------------------------
+    // =========================
 
     if (
+
       !this.nuevoDni ||
-      !regexDni.test(this.nuevoDni.trim())
+
+      !regexDni.test(
+        this.nuevoDni.trim()
+      )
+
     ) {
+
       Swal.fire({
-        title: 'DNI Inválido',
-        text: 'El DNI debe tener un mínimo de 7 dígitos numéricos.',
-        icon: 'warning',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'DNI Inválido',
+
+        text:
+          'El DNI debe tener un mínimo de 7 dígitos numéricos.',
+
+        icon:
+          'warning',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN TELÉFONO
-    // -------------------------
+    // =========================
 
     if (
+
       !this.nuevoTelefono ||
-      !regexTelefono.test(this.nuevoTelefono.trim())
+
+      !regexTelefono.test(
+        this.nuevoTelefono.trim()
+      )
+
     ) {
+
       Swal.fire({
-        title: 'Teléfono Inválido',
-        text: 'El teléfono debe iniciar con "+" seguido de 12 dígitos.',
-        icon: 'warning',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'Teléfono Inválido',
+
+        text:
+          'El teléfono debe iniciar con "+" seguido de 12 dígitos.',
+
+        icon:
+          'warning',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN EMAIL
-    // -------------------------
+    // =========================
 
     if (
+
       !this.nuevoEmail ||
-      !regexEmail.test(this.nuevoEmail.trim())
+
+      !regexEmail.test(
+        this.nuevoEmail.trim()
+      )
+
     ) {
+
       Swal.fire({
-        title: 'Correo Inválido',
-        text: 'El correo debe ser de dominio @gmail.com o @hotmail.com.',
-        icon: 'warning',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'Correo Inválido',
+
+        text:
+          'El correo debe ser de dominio @gmail.com o @hotmail.com.',
+
+        icon:
+          'warning',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // VALIDACIÓN DUPLICADOS
-    // -------------------------
+    // =========================
 
-    const dniLimpio = this.nuevoDni.trim();
+    const dniLimpio =
+      this.nuevoDni.trim();
 
-    if (this.socios.some(s => s.dni.trim() === dniLimpio)) {
+
+    if (
+
+      this.socios.some(
+
+        s =>
+          s.dni.trim() ===
+          dniLimpio
+
+      )
+
+    ) {
 
       Swal.fire({
-        title: 'Socio Duplicado',
-        text: 'Ya existe un socio registrado con este número de DNI.',
-        icon: 'error',
-        confirmButtonColor: '#0d9488'
+
+        title:
+          'Socio Duplicado',
+
+        text:
+          'Ya existe un socio registrado con este número de DNI.',
+
+        icon:
+          'error',
+
+        confirmButtonColor:
+          '#0d9488'
+
       });
 
       return;
+
     }
 
-    // -------------------------
+
+    // =========================
     // CREAR SOCIO
-    // -------------------------
+    // =========================
 
-    const nuevoSocio: Omit<Socio, 'id' | 'numCarnet'> = {
+    const nuevoSocio:
 
-      nombre: this.nuevoNombre.trim(),
+      Omit<
+        Socio,
+        'id' | 'numCarnet'
+      > = {
 
-      edad: Number(this.nuevaEdad),
+      nombre:
+        this.nuevoNombre.trim(),
 
-      dni: dniLimpio,
+      edad:
+        Number(this.nuevaEdad),
 
-      telefono: this.nuevoTelefono.trim(),
+      dni:
+        dniLimpio,
 
-      email: this.nuevoEmail.trim(),
+      telefono:
+        this.nuevoTelefono.trim(),
 
-      estado: 'activo',
+      email:
+        this.nuevoEmail.trim(),
 
-      prestamos: 'Libre'
+      estado:
+        'activo',
+
+      prestamos:
+        'Libre'
+
     };
 
+
     // Guardar mediante el servicio
-    this.socioServicio.agregarSocio(nuevoSocio as Socio);
+
+    this.socioServicio
+      .agregarSocio(
+        nuevoSocio as Socio
+      );
+
 
     // Actualizar lista
+
     this.obtenerSocios();
 
+
     // Cerrar modal
+
     this.closeModal();
 
-    // -------------------------
+
+    // =========================
     // ALERTA DE ÉXITO
-    // -------------------------
+    // =========================
 
     Swal.fire({
-      title: '¡Socio Registrado!',
-      text: `El socio "${nuevoSocio.nombre}" se ha guardado exitosamente.`,
-      icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  }
-}
 
+      title:
+        '¡Socio Registrado!',
+
+      text:
+        `El socio "${nuevoSocio.nombre}" se ha guardado exitosamente.`,
+
+      icon:
+        'success',
+
+      confirmButtonColor:
+        '#0d9488',
+
+      timer:
+        2000,
+
+      showConfirmButton:
+        false
+
+    });
+
+  }
+
+
+  // =========================
+  // QUITAR SUSPENSIÓN
+  // =========================
+
+  quitarSuspension(
+    socio: Socio
+  ): void {
+
+    Swal.fire({
+
+      title:
+        '¿Quitar suspensión?',
+
+      text:
+        `El socio "${socio.nombre}" volverá a estar activo.`,
+
+      icon:
+        'question',
+
+      showCancelButton:
+        true,
+
+      confirmButtonColor:
+        '#0d9488',
+
+      cancelButtonColor:
+        '#ef4444',
+
+      confirmButtonText:
+        'Sí, quitar suspensión',
+
+      cancelButtonText:
+        'Cancelar'
+
+    }).then(result => {
+
+      if (
+        !result.isConfirmed
+      ) {
+
+        return;
+
+      }
+
+
+      // Cambiar estado del socio
+
+      this.socioServicio
+        .actualizarEstadoSocio(
+
+          socio.id,
+
+          'activo'
+
+        );
+
+
+      // Actualizar lista
+
+      this.obtenerSocios();
+
+
+      // Mensaje
+
+      Swal.fire({
+
+        title:
+          '¡Suspensión quitada!',
+
+        text:
+          'El socio volvió a estar activo correctamente.',
+
+        icon:
+          'success',
+
+        confirmButtonColor:
+          '#0d9488',
+
+        timer:
+          2000,
+
+        showConfirmButton:
+          false
+
+      });
+
+    });
+
+  }
+
+}
