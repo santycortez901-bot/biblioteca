@@ -496,8 +496,10 @@ agregarSocio(): void {
       title: 'Socio agregado',
       text: `El socio "${nuevoSocio.nombre}" fue registrado correctamente.`,
       icon: 'success',
-      confirmButtonColor: '#0d9488'
+      timer: 2000,
+      showConfirmButton: false
     });
+    
   });
 }
 
