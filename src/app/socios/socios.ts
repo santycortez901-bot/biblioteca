@@ -132,6 +132,8 @@ agregarSocio(): void {
     return;
   }
 
+  // Oculta el modal de inmediato para que no se pise con la alerta
+    this.isModalOpen = false;
   // Primero preguntar
   Swal.fire({
     title: '¿Estás seguro?',
@@ -188,8 +190,10 @@ agregarSocio(): void {
       title: 'Socio agregado',
       text: `El socio "${nuevoSocio.nombre}" fue registrado correctamente.`,
       icon: 'success',
-      confirmButtonColor: '#0d9488'
+      timer: 2000,
+      showConfirmButton: false
     });
+    
   });
 }
 
