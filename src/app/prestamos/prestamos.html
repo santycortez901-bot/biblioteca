@@ -67,6 +67,16 @@
         </button>
 
 
+        <button
+          class="filter"
+          [class.active]="filtro === 'suspendido'"
+          (click)="cambiarFiltro('suspendido')">
+
+          Suspendidos
+
+        </button>
+
+
         <span class="records">
 
           {{ prestamosFiltrados.length }}
@@ -117,221 +127,229 @@
             track prestamo.id
           ) {
 
-          <tr>
+            <tr>
 
-            <!-- ID -->
+              <!-- ID -->
 
-            <td>
+              <td>
 
-              <span class="prestamo-id">
+                <span class="prestamo-id">
 
-                {{ prestamo.id }}
-
-              </span>
-
-            </td>
-
-
-            <!-- SOCIO -->
-
-            <td>
-
-              <div class="socio">
-
-                <span class="socio-nombre">
-
-                  {{ prestamo.socio }}
+                  {{ prestamo.id }}
 
                 </span>
 
-              </div>
-
-            </td>
+              </td>
 
 
-            <!-- LIBRO -->
+              <!-- SOCIO -->
 
-            <td>
+              <td>
 
-              <div class="libro">
+                <div class="socio">
 
-                <span class="libro-nombre">
+                  <span class="socio-nombre">
 
-                  {{ prestamo.libro }}
+                    {{ prestamo.socio }}
+
+                  </span>
+
+                </div>
+
+              </td>
+
+
+              <!-- LIBRO -->
+
+              <td>
+
+                <div class="libro">
+
+                  <span class="libro-nombre">
+
+                    {{ prestamo.libro }}
+
+                  </span>
+
+                  <span class="inventario">
+
+                    {{ prestamo.inventario }}
+
+                  </span>
+
+                </div>
+
+              </td>
+
+
+              <!-- INICIO -->
+
+              <td>
+
+                <span class="fecha">
+
+                  {{ prestamo.fechaInicio }}
 
                 </span>
 
-                <span class="inventario">
+              </td>
 
-                  {{ prestamo.inventario }}
+
+              <!-- VENCIMIENTO -->
+
+              <td>
+
+                <span class="fecha vencimiento">
+
+                  {{ prestamo.fechaVencimiento }}
 
                 </span>
 
-              </div>
+              </td>
 
-            </td>
 
+              <!-- ESTADO -->
 
-            <!-- INICIO -->
+              <td>
 
-            <td>
+                <span
+                  class="estado"
+                  [class.estado-activo]="prestamo.estado === 'activo'"
+                  [class.estado-vencido]="prestamo.estado === 'atrasado'"
+                  [class.estado-devuelto]="prestamo.estado === 'devuelto'"
+                  [class.estado-suspendido]="prestamo.estado === 'suspendido'">
 
-              <span class="fecha">
+                  {{ prestamo.estado }}
 
-                {{ prestamo.fechaInicio }}
+                </span>
 
-              </span>
+              </td>
 
-            </td>
 
+              <!-- RENOVACIONES -->
 
-            <!-- VENCIMIENTO -->
+              <td>
 
-            <td>
+                <span class="renovaciones">
 
-              <span class="fecha vencimiento">
+                  {{ prestamo.renovaciones }}/2
 
-                {{ prestamo.fechaVencimiento }}
+                </span>
 
-              </span>
+              </td>
 
-            </td>
 
+              <!-- ACCIONES -->
 
-            <!-- ESTADO -->
+              <td>
 
-            <td>
+                <div class="acciones">
 
-              <span
-                class="estado"
 
-                [class.estado-activo]="
-                  prestamo.estado === 'activo'
-                "
+                  <!-- RENOVAR -->
 
-                [class.estado-vencido]="
-                  prestamo.estado === 'atrasado'
-                "
+                  @if (
+                    prestamo.renovaciones < 2 &&
+                    prestamo.estado !== 'devuelto' &&
+                    prestamo.estado !== 'suspendido'
+                  ) {
 
-                [class.estado-devuelto]="
-                  prestamo.estado === 'devuelto'
-                "
+                    <button
+                      class="btn-renovar"
+                      (click)="renovarPrestamo(prestamo)">
 
-                [class.estado-suspendido]="
-                  prestamo.estado === 'suspendido'
-                ">
+                      <span>↻</span>
 
-                {{ prestamo.estado }}
+                      Renovar Whatsapp
 
-              </span>
+                    </button>
 
-            </td>
+                  }
 
 
-            <!-- RENOVACIONES -->
+                  <!-- SUSPENDER -->
 
-            <td>
+                  @if (
+                    prestamo.estado !== 'devuelto' &&
+                    prestamo.estado !== 'suspendido'
+                  ) {
 
-              <span class="renovaciones">
+                    <button
+                      class="btn-suspender"
+                      (click)="abrirModalSuspension(prestamo)">
 
-                {{ prestamo.renovaciones }}/2
+                      <span>⚠</span>
 
-              </span>
+                      Suspender
 
-            </td>
+                    </button>
 
+                  }
 
-            <!-- ACCIONES -->
 
-            <td>
+                  <!-- DEVOLVER -->
 
-              <div class="acciones">
+                  @if (
+                    prestamo.estado !== 'devuelto' &&
+                    prestamo.estado !== 'suspendido'
+                  ) {
 
+                    <button
+                      class="btn-devolver"
+                      (click)="devolverPrestamo(prestamo)">
 
-                <!-- RENOVAR -->
+                      <span>✓</span>
 
-                @if (
-                  prestamo.renovaciones < 2 &&
-                  prestamo.estado !== 'devuelto' &&
-                  prestamo.estado !== 'suspendido'
-                ) {
+                      Devolver
 
-                  <button
-                    class="btn-renovar"
-                    (click)="renovarPrestamo(prestamo)">
+                    </button>
 
-                    <span>↻</span>
+                  }
 
-                    Renovar Whatsapp
 
-                  </button>
+                  <!-- QUITAR SUSPENSIÓN -->
 
-                }
+                  @if (
+                    prestamo.estado === 'suspendido'
+                  ) {
 
+                    <button
+                      class="btn-quitar-suspension"
+                      (click)="quitarSuspension(prestamo)">
 
-                <!-- SUSPENDER -->
+                      Quitar suspensión
 
-                @if (
-                  prestamo.estado !== 'devuelto' &&
-                  prestamo.estado !== 'suspendido'
-                ) {
+                    </button>
 
-                  <button
-                    class="btn-suspender"
-                    (click)="abrirModalSuspension(prestamo)">
+                  }
 
-                    <span>⚠</span>
 
-                    Suspender
+                </div>
 
-                  </button>
+              </td>
 
-                }
-
-
-                <!-- DEVOLVER -->
-
-                @if (
-                  prestamo.estado !== 'devuelto' &&
-                  prestamo.estado !== 'suspendido'
-                ) {
-
-                  <button
-                    class="btn-devolver"
-                    (click)="devolverPrestamo(prestamo)">
-
-                    <span>✓</span>
-
-                    Devolver
-
-                  </button>
-
-                }
-
-              </div>
-
-            </td>
-
-          </tr>
+            </tr>
 
           }
 
+
+          <!-- SIN RESULTADOS -->
 
           @if (
             prestamosFiltrados.length === 0
           ) {
 
-          <tr>
+            <tr>
 
-            <td
-              colspan="8"
-              class="sin-resultados">
+              <td
+                colspan="8"
+                class="sin-resultados">
 
-              No se encontraron préstamos.
+                No se encontraron préstamos.
 
-            </td>
+              </td>
 
-          </tr>
+            </tr>
 
           }
 
@@ -371,10 +389,7 @@
 
       <form
         #prestamoForm="ngForm"
-        (ngSubmit)="
-          prestamoForm.valid &&
-          crearPrestamo()
-        ">
+        (ngSubmit)="prestamoForm.valid && crearPrestamo()">
 
 
         <!-- SOCIO -->
@@ -400,9 +415,7 @@
 
 
             <option
-              *ngFor="
-                let socio of sociosDisponibles
-              "
+              *ngFor="let socio of sociosDisponibles"
               [value]="socio.id">
 
               {{ socio.nombre }}
@@ -421,7 +434,9 @@
             class="alert-error">
 
             <small>
+
               Debes seleccionar un socio.
+
             </small>
 
           </div>
@@ -452,7 +467,9 @@
             class="alert-error">
 
             <small>
+
               El título del libro es obligatorio.
+
             </small>
 
           </div>
@@ -483,7 +500,9 @@
             class="alert-error">
 
             <small>
+
               El código de inventario es obligatorio.
+
             </small>
 
           </div>
@@ -521,7 +540,7 @@
         </div>
 
 
-        <!-- ACCIONES -->
+        <!-- ACCIONES MODAL -->
 
         <div class="modal-actions">
 
@@ -622,4 +641,4 @@
 
   </div>
 
-</div>
+</div>  

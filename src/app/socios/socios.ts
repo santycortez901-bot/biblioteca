@@ -65,7 +65,6 @@ export class Socios implements OnInit {
 
   // NO TOCAR JULIETA ELUNEY CHIARA,
   // NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
-
   // UN SOLO CONSTRUCTOR
 
   constructor(
@@ -109,7 +108,7 @@ export class Socios implements OnInit {
 
 
   // HASTA ACA, DESPUES DE ESTO,
-  // HACE LA VRG Q QUIERAS, GRACIAS
+  // HACE LA VRG Q QIERAS, GRACIAS
 
 
   obtenerSocios(): void {
@@ -164,7 +163,6 @@ export class Socios implements OnInit {
         // 1. Filtro por búsqueda
 
         const cumpleBusqueda =
-
           !termino ||
 
           socio.nombre
@@ -187,12 +185,12 @@ export class Socios implements OnInit {
         // 2. Filtro por Estado
 
         const cumpleEstado =
+          this.filtroEstado === 'Todos'
 
-          this.filtroEstado === 'Todos' ||
+          ||
 
           socio.estado
             .toLowerCase() ===
-
           this.filtroEstado
             .toLowerCase();
 
@@ -222,9 +220,13 @@ export class Socios implements OnInit {
 
 
         return (
+
           cumpleBusqueda &&
+
           cumpleEstado &&
+
           cumpleEdad
+
         );
 
       }
@@ -482,6 +484,7 @@ export class Socios implements OnInit {
       this.socios.some(
 
         s =>
+
           s.dni.trim() ===
           dniLimpio
 
@@ -515,7 +518,6 @@ export class Socios implements OnInit {
     // =========================
 
     const nuevoSocio:
-
       Omit<
         Socio,
         'id' | 'numCarnet'
@@ -549,7 +551,7 @@ export class Socios implements OnInit {
 
     this.socioServicio
       .agregarSocio(
-        nuevoSocio as Socio
+        nuevoSocio
       );
 
 
@@ -586,97 +588,6 @@ export class Socios implements OnInit {
 
       showConfirmButton:
         false
-
-    });
-
-  }
-
-
-  // =========================
-  // QUITAR SUSPENSIÓN
-  // =========================
-
-  quitarSuspension(
-    socio: Socio
-  ): void {
-
-    Swal.fire({
-
-      title:
-        '¿Quitar suspensión?',
-
-      text:
-        `El socio "${socio.nombre}" volverá a estar activo.`,
-
-      icon:
-        'question',
-
-      showCancelButton:
-        true,
-
-      confirmButtonColor:
-        '#0d9488',
-
-      cancelButtonColor:
-        '#ef4444',
-
-      confirmButtonText:
-        'Sí, quitar suspensión',
-
-      cancelButtonText:
-        'Cancelar'
-
-    }).then(result => {
-
-      if (
-        !result.isConfirmed
-      ) {
-
-        return;
-
-      }
-
-
-      // Cambiar estado del socio
-
-      this.socioServicio
-        .actualizarEstadoSocio(
-
-          socio.id,
-
-          'activo'
-
-        );
-
-
-      // Actualizar lista
-
-      this.obtenerSocios();
-
-
-      // Mensaje
-
-      Swal.fire({
-
-        title:
-          '¡Suspensión quitada!',
-
-        text:
-          'El socio volvió a estar activo correctamente.',
-
-        icon:
-          'success',
-
-        confirmButtonColor:
-          '#0d9488',
-
-        timer:
-          2000,
-
-        showConfirmButton:
-          false
-
-      });
 
     });
 
