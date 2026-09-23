@@ -8,7 +8,7 @@ export interface Socio {
   numCarnet: string;
   edad: number;
   email: string;
-  telefono: string;
+  telefono: string; 
   estado: EstadoSocio;
   prestamos: PrestamoActual;
   cuota: EstadoCuota

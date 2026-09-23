@@ -1,284 +1,652 @@
 <div class="body">
+
   <div class="main">
+
+    <!-- HEADER -->
+
     <header class="header">
+
       <h1>Socios</h1>
-      <button class="btn-primary" (click)="openModal()">+ Nuevo socio</button>
+
+      <button
+        class="btn-primary"
+        (click)="openModal()">
+
+        + Nuevo socio
+
+      </button>
+
     </header>
 
+
+    <!-- TOOLBAR / SEARCH & FILTERS -->
+
     <div class="toolbar">
+
       <div class="search-box">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+
+        <svg
+          class="search-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
           stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+
+          <circle
+            cx="11"
+            cy="11"
+            r="8">
+          </circle>
+
+          <line
+            x1="21"
+            y1="21"
+            x2="16.65"
+            y2="16.65">
+          </line>
+
         </svg>
-        <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, DNI o carnet...">
+
+
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar por nombre, DNI o carnet...">
+
       </div>
+
 
       <div class="filters">
-        <div class="filter-group">
-          <button class="filter-btn" [class.active]="filtroEstado === 'Todos'"
-            (click)="FiltroEstado('Todos')">Todos</button>
-          <button class="filter-btn" [class.active]="filtroEstado === 'activo'"
-            (click)="FiltroEstado('activo')">Activo</button>
-          <button class="filter-btn" [class.active]="filtroEstado === 'suspendido'"
-            (click)="FiltroEstado('suspendido')">Suspendido</button>
-          <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'"
-            (click)="FiltroEstado('inactivo')">Inactivo</button>
-        </div>
 
         <div class="filter-group">
-          <button class="filter-btn dark" [class.active]="filtroEdad === 'Todas edades'"
-            (click)="FiltroEdad('Todas edades')">Todas edades</button>
-          <button class="filter-btn" [class.active]="filtroEdad === '+18'" (click)="FiltroEdad('+18')">+18</button>
-          <button class="filter-btn" [class.active]="filtroEdad === '-18'" (click)="FiltroEdad('-18')">-18</button>
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'Todos'"
+            (click)="FiltroEstado('Todos')">
+
+            Todos
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'activo'"
+            (click)="FiltroEstado('activo')">
+
+            Activo
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'suspendido'"
+            (click)="FiltroEstado('suspendido')">
+
+            Suspendidos
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'bloqueado'"
+            (click)="FiltroEstado('bloqueado')">
+
+            Bloqueado
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEstado === 'inactivo'"
+            (click)="FiltroEstado('inactivo')">
+
+            Baja
+
+          </button>
+
         </div>
 
-        <span class="results-count">{{sociosFiltrados.length}} Resultado(s)</span>
+
+        <div class="filter-group">
+
+          <button
+            class="filter-btn dark"
+            [class.active]="filtroEdad === 'Todas edades'"
+            (click)="FiltroEdad('Todas edades')">
+
+            Todas edades
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEdad === '+18'"
+            (click)="FiltroEdad('+18')">
+
+            +18
+
+          </button>
+
+
+          <button
+            class="filter-btn"
+            [class.active]="filtroEdad === '-18'"
+            (click)="FiltroEdad('-18')">
+
+            -18
+
+          </button>
+
+        </div>
+
+
+        <span class="results-count">
+
+          {{ sociosFiltrados.length }}
+
+          Resultado(s)
+
+        </span>
+
       </div>
+
     </div>
+
+
+    <!-- DATA TABLE -->
 
     <div class="table-container">
+
       <table>
+
         <thead>
+
           <tr>
+
             <th>CARNET</th>
+
             <th>NOMBRE</th>
+
             <th>DNI</th>
+
             <th>CONTACTO</th>
+
             <th>ESTADO</th>
+
             <th>PRÉSTAMO</th>
-            <th>ACCIONES</th>
+
           </tr>
+
         </thead>
+
+
         <tbody>
-          @for(s of sociosFiltrados; track s.id){
-          <tr>
-            <td data-label="CARNET" class="text-muted">{{s.numCarnet}}</td>
-            <td data-label="NOMBRE">
-              <div class="user-name">{{s.nombre}}</div>
-              <div class="user-subtext">{{s.edad}} años</div>
-            </td>
-            <td data-label="DNI">{{s.dni}}</td>
-            <td data-label="CONTACTO">
-              <div>{{s.telefono}}</div>
-              <div class="user-subtext">{{s.email}}</div>
-            </td>
-            <td data-label="ESTADO">
-              <span class="badge" [ngClass]="{
-                'badge-activo': s.estado === 'activo',
-                'badge-inactivo': s.estado === 'inactivo',
-                'badge-suspendido': s.estado === 'suspendido'}">
-                {{ s.estado }}
-              </span>
-            </td>
-            <td data-label="PRÉSTAMO" [class.prestamo-encurso]="s.prestamos === 'Encurso'"
-              [class.prestamo-libre]="s.prestamos === 'Libre'">{{ s.prestamos }}
-            </td>
-            <td data-label="ACCIONES">
-              <button class="btn-primary" (click)="abrirModalEditar(s)">Editar</button>
-            </td>
-          </tr>
-          }
-          @if (sociosFiltrados.length === 0) {
+
+          @for (
+            s of sociosFiltrados;
+            track s.id
+          ) {
+
             <tr>
-              <td colspan="7" class="sin-resultados">
-                No se encontraron Socios.
+
+              <!-- CARNET -->
+
+              <td
+                data-label="CARNET"
+                class="text-muted">
+
+                {{ s.numCarnet }}
+
               </td>
+
+
+              <!-- NOMBRE -->
+
+              <td data-label="NOMBRE">
+
+                <div class="user-name">
+
+                  {{ s.nombre }}
+
+                </div>
+
+                <div class="user-subtext">
+
+                  {{ s.edad }}
+
+                </div>
+
+              </td>
+
+
+              <!-- DNI -->
+
+              <td data-label="DNI">
+
+                {{ s.dni }}
+
+              </td>
+
+
+              <!-- CONTACTO -->
+
+              <td data-label="CONTACTO">
+
+                <div>
+
+                  {{ s.telefono }}
+
+                </div>
+
+                <div class="user-subtext">
+
+                  {{ s.email }}
+
+                </div>
+
+              </td>
+
+
+              <!-- ESTADO -->
+
+              <td data-label="ESTADO">
+
+                <span
+                  class="badge"
+
+                  [ngClass]="{
+
+                    'badge-activo':
+                      s.estado === 'activo',
+
+                    'badge-inactivo':
+                      s.estado === 'inactivo',
+
+                    'badge-suspendido':
+                      s.estado === 'suspendido',
+
+                    'badge-bloqueado':
+                      s.estado === 'bloqueado'
+
+                  }">
+
+                  {{ s.estado }}
+
+                </span>
+
+              </td>
+
+
+              <!-- PRÉSTAMO -->
+
+              <td
+                data-label="PRÉSTAMO"
+
+                [class.prestamo-encurso]="
+                  s.prestamos === 'Encurso'
+                "
+
+                [class.prestamo-libre]="
+                  s.prestamos === 'Libre'
+                ">
+
+                {{ s.prestamos }}
+
+              </td>
+
             </tr>
+
           }
+
+
+          @if (
+            sociosFiltrados.length === 0
+          ) {
+
+            <tr>
+
+              <td
+                colspan="6"
+                class="sin-resultados">
+
+                No se encontraron Socios.
+
+              </td>
+
+            </tr>
+
+          }
+
         </tbody>
+
       </table>
+
     </div>
+
   </div>
 
-  <div class="modal-overlay" *ngIf="isModalOpen">
+
+  <!-- ================================= -->
+  <!-- MODAL: AGREGAR SOCIO -->
+  <!-- ================================= -->
+
+  <div
+    class="modal-overlay"
+    *ngIf="isModalOpen">
+
     <div class="modal-card">
+
       <div class="modal-header">
+
         <h2>Agregar Nuevo Socio</h2>
-        <button (click)="closeModal()" class="close-btn">&times;</button>
+
+        <button
+          (click)="closeModal()"
+          class="close-btn">
+
+          &times;
+
+        </button>
+
       </div>
 
-      <form #socioForm="ngForm" (ngSubmit)="socioForm.valid && agregarSocio()">
+
+      <form
+        #socioForm="ngForm"
+        (ngSubmit)="
+          socioForm.valid &&
+          agregarSocio()
+        ">
+
+
+        <!-- NOMBRE -->
 
         <div class="form-group">
-          <label>Nombre y Apellido</label>
-          <input 
-            type="text" 
-            [(ngModel)]="nuevoNombre" 
-            name="nombre" 
+
+          <label>
+            Nombre y Apellido
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="nuevoNombre"
+            name="nombre"
             #nombre="ngModel"
-            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$" 
+            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$"
             placeholder="Ej: Juan Pérez"
             required />
-          <div *ngIf="nombre.invalid && nombre.touched" class="alert-error">
-            <small *ngIf="nombre.errors?.['required']">El nombre es obligatorio.</small>
-            <small *ngIf="nombre.errors?.['pattern']">Ingresá nombre y apellido (mínimo 2 palabras).</small>
+
+
+          <div
+            *ngIf="
+              nombre.invalid &&
+              nombre.touched
+            "
+            class="alert-error">
+
+            <small
+              *ngIf="
+                nombre.errors?.['required']
+              ">
+
+              El nombre es obligatorio.
+
+            </small>
+
+
+            <small
+              *ngIf="
+                nombre.errors?.['pattern']
+              ">
+
+              Ingresá nombre y apellido
+              (mínimo 2 palabras).
+
+            </small>
+
           </div>
+
         </div>
 
+
+        <!-- EDAD -->
+
         <div class="form-group">
-          <label>Edad</label>
-          <input 
-            type="number" 
-            [(ngModel)]="nuevaEdad" 
-            name="edad" 
+
+          <label>
+            Edad
+          </label>
+
+          <input
+            type="number"
+            [(ngModel)]="nuevaEdad"
+            name="edad"
             #edad="ngModel"
-            min="4" 
+            min="4"
             placeholder="Mínimo 4"
             required />
-          <div *ngIf="edad.invalid && edad.touched" class="alert-error">
-            <small *ngIf="edad.errors?.['required']">La edad es obligatoria.</small>
-            <small *ngIf="edad.errors?.['min']">La edad mínima permitida es 4 años.</small>
+
+
+          <div
+            *ngIf="
+              edad.invalid &&
+              edad.touched
+            "
+            class="alert-error">
+
+            <small
+              *ngIf="
+                edad.errors?.['required']
+              ">
+
+              La edad es obligatoria.
+
+            </small>
+
+
+            <small
+              *ngIf="
+                edad.errors?.['min']
+              ">
+
+              La edad mínima permitida
+              es 4 años.
+
+            </small>
+
           </div>
+
         </div>
 
+
+        <!-- DNI -->
+
         <div class="form-group">
-          <label>DNI</label>
-          <input 
-            type="text" 
-            [(ngModel)]="nuevoDni" 
-            name="dni" 
+
+          <label>
+            DNI
+          </label>
+
+          <input
+            type="text"
+            [(ngModel)]="nuevoDni"
+            name="dni"
             #dni="ngModel"
-            pattern="^[0-9]{7,}$" 
+            pattern="^[0-9]{7,}$"
             placeholder="Mínimo 7 números"
             required />
-          <div *ngIf="(dni.invalid && dni.touched) || errorDni" class="alert-error">
-          <small *ngIf="dni.errors?.['required']">El DNI es obligatorio.</small>
-          <small *ngIf="dni.errors?.['pattern']">El DNI debe tener al menos 7 dígitos numéricos.</small>
-          <small *ngIf="errorDni">{{ errorDni }}</small>
+
+
+          <div
+            *ngIf="
+              dni.invalid &&
+              dni.touched
+            "
+            class="alert-error">
+
+            <small
+              *ngIf="
+                dni.errors?.['required']
+              ">
+
+              El DNI es obligatorio.
+
+            </small>
+
+
+            <small
+              *ngIf="
+                dni.errors?.['pattern']
+              ">
+
+              El DNI debe tener al menos
+              7 dígitos numéricos.
+
+            </small>
+
           </div>
+
         </div>
 
+
+        <!-- TELÉFONO -->
+
         <div class="form-group">
-          <label>Teléfono</label>
-          <input 
-            type="tel" 
-            [(ngModel)]="nuevoTelefono" 
-            name="telefono" 
+
+          <label>
+            Teléfono
+          </label>
+
+          <input
+            type="tel"
+            [(ngModel)]="nuevoTelefono"
+            name="telefono"
             #telefono="ngModel"
-            pattern="^\+[0-9]{12}$" 
+            pattern="^\+[0-9]{12}$"
             placeholder="Ej: +5491112345678"
             required />
-          <div *ngIf="telefono.invalid && telefono.touched" class="alert-error">
-            <small *ngIf="telefono.errors?.['required']">El teléfono es obligatorio.</small>
-            <small *ngIf="telefono.errors?.['pattern']">Formato incorrecto. Debe ser '+' seguido de 12 números.</small>
+
+
+          <div
+            *ngIf="
+              telefono.invalid &&
+              telefono.touched
+            "
+            class="alert-error">
+
+            <small
+              *ngIf="
+                telefono.errors?.['required']
+              ">
+
+              El teléfono es obligatorio.
+
+            </small>
+
+
+            <small
+              *ngIf="
+                telefono.errors?.['pattern']
+              ">
+
+              Formato incorrecto.
+              Debe ser '+' seguido de
+              12 números.
+
+            </small>
+
           </div>
+
         </div>
 
+
+        <!-- EMAIL -->
+
         <div class="form-group">
-          <label>Correo Electrónico</label>
-          <input 
-            type="email" 
-            [(ngModel)]="nuevoEmail" 
-            name="email" 
+
+          <label>
+            Correo Electrónico
+          </label>
+
+          <input
+            type="email"
+            [(ngModel)]="nuevoEmail"
+            name="email"
             #email="ngModel"
-            pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$" 
+            pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$"
             placeholder="usuario@gmail.com o @hotmail.com"
             required />
-          <div *ngIf="email.invalid && email.touched" class="alert-error">
-            <small *ngIf="email.errors?.['required']">El correo es obligatorio.</small>
-            <small *ngIf="email.errors?.['pattern']">El correo debe finalizar en @gmail.com o @hotmail.com.</small>
+
+
+          <div
+            *ngIf="
+              email.invalid &&
+              email.touched
+            "
+            class="alert-error">
+
+            <small
+              *ngIf="
+                email.errors?.['required']
+              ">
+
+              El correo es obligatorio.
+
+            </small>
+
+
+            <small
+              *ngIf="
+                email.errors?.['pattern']
+              ">
+
+              El correo debe finalizar
+              en @gmail.com o @hotmail.com.
+
+            </small>
+
           </div>
+
         </div>
+
+
+        <!-- ACCIONES MODAL -->
 
         <div class="modal-actions">
-          <button type="submit" [disabled]="!socioForm.valid" class="submit-btn">Guardar</button>
-          <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
+
+          <button
+            type="submit"
+            [disabled]="!socioForm.valid"
+            class="submit-btn">
+
+            Guardar
+
+          </button>
+
+
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="cancel-btn">
+
+            Cancelar
+
+          </button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
 
-  <div class="modal-overlay" *ngIf="mostrarModalEditar">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>Editar Socio</h2>
-        <button (click)="cerrarModalEditar()" class="close-btn">&times;</button>
-      </div>
-
-      <form #editForm="ngForm" (ngSubmit)="editForm.valid && guardarEdicion()">
-
-        <div class="form-group">
-          <label>Nombre y Apellido</label>
-          <input 
-            type="text" 
-            [(ngModel)]="socioEnEdicion.nombre" 
-            name="editNombre" 
-            #editNombre="ngModel"
-            pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$" 
-            required />
-          <div *ngIf="editNombre.invalid && editNombre.touched" class="alert-error">
-            <small *ngIf="editNombre.errors?.['required']">El nombre es obligatorio.</small>
-            <small *ngIf="editNombre.errors?.['pattern']">Ingresá nombre y apellido (mínimo 2 palabras).</small>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Edad</label>
-          <input 
-            type="number" 
-            [(ngModel)]="socioEnEdicion.edad" 
-            name="editEdad" 
-            #editEdad="ngModel"
-            min="4" 
-            required />
-          <div *ngIf="editEdad.invalid && editEdad.touched" class="alert-error">
-            <small *ngIf="editEdad.errors?.['required']">La edad es obligatoria.</small>
-            <small *ngIf="editEdad.errors?.['min']">La edad mínima permitida es 4 años.</small>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>DNI</label>
-          <input 
-            type="text" 
-            [(ngModel)]="socioEnEdicion.dni" 
-            name="editDni" 
-            #editDni="ngModel"
-            pattern="^[0-9]{7,}$" 
-            required />
-          <div *ngIf="editDni.invalid && editDni.touched" class="alert-error">
-            <small *ngIf="editDni.errors?.['required']">El DNI es obligatorio.</small>
-            <small *ngIf="editDni.errors?.['pattern']">El DNI debe tener al menos 7 dígitos numéricos.</small>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Teléfono</label>
-          <input 
-            type="tel" 
-            [(ngModel)]="socioEnEdicion.telefono" 
-            name="editTelefono" 
-            #editTelefono="ngModel"
-            pattern="^\+[0-9]{12}$" 
-            required />
-          <div *ngIf="editTelefono.invalid && editTelefono.touched" class="alert-error">
-            <small *ngIf="editTelefono.errors?.['required']">El teléfono es obligatorio.</small>
-            <small *ngIf="editTelefono.errors?.['pattern']">Formato incorrecto. Debe ser '+' seguido de 12 números.</small>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Correo Electrónico</label>
-          <input 
-            type="email" 
-            [(ngModel)]="socioEnEdicion.email" 
-            name="editEmail" 
-            #editEmail="ngModel"
-            pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$" 
-            required />
-          <div *ngIf="editEmail.invalid && editEmail.touched" class="alert-error">
-            <small *ngIf="editEmail.errors?.['required']">El correo es obligatorio.</small>
-            <small *ngIf="editEmail.errors?.['pattern']">El correo debe finalizar en @gmail.com o @hotmail.com.</small>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="submit" [disabled]="!editForm.valid" class="submit-btn">Guardar Cambios</button>
-          <button type="button" (click)="cerrarModalEditar()" class="cancel-btn">Cancelar</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>

@@ -1,13 +1,11 @@
-import { Injectable, inject } from '@angular/core';
-import { Socio } from '../models/models/socio'; 
-// Asegurate de usar el nombre de archivo exacto que tenés en la carpeta services:
-import { PrestamoService } from '../services/prestamo';
+import { Injectable } from '@angular/core';
+import { Socio } from '../models/models/socio';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocioServicio {
-  private prestamoService = inject(PrestamoService);
+
   private socios: Socio[] = [];
   private contadorSocio = 1;
 
@@ -15,8 +13,13 @@ export class SocioServicio {
     return this.socios;
   }
 
-  agregarSocio(socioData: Omit<Socio, 'id' | 'numCarnet'>): void {
-    const idSecuencia = this.contadorSocio.toString().padStart(3, '0');
+  agregarSocio(
+    socioData: Omit<Socio, 'id' | 'numCarnet'>
+  ): void {
+
+    const idSecuencia = this.contadorSocio
+      .toString()
+      .padStart(3, '0');
 
     const nuevoSocio: Socio = {
       ...socioData,
@@ -25,6 +28,7 @@ export class SocioServicio {
     };
 
     this.socios.push(nuevoSocio);
+
     this.contadorSocio++;
   }
 
@@ -47,17 +51,35 @@ export class SocioServicio {
     this.actualizarSocio(socioActualizado);
   }
 
-  actualizarEstadoPrestamo(idSocio: number | string, nuevoEstado: 'Libre' | 'Encurso'): void {
-    const socio = this.socios.find(s => s.id === Number(idSocio));
+  actualizarEstadoPrestamo(
+    idSocio: number | string,
+    nuevoEstado: 'Libre' | 'Encurso'
+  ): void {
+
+    const socio = this.socios.find(
+      s => s.id === Number(idSocio)
+    );
+
     if (socio) {
       socio.prestamos = nuevoEstado;
     }
   }
 
-  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pendiente' | 'pagada' | 'vencida'): void {
-    const socio = this.socios.find(s => s.id === Number(idSocio));
-    if (socio) { 
-      socio.cuota = nuevoEstado; 
+  actualizarEstadoSocio(
+    idSocio: number | string,
+    nuevoEstado:
+      | 'activo'
+      | 'inactivo'
+      | 'suspendido'
+      | 'bloqueado'
+  ): void {
+
+    const socio = this.socios.find(
+      s => s.id === Number(idSocio)
+    );
+
+    if (socio) {
+      socio.estado = nuevoEstado;
     }
   }
 }

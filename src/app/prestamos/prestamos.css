@@ -973,4 +973,17 @@ textarea {
   font-family: inherit;
   font-size: 14px;
 }
+.btn-quitar-suspension {
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
 
+.btn-quitar-suspension:hover {
+  opacity: 0.9;
+}
