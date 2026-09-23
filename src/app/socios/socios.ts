@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
-
+import { ActivatedRoute } from '@angular/router';
 import { Socio, EstadoSocio, EstadoCuota } from '../models/models/socio';
 import { SocioServicio } from '../services/socio';
 import { ActividadServicio } from '../services/actividade-service';
@@ -16,6 +16,28 @@ import { ActividadServicio } from '../services/actividade-service';
 })
 export class Socios implements OnInit {
   socios: Socio[] = [];
+
+   //NO TOCAR JULIETA ELUNEY CHIARA, NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
+  // UN SOLO CONSTRUCTOR
+  constructor(
+    private route: ActivatedRoute,
+    private socioServicio: SocioServicio,
+    private actividadServicio: ActividadServicio
+    
+  ) {}
+  // UN SOLO ngOnInit
+  ngOnInit(): void {
+    // Cargar socios
+    this.obtenerSocios();
+    // Abrir modal automáticamente si viene el parámetro
+    this.route.queryParams.subscribe(params => {
+      if (params['openModal'] === 'true') {
+        this.openModal();
+      }
+    });
+  }
+  // HASTA ACA, DESPUES DE ESTO, HACE LA VRG Q QUIERAS, GRACIAS
+
 
   // Filtros y Búsqueda
   busqueda: string = '';
@@ -45,15 +67,6 @@ export class Socios implements OnInit {
     prestamos: 'Libre',
     cuota: 'pagada' as EstadoCuota
   };
-
-  constructor(
-    private socioServicio: SocioServicio,
-    private actividadServicio: ActividadServicio
-  ) {}
-
-  ngOnInit(): void {
-    this.obtenerSocios();
-  }
 
   obtenerSocios(): void {
     if (typeof this.socioServicio.tenerSocios === 'function') {
