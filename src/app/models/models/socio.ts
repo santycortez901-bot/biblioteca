@@ -1,4 +1,4 @@
-export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido'| 'bloqueado';
+export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido';
 export type PrestamoActual = 'Encurso' | 'Libre' ;
 export type EstadoCuota = 'pagada' | 'pendiente' | 'vencida';
 export interface Socio {

@@ -29,6 +29,7 @@ export class Socios implements OnInit {
   nuevoDni: string = '';
   nuevoTelefono: string = '';
   nuevoEmail: string = '';
+  errorDni: string = '';
 
   // Modal para Editar Socio
   mostrarModalEditar: boolean = false;
@@ -42,7 +43,7 @@ export class Socios implements OnInit {
     telefono: '',
     estado: 'activo' as EstadoSocio,
     prestamos: 'Libre',
-    cuota: 'al dia' as EstadoCuota
+    cuota: 'pagada' as EstadoCuota
   };
 
   constructor(
@@ -113,9 +114,42 @@ export class Socios implements OnInit {
     this.nuevoEmail = '';
   }
 
-  agregarSocio(): void {
-    if (!this.nuevoNombre || !this.nuevaEdad || !this.nuevoDni) return;
+agregarSocio(): void {
+  this.errorDni = '';
 
+  if (!this.nuevoNombre || !this.nuevaEdad || !this.nuevoDni) {
+    return;
+  }
+
+  const dniLimpio = this.nuevoDni.trim();
+
+  const existeDni = this.socios.some(
+    s => s.dni?.toString().trim() === dniLimpio
+  );
+
+  if (existeDni) {
+    this.errorDni = 'Ya existe un socio registrado con este DNI.';
+    return;
+  }
+
+  // Primero preguntar
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: `¿Deseas agregar socio "${this.nuevoNombre.trim()}"?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#0d9488',
+    cancelButtonColor: '#ef4444',
+    confirmButtonText: 'Agregar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+
+    // Si cancela, no hacemos nada
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    // Recién después de confirmar generamos y agregamos
     const carnetGenerado = `C-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const nuevoSocio: Socio = {
@@ -123,14 +157,12 @@ export class Socios implements OnInit {
       numCarnet: carnetGenerado,
       nombre: this.nuevoNombre.trim(),
       edad: Number(this.nuevaEdad),
-      dni: this.nuevoDni.trim(),
+      dni: dniLimpio,
       telefono: this.nuevoTelefono.trim(),
       email: this.nuevoEmail.trim(),
       estado: 'activo' as EstadoSocio,
       prestamos: 'Libre',
-
-      cuota:  'pendiente'
-
+      cuota: 'pendiente'
     };
 
     if (typeof (this.socioServicio as any).agregarSocio === 'function') {
@@ -153,14 +185,13 @@ export class Socios implements OnInit {
     this.closeModal();
 
     Swal.fire({
-      title: '¡Socio Registrado!',
-      text: `Se dio de alta a ${nuevoSocio.nombre}.`,
+      title: 'Socio agregado',
+      text: `El socio "${nuevoSocio.nombre}" fue registrado correctamente.`,
       icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 2000,
-      showConfirmButton: false
+      confirmButtonColor: '#0d9488'
     });
-  }
+  });
+}
 
   // --- Modal Editar Socio ---
   abrirModalEditar(socio: Socio): void {
@@ -195,12 +226,14 @@ export class Socios implements OnInit {
     this.cerrarModalEditar();
 
     Swal.fire({
-      title: '¡Socio Actualizado!',
-      text: `Se guardaron los cambios para ${this.socioEnEdicion.nombre}.`,
-      icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 1800,
-      showConfirmButton: false
+          title: '¿Estás seguro?',
+          text: `¿Deseas editar el socio "${this.socioEnEdicion.nombre}"?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#0d9488',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Editar',
+          cancelButtonText: 'Cancelar'
     });
   }
 }

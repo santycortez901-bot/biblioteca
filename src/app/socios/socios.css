@@ -461,6 +461,11 @@ td[data-label="PRÉSTAMO"] {
   border-color: #0d9488; /* Verde/Teal del sistema */
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
+.modal-overlay,
+.modal-backdrop,
+.modal-card {
+  z-index: 1000; /* SweetAlert2 usa z-index 1060 por defecto, así la alerta siempre queda arriba */
+}
 
 /* Botones de acción del formulario */
 .modal-actions {

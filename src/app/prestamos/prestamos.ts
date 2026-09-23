@@ -21,6 +21,7 @@ export class Prestamos implements OnInit, OnDestroy {
   librosDisponibles: Libro[] = [];
   busqueda: string = '';
   filtro: 'todos' | 'activo' | 'atrasado' = 'todos';
+  
 
   isModalOpen = false;
   socioSeleccionadoId: number | null = null;

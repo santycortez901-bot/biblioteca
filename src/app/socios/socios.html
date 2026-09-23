@@ -21,10 +21,10 @@
             (click)="FiltroEstado('Todos')">Todos</button>
           <button class="filter-btn" [class.active]="filtroEstado === 'activo'"
             (click)="FiltroEstado('activo')">Activo</button>
-          <button class="filter-btn" [class.active]="filtroEstado === 'bloqueado'"
-            (click)="FiltroEstado('bloqueado')">Bloqueado</button>
+          <button class="filter-btn" [class.active]="filtroEstado === 'suspendido'"
+            (click)="FiltroEstado('suspendido')">Suspendido</button>
           <button class="filter-btn" [class.active]="filtroEstado === 'inactivo'"
-            (click)="FiltroEstado('inactivo')">Baja</button>
+            (click)="FiltroEstado('inactivo')">Inactivo</button>
         </div>
 
         <div class="filter-group">
@@ -68,8 +68,7 @@
               <span class="badge" [ngClass]="{
                 'badge-activo': s.estado === 'activo',
                 'badge-inactivo': s.estado === 'inactivo',
-                'badge-suspendido': s.estado === 'suspendido',
-                'badge-bloqueado': s.estado === 'bloqueado'}">
+                'badge-suspendido': s.estado === 'suspendido'}">
                 {{ s.estado }}
               </span>
             </td>
@@ -144,9 +143,10 @@
             pattern="^[0-9]{7,}$" 
             placeholder="Mínimo 7 números"
             required />
-          <div *ngIf="dni.invalid && dni.touched" class="alert-error">
-            <small *ngIf="dni.errors?.['required']">El DNI es obligatorio.</small>
-            <small *ngIf="dni.errors?.['pattern']">El DNI debe tener al menos 7 dígitos numéricos.</small>
+          <div *ngIf="(dni.invalid && dni.touched) || errorDni" class="alert-error">
+          <small *ngIf="dni.errors?.['required']">El DNI es obligatorio.</small>
+          <small *ngIf="dni.errors?.['pattern']">El DNI debe tener al menos 7 dígitos numéricos.</small>
+          <small *ngIf="errorDni">{{ errorDni }}</small>
           </div>
         </div>
 
