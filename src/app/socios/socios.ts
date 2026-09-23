@@ -132,8 +132,6 @@ agregarSocio(): void {
     return;
   }
 
-  // Oculta el modal de inmediato para que no se pise con la alerta
-    this.isModalOpen = false;
   // Primero preguntar
   Swal.fire({
     title: '¿Estás seguro?',

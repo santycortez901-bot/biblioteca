@@ -84,6 +84,7 @@ export class Libros implements OnInit, OnDestroy {
 
     const tituloIngresado = this.nuevoTitulo.trim();
 
+    
     // Muestra un cuadro de diálogo interactivo de confirmación con el nombre del libro
     Swal.fire({
       title: '¿Estás seguro?',
