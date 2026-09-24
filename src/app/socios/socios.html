@@ -96,15 +96,7 @@
           </button>
 
 
-          <button
-            type="button"
-            class="filter-btn"
-            [class.active]="filtroEstado === 'bloqueado'"
-            (click)="filtrarPorEstado('bloqueado')">
-
-            Bloqueado
-
-          </button>
+          
 
 
           <button
@@ -191,6 +183,8 @@
             <th>ESTADO</th>
 
             <th>PRÉSTAMO</th>
+
+            <th>ACCIONES</th>
 
           </tr>
 
@@ -282,8 +276,7 @@
                     'badge-suspendido':
                       s.estado === 'suspendido',
 
-                    'badge-bloqueado':
-                      s.estado === 'bloqueado'
+                    
 
                   }">
 
@@ -311,6 +304,23 @@
 
               </td>
 
+
+              <!-- ACCIONES -->
+
+              <td
+                data-label="ACCIONES">
+
+                <button
+                  type="button"
+                  class="btn-editar"
+                  (click)="abrirModalEditar(s)">
+
+                  Editar
+
+                </button>
+
+              </td>
+
             </tr>
 
           }
@@ -323,7 +333,7 @@
             <tr>
 
               <td
-                colspan="6"
+                colspan="7"
                 class="sin-resultados">
 
                 No se encontraron Socios.
@@ -365,6 +375,7 @@
 
         </h2>
 
+
         <button
           type="button"
           (click)="closeModal()"
@@ -389,6 +400,7 @@
           <label>
             Nombre y Apellido
           </label>
+
 
           <input
             type="text"
@@ -440,6 +452,7 @@
             Edad
           </label>
 
+
           <input
             type="number"
             [(ngModel)]="form.edad"
@@ -490,6 +503,7 @@
             DNI
           </label>
 
+
           <input
             type="text"
             [(ngModel)]="form.dni"
@@ -539,6 +553,7 @@
           <label>
             Teléfono
           </label>
+
 
           <input
             type="tel"
@@ -591,6 +606,7 @@
             Correo Electrónico
           </label>
 
+
           <input
             type="email"
             [(ngModel)]="form.email"
@@ -629,33 +645,6 @@
             </small>
 
           </div>
-
-        </div>
-
-
-        <!-- ESTADO -->
-
-        <div
-          class="form-group"
-          *ngIf="esEdicion">
-
-          <label>
-            Estado
-          </label>
-
-          <select
-            [(ngModel)]="form.estado"
-            name="estado">
-
-            <option
-              *ngFor="let estado of estadosEditables"
-              [ngValue]="estado">
-
-              {{ estado }}
-
-            </option>
-
-          </select>
 
         </div>
 

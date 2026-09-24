@@ -1,6 +1,27 @@
 /* ==========================================
    RESET Y ESTILOS GLOBALES
    ========================================== */
+.btn-editar {
+  border: none;
+  background: #0d9488;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-editar:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn-editar:active {
+  transform: translateY(0);
+}
+
 .body {
   width: 100%;
   min-height: 100vh;

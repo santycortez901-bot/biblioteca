@@ -6,79 +6,160 @@ import {
   PrestamoActual
 } from '../models/models/socio';
 
+
 @Injectable({
   providedIn: 'root',
 })
 export class SocioServicio {
 
   private socios: Socio[] = [];
+
   private contadorSocio = 1;
 
+
+  // ==========================================
+  // OBTENER SOCIOS
+  // ==========================================
+
   tenerSocios(): Socio[] {
+
     return this.socios;
+
   }
+
+
+  // ==========================================
+  // AGREGAR SOCIO
+  // ==========================================
 
   agregarSocio(
     socioData: Omit<Socio, 'id' | 'numCarnet'>
   ): void {
 
-    const idSecuencia = this.contadorSocio
-      .toString()
-      .padStart(3, '0');
+    const idSecuencia =
+      this.contadorSocio
+        .toString()
+        .padStart(3, '0');
+
 
     const nuevoSocio: Socio = {
+
       ...socioData,
+
       id: this.contadorSocio,
+
       numCarnet: `c-${idSecuencia}`,
+
     };
 
-    this.socios.push(nuevoSocio);
 
-    this.contadorSocio++;
-  }
-
-  actualizarSocio(socioActualizado: Socio): void {
-
-    const index = this.socios.findIndex(
-      s => s.id === socioActualizado.id
+    this.socios.push(
+      nuevoSocio
     );
 
-    if (index !== -1) {
-      this.socios[index] = {
-        ...socioActualizado
-      };
-    }
+
+    this.contadorSocio++;
+
   }
 
-  modificarSocio(socioActualizado: Socio): void {
-    this.actualizarSocio(socioActualizado);
+
+  // ==========================================
+  // ACTUALIZAR SOCIO
+  // ==========================================
+
+  actualizarSocio(
+    socioActualizado: Socio
+  ): void {
+
+    const index =
+      this.socios.findIndex(
+        s =>
+          s.id ===
+          socioActualizado.id
+      );
+
+
+    if (index !== -1) {
+
+      this.socios[index] = {
+
+        ...socioActualizado
+
+      };
+
+    }
+
   }
+
+
+  // ==========================================
+  // MODIFICAR SOCIO
+  // ==========================================
+
+  modificarSocio(
+    socioActualizado: Socio
+  ): void {
+
+    this.actualizarSocio(
+      socioActualizado
+    );
+
+  }
+
+
+  // ==========================================
+  // ACTUALIZAR ESTADO PRÉSTAMO
+  // ==========================================
 
   actualizarEstadoPrestamo(
     idSocio: number | string,
+
     nuevoEstado: PrestamoActual
   ): void {
 
-    const socio = this.socios.find(
-      s => s.id === Number(idSocio)
-    );
+    const socio =
+      this.socios.find(
+        s =>
+          s.id ===
+          Number(idSocio)
+      );
+
 
     if (socio) {
-      socio.prestamos = nuevoEstado;
+
+      socio.prestamos =
+        nuevoEstado;
+
     }
+
   }
+
+
+  // ==========================================
+  // ACTUALIZAR ESTADO CUOTA
+  // ==========================================
 
   actualizarEstadoCuota(
     idSocio: number | string,
+
     nuevoEstado: EstadoCuota
   ): void {
 
-    const socio = this.socios.find(
-      s => s.id === Number(idSocio)
-    );
+    const socio =
+      this.socios.find(
+        s =>
+          s.id ===
+          Number(idSocio)
+      );
+
 
     if (socio) {
-      socio.cuota = nuevoEstado;
+
+      socio.cuota =
+        nuevoEstado;
+
     }
+
   }
+
 }
