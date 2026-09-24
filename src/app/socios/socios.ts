@@ -1,20 +1,79 @@
-import { Component, OnInit } from '@angular/core';
-
 import { CommonModule } from '@angular/common';
-
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import Swal, { type SweetAlertIcon } from 'sweetalert2';
 
-import { Socio } from '../models/models/socio';
+import {
+  Socio,
+  EstadoSocio,
+  EstadoCuota
+} from '../models/models/socio';
 
 import { SocioServicio } from '../services/socio';
+import { ActividadServicio } from '../services/actividade-service';
 
-import { ActivatedRoute } from '@angular/router';
+// =========================
+// TIPOS Y CONSTANTES
+// =========================
 
-import Swal from 'sweetalert2';
+type FiltroEstado = 'Todos' | EstadoSocio;
 
+type FiltroEdad =
+  | 'Todas edades'
+  | '+18'
+  | '-18';
+
+interface OpcionFiltro<T> {
+  valor: T;
+  etiqueta: string;
+}
+
+interface FormSocio {
+  nombre: string;
+  edad: number | null;
+  dni: string;
+  telefono: string;
+  email: string;
+  estado: EstadoSocio;
+}
+
+interface ErrorValidacion {
+  titulo: string;
+  texto: string;
+  icono: SweetAlertIcon;
+}
+
+const COLOR_PRIMARIO = '#0d9488';
+const COLOR_PELIGRO = '#ef4444';
+
+const EDAD_MINIMA = 4;
+const EDAD_MAYORIA = 18;
+
+const PATRONES_SOCIO = {
+  nombre:
+    /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/,
+
+  dni:
+    /^[0-9]{7,}$/,
+
+  telefono:
+    /^\+[0-9]{12}$/,
+
+  email:
+    /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/,
+} as const;
+
+const crearFormVacio = (): FormSocio => ({
+  nombre: '',
+  edad: null,
+  dni: '',
+  telefono: '',
+  email: '',
+  estado: 'activo',
+});
 
 @Component({
-
   selector: 'app-socios',
 
   standalone: true,
@@ -26,127 +85,151 @@ import Swal from 'sweetalert2';
 
   templateUrl: './socios.html',
 
-  styleUrl: './socios.css'
-
+  styleUrl: './socios.css',
 })
-
-
 export class Socios implements OnInit {
 
-  isModalOpen = false;
-
-
-  // Variables para Búsqueda y Filtros
-
-  busqueda: string = '';
-
-  filtroEstado: string = 'Todos';
-
-  filtroEdad: string = 'Todas edades';
-
-
-  // Variables del Formulario
-
-  nuevoNombre: string = '';
-
-  nuevaEdad: number | null = null;
-
-  nuevoDni: string = '';
-
-  nuevoTelefono: string = '';
-
-  nuevoEmail: string = '';
-
-
-  // Lista de socios
+  // =========================
+  // ESTADO DE LA VISTA
+  // =========================
 
   socios: Socio[] = [];
 
+  busqueda = '';
 
-  // NO TOCAR JULIETA ELUNEY CHIARA,
-  // NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
-  // UN SOLO CONSTRUCTOR
+  filtroEstado: FiltroEstado = 'Todos';
+
+  filtroEdad: FiltroEdad = 'Todas edades';
+
+  readonly opcionesEstado:
+    OpcionFiltro<FiltroEstado>[] = [
+
+    {
+      valor: 'Todos',
+      etiqueta: 'Todos'
+    },
+
+    {
+      valor: 'activo',
+      etiqueta: 'Activo'
+    },
+
+    {
+      valor: 'suspendido',
+      etiqueta: 'Suspendidos'
+    },
+
+    {
+      valor: 'bloqueado',
+      etiqueta: 'Bloqueado'
+    },
+
+    {
+      valor: 'inactivo',
+      etiqueta: 'Baja'
+    },
+  ];
+
+  readonly opcionesEdad:
+    OpcionFiltro<FiltroEdad>[] = [
+
+    {
+      valor: 'Todas edades',
+      etiqueta: 'Todas edades'
+    },
+
+    {
+      valor: '+18',
+      etiqueta: '+18'
+    },
+
+    {
+      valor: '-18',
+      etiqueta: '-18'
+    },
+  ];
+
+  // =========================
+  // MODAL
+  // =========================
+
+  isModalOpen = false;
+
+  socioEditandoId: number | null = null;
+
+  form: FormSocio = crearFormVacio();
+
+  readonly patrones = PATRONES_SOCIO;
+
+  readonly edadMinima = EDAD_MINIMA;
+
+  readonly estadosEditables:
+    EstadoSocio[] = [
+      'activo',
+      'suspendido',
+      'bloqueado',
+      'inactivo'
+    ];
+
+  // =========================
+  // CONSTRUCTOR
+  // =========================
 
   constructor(
-
     private route: ActivatedRoute,
 
-    private socioServicio: SocioServicio
+    private socioServicio: SocioServicio,
 
+    private actividadServicio: ActividadServicio,
   ) {}
 
-
-  // UN SOLO ngOnInit
+  // =========================
+  // CICLO DE VIDA
+  // =========================
 
   ngOnInit(): void {
 
-    // Cargar socios
-
     this.obtenerSocios();
 
-
-    // Abrir modal automáticamente
-    // si viene el parámetro
-
     this.route.queryParams.subscribe(
+      (params) => {
 
-      params => {
-
-        if (
-          params['openModal'] === 'true'
-        ) {
-
+        if (params['openModal'] === 'true') {
           this.openModal();
-
         }
 
       }
-
     );
-
   }
 
-
-  // HASTA ACA, DESPUES DE ESTO,
-  // HACE LA VRG Q QIERAS, GRACIAS
-
+  // =========================
+  // SOCIOS
+  // =========================
 
   obtenerSocios(): void {
 
     this.socios =
-      this.socioServicio
-        .tenerSocios();
+      this.socioServicio.tenerSocios();
 
   }
-
 
   // =========================
   // FILTROS
   // =========================
 
-  FiltroEstado(
-    estado: string
+  filtrarPorEstado(
+    estado: FiltroEstado
   ): void {
 
-    this.filtroEstado =
-      estado;
-
+    this.filtroEstado = estado;
   }
 
-
-  FiltroEdad(
-    edad: string
+  filtrarPorEdad(
+    edad: FiltroEdad
   ): void {
 
-    this.filtroEdad =
-      edad;
-
+    this.filtroEdad = edad;
   }
-
-
-  // =========================
-  // SOCIOS FILTRADOS
-  // =========================
 
   get sociosFiltrados(): Socio[] {
 
@@ -155,446 +238,500 @@ export class Socios implements OnInit {
         .trim()
         .toLowerCase();
 
-
     return this.socios.filter(
+      (socio) =>
 
-      socio => {
+        this.cumpleBusqueda(
+          socio,
+          termino
+        ) &&
 
-        // 1. Filtro por búsqueda
+        this.cumpleEstado(
+          socio
+        ) &&
 
-        const cumpleBusqueda =
-          !termino ||
-
-          socio.nombre
-            .toLowerCase()
-            .includes(termino)
-
-          ||
-
-          socio.dni
-            .toLowerCase()
-            .includes(termino)
-
-          ||
-
-          socio.numCarnet
-            .toLowerCase()
-            .includes(termino);
-
-
-        // 2. Filtro por Estado
-
-        const cumpleEstado =
-          this.filtroEstado === 'Todos'
-
-          ||
-
-          socio.estado
-            .toLowerCase() ===
-          this.filtroEstado
-            .toLowerCase();
-
-
-        // 3. Filtro por Edad
-
-        let cumpleEdad = true;
-
-
-        if (
-          this.filtroEdad === '+18'
-        ) {
-
-          cumpleEdad =
-            socio.edad >= 18;
-
-        }
-
-        else if (
-          this.filtroEdad === '-18'
-        ) {
-
-          cumpleEdad =
-            socio.edad < 18;
-
-        }
-
-
-        return (
-
-          cumpleBusqueda &&
-
-          cumpleEstado &&
-
-          cumpleEdad
-
-        );
-
-      }
-
+        this.cumpleEdad(
+          socio
+        )
     );
-
   }
 
+  private cumpleBusqueda(
+    socio: Socio,
+    termino: string
+  ): boolean {
+
+    if (!termino) {
+      return true;
+    }
+
+    return [
+      socio.nombre,
+      socio.dni,
+      socio.numCarnet
+    ].some(
+      (campo) =>
+        String(campo ?? '')
+          .toLowerCase()
+          .includes(termino)
+    );
+  }
+
+  private cumpleEstado(
+    socio: Socio
+  ): boolean {
+
+    return (
+      this.filtroEstado === 'Todos' ||
+
+      socio.estado.toLowerCase() ===
+      this.filtroEstado.toLowerCase()
+    );
+  }
+
+  private cumpleEdad(
+    socio: Socio
+  ): boolean {
+
+    switch (this.filtroEdad) {
+
+      case '+18':
+        return socio.edad >= EDAD_MAYORIA;
+
+      case '-18':
+        return socio.edad < EDAD_MAYORIA;
+
+      default:
+        return true;
+    }
+  }
 
   // =========================
   // MODAL
   // =========================
 
-  openModal(): void {
+  get esEdicion(): boolean {
 
-    this.isModalOpen =
-      true;
-
+    return this.socioEditandoId !== null;
   }
 
+  openModal(): void {
+
+    this.socioEditandoId = null;
+
+    this.form = crearFormVacio();
+
+    this.isModalOpen = true;
+  }
+
+  abrirModalEditar(
+    socio: Socio
+  ): void {
+
+    this.socioEditandoId = socio.id;
+
+    this.form = {
+
+      nombre: socio.nombre,
+
+      edad: socio.edad,
+
+      dni: socio.dni,
+
+      telefono: socio.telefono,
+
+      email: socio.email,
+
+      estado: socio.estado,
+    };
+
+    this.isModalOpen = true;
+  }
 
   closeModal(): void {
 
-    this.isModalOpen =
-      false;
+    this.isModalOpen = false;
 
-    this.limpiarFormulario();
+    this.socioEditandoId = null;
 
-  }
-
-
-  limpiarFormulario(): void {
-
-    this.nuevoNombre = '';
-
-    this.nuevaEdad = null;
-
-    this.nuevoDni = '';
-
-    this.nuevoTelefono = '';
-
-    this.nuevoEmail = '';
-
+    this.form = crearFormVacio();
   }
 
   // =========================
-  // AGREGAR SOCIO
+  // GUARDAR
   // =========================
 
+  async guardarSocio(): Promise<void> {
+
+    const error =
+      this.validarFormulario();
+
+    if (error) {
+
+      await Swal.fire({
+
+        title: error.titulo,
+
+        text: error.texto,
+
+        icon: error.icono,
+
+        confirmButtonColor:
+          COLOR_PRIMARIO,
+      });
+
+      return;
+    }
+
+    if (this.esEdicion) {
+
+      await this.editarSocio();
+
+    } else {
+
+      await this.agregarSocio();
+    }
+  }
 
   // =========================
-  // AGREGAR SOCIO
+  // AGREGAR
   // =========================
 
-  agregarSocio(): void {
+  private async agregarSocio(): Promise<void> {
 
+    const datos =
+      this.datosDelFormulario();
 
-    // Regex de validación
+    const confirmado =
+      await this.confirmar(
 
-    const regexNombre =
-      /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
+        '¿Estás seguro?',
 
+        `¿Deseas agregar al socio "${datos.nombre}"?`,
 
-    const regexDni =
-      /^[0-9]{7,}$/;
-
-
-    const regexTelefono =
-      /^\+[0-9]{12}$/;
-
-
-    const regexEmail =
-      /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
-
-
-    // =========================
-    // VALIDACIÓN NOMBRE
-    // =========================
-
-    if (
-
-      !this.nuevoNombre ||
-
-      !regexNombre.test(
-        this.nuevoNombre.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Nombre Inválido',
-
-        text:
-          'El nombre debe contener al menos dos palabras.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN EDAD
-    // =========================
-
-    if (
-
-      !this.nuevaEdad ||
-
-      this.nuevaEdad < 4
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Edad Inválida',
-
-        text:
-          'La edad debe ser de al menos 4 años.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN DNI
-    // =========================
-
-    if (
-
-      !this.nuevoDni ||
-
-      !regexDni.test(
-        this.nuevoDni.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'DNI Inválido',
-
-        text:
-          'El DNI debe tener un mínimo de 7 dígitos numéricos.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN TELÉFONO
-    // =========================
-
-    if (
-
-      !this.nuevoTelefono ||
-
-      !regexTelefono.test(
-        this.nuevoTelefono.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Teléfono Inválido',
-
-        text:
-          'El teléfono debe iniciar con "+" seguido de 12 dígitos.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN EMAIL
-    // =========================
-
-    if (
-
-      !this.nuevoEmail ||
-
-      !regexEmail.test(
-        this.nuevoEmail.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Correo Inválido',
-
-        text:
-          'El correo debe ser de dominio @gmail.com o @hotmail.com.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN DUPLICADOS
-    // =========================
-
-    const dniLimpio =
-      this.nuevoDni.trim();
-
-
-    if (
-
-      this.socios.some(
-
-        s =>
-
-          s.dni.trim() ===
-          dniLimpio
-
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Socio Duplicado',
-
-        text:
-          'Ya existe un socio registrado con este número de DNI.',
-
-        icon:
-          'error',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // CREAR SOCIO
-    // =========================
-
-    const nuevoSocio:
-      Omit<
-        Socio,
-        'id' | 'numCarnet'
-      > = {
-
-      nombre:
-        this.nuevoNombre.trim(),
-
-      edad:
-        Number(this.nuevaEdad),
-
-      dni:
-        dniLimpio,
-
-      telefono:
-        this.nuevoTelefono.trim(),
-
-      email:
-        this.nuevoEmail.trim(),
-
-      estado:
-        'activo',
-
-      prestamos:
-        'Libre'
-
-    };
-
-
-    // Guardar mediante el servicio
-
-    this.socioServicio
-      .agregarSocio(
-        nuevoSocio
+        'Agregar'
       );
 
+    if (!confirmado) {
+      return;
+    }
 
-    // Actualizar lista
+    const nuevoSocio:
+      Omit<Socio, 'id' | 'numCarnet'> = {
+
+      ...datos,
+
+      estado: 'activo',
+
+      prestamos: 'Libre',
+
+      cuota: 'pendiente',
+    };
+
+    this.socioServicio.agregarSocio(
+      nuevoSocio
+    );
+
+    this.registrarActividad(
+      `Nuevo socio registrado: ${datos.nombre}`,
+      datos.dni
+    );
 
     this.obtenerSocios();
 
+    this.closeModal();
 
-    // Cerrar modal
+    this.mostrarExito(
+      '¡Socio registrado!',
+
+      `El socio "${datos.nombre}" se guardó exitosamente.`
+    );
+  }
+
+  // =========================
+  // EDITAR
+  // =========================
+
+  private async editarSocio(): Promise<void> {
+
+    const original =
+      this.socios.find(
+        (s) =>
+          s.id === this.socioEditandoId
+      );
+
+    if (!original) {
+      return;
+    }
+
+    const datos =
+      this.datosDelFormulario();
+
+    const confirmado =
+      await this.confirmar(
+
+        '¿Estás seguro?',
+
+        `¿Deseas editar al socio "${datos.nombre}"?`,
+
+        'Editar'
+      );
+
+    if (!confirmado) {
+      return;
+    }
+
+    const actualizado: Socio = {
+
+      ...original,
+
+      ...datos,
+
+      estado: this.form.estado,
+    };
+
+    this.socioServicio.actualizarSocio(
+      actualizado
+    );
+
+    this.registrarActividad(
+      `Socio actualizado: ${actualizado.nombre}`,
+      actualizado.dni
+    );
+
+    this.obtenerSocios();
 
     this.closeModal();
 
+    this.mostrarExito(
+      '¡Socio actualizado!',
 
-    // =========================
-    // ALERTA DE ÉXITO
-    // =========================
+      `Los datos de "${actualizado.nombre}" se guardaron.`
+    );
+  }
+
+  // =========================
+  // VALIDACIONES
+  // =========================
+
+  private validarFormulario():
+    ErrorValidacion | null {
+
+    const {
+      nombre,
+      edad,
+      dni,
+      telefono,
+      email
+    } = this.datosDelFormulario();
+
+    if (
+      !PATRONES_SOCIO.nombre.test(
+        nombre
+      )
+    ) {
+
+      return this.error(
+        'Nombre inválido',
+        'El nombre debe contener al menos dos palabras.'
+      );
+    }
+
+    if (
+      !edad ||
+      edad < EDAD_MINIMA
+    ) {
+
+      return this.error(
+        'Edad inválida',
+        `La edad debe ser de al menos ${EDAD_MINIMA} años.`
+      );
+    }
+
+    if (
+      !PATRONES_SOCIO.dni.test(
+        dni
+      )
+    ) {
+
+      return this.error(
+        'DNI inválido',
+        'El DNI debe tener un mínimo de 7 dígitos numéricos.'
+      );
+    }
+
+    if (
+      !PATRONES_SOCIO.telefono.test(
+        telefono
+      )
+    ) {
+
+      return this.error(
+        'Teléfono inválido',
+        'El teléfono debe iniciar con "+" seguido de 12 dígitos.'
+      );
+    }
+
+    if (
+      !PATRONES_SOCIO.email.test(
+        email
+      )
+    ) {
+
+      return this.error(
+        'Correo inválido',
+        'El correo debe ser de dominio @gmail.com o @hotmail.com.'
+      );
+    }
+
+    if (
+      this.dniDuplicado(dni)
+    ) {
+
+      return this.error(
+        'Socio duplicado',
+        'Ya existe un socio registrado con este número de DNI.',
+        'error'
+      );
+    }
+
+    return null;
+  }
+
+  private dniDuplicado(
+    dni: string
+  ): boolean {
+
+    return this.socios.some(
+      (s) =>
+
+        s.id !== this.socioEditandoId &&
+
+        String(s.dni).trim() === dni
+    );
+  }
+
+  private error(
+    titulo: string,
+    texto: string,
+    icono: SweetAlertIcon = 'warning'
+  ): ErrorValidacion {
+
+    return {
+      titulo,
+      texto,
+      icono
+    };
+  }
+
+  // =========================
+  // HELPERS
+  // =========================
+
+  private datosDelFormulario() {
+
+    const {
+      nombre,
+      edad,
+      dni,
+      telefono,
+      email
+    } = this.form;
+
+    return {
+
+      nombre:
+        nombre.trim(),
+
+      edad:
+        Number(edad),
+
+      dni:
+        dni.trim(),
+
+      telefono:
+        telefono.trim(),
+
+      email:
+        email.trim(),
+    };
+  }
+
+  private registrarActividad(
+    descripcion: string,
+    idRelacionado: string
+  ): void {
+
+    this.actividadServicio.agregarActividad({
+
+      tipo: 'socio',
+
+      descripcion,
+
+      fecha:
+        new Date()
+          .toLocaleDateString('es-AR'),
+
+      user: 'admin',
+
+      idrelacionado:
+        idRelacionado,
+    });
+  }
+
+  private async confirmar(
+    titulo: string,
+    texto: string,
+    textoConfirmar: string
+  ): Promise<boolean> {
+
+    const {
+      isConfirmed
+    } = await Swal.fire({
+
+      title: titulo,
+
+      text: texto,
+
+      icon: 'warning',
+
+      showCancelButton: true,
+
+      confirmButtonColor:
+        COLOR_PRIMARIO,
+
+      cancelButtonColor:
+        COLOR_PELIGRO,
+
+      confirmButtonText:
+        textoConfirmar,
+
+      cancelButtonText:
+        'Cancelar',
+    });
+
+    return isConfirmed;
+  }
+
+  private mostrarExito(
+    titulo: string,
+    texto: string
+  ): void {
 
     Swal.fire({
 
-      title:
-        '¡Socio Registrado!',
+      title: titulo,
 
-      text:
-        `El socio "${nuevoSocio.nombre}" se ha guardado exitosamente.`,
+      text: texto,
 
-      icon:
-        'success',
+      icon: 'success',
 
       confirmButtonColor:
-        '#0d9488',
+        COLOR_PRIMARIO,
 
-      timer:
-        2000,
+      timer: 2000,
 
-      showConfirmButton:
-        false
-
+      showConfirmButton: false,
     });
-
   }
 }
-

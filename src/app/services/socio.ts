@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Socio } from '../models/models/socio';
+
+import {
+  Socio,
+  EstadoCuota,
+  PrestamoActual
+} from '../models/models/socio';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +29,7 @@ export class SocioServicio {
     const nuevoSocio: Socio = {
       ...socioData,
       id: this.contadorSocio,
-      numCarnet: `c-${idSecuencia}`
+      numCarnet: `c-${idSecuencia}`,
     };
 
     this.socios.push(nuevoSocio);
@@ -33,17 +38,15 @@ export class SocioServicio {
   }
 
   actualizarSocio(socioActualizado: Socio): void {
-    const index = this.socios.findIndex(s => s.id === socioActualizado.id);
+
+    const index = this.socios.findIndex(
+      s => s.id === socioActualizado.id
+    );
+
     if (index !== -1) {
-      const nombreAnterior = this.socios[index].nombre;
-
-      // Actualizamos los datos del socio
-      this.socios[index] = { ...socioActualizado };
-
-      // Si cambió el nombre, notificamos al servicio de préstamos
-      if (nombreAnterior !== socioActualizado.nombre) {
-        this.prestamoService.actualizarNombreSocio(nombreAnterior, socioActualizado.nombre);
-      }
+      this.socios[index] = {
+        ...socioActualizado
+      };
     }
   }
 
@@ -53,7 +56,7 @@ export class SocioServicio {
 
   actualizarEstadoPrestamo(
     idSocio: number | string,
-    nuevoEstado: 'Libre' | 'Encurso'
+    nuevoEstado: PrestamoActual
   ): void {
 
     const socio = this.socios.find(
@@ -65,12 +68,17 @@ export class SocioServicio {
     }
   }
 
-  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pendiente' | 'pagada' | 'vencida'): void {
-    const socio = this.socios.find(s => s.id === Number(idSocio));
-    if (socio) { 
-      socio.cuota = nuevoEstado; 
+  actualizarEstadoCuota(
+    idSocio: number | string,
+    nuevoEstado: EstadoCuota
+  ): void {
+
+    const socio = this.socios.find(
+      s => s.id === Number(idSocio)
+    );
+
+    if (socio) {
+      socio.cuota = nuevoEstado;
     }
-    return socio;
-  });
-}
+  }
 }

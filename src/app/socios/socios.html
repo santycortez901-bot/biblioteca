@@ -10,6 +10,7 @@
 
       <button
         class="btn-primary"
+        type="button"
         (click)="openModal()">
 
         + Nuevo socio
@@ -63,9 +64,10 @@
         <div class="filter-group">
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEstado === 'Todos'"
-            (click)="FiltroEstado('Todos')">
+            (click)="filtrarPorEstado('Todos')">
 
             Todos
 
@@ -73,9 +75,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEstado === 'activo'"
-            (click)="FiltroEstado('activo')">
+            (click)="filtrarPorEstado('activo')">
 
             Activo
 
@@ -83,9 +86,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEstado === 'suspendido'"
-            (click)="FiltroEstado('suspendido')">
+            (click)="filtrarPorEstado('suspendido')">
 
             Suspendidos
 
@@ -93,9 +97,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEstado === 'bloqueado'"
-            (click)="FiltroEstado('bloqueado')">
+            (click)="filtrarPorEstado('bloqueado')">
 
             Bloqueado
 
@@ -103,9 +108,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEstado === 'inactivo'"
-            (click)="FiltroEstado('inactivo')">
+            (click)="filtrarPorEstado('inactivo')">
 
             Baja
 
@@ -117,9 +123,10 @@
         <div class="filter-group">
 
           <button
+            type="button"
             class="filter-btn dark"
             [class.active]="filtroEdad === 'Todas edades'"
-            (click)="FiltroEdad('Todas edades')">
+            (click)="filtrarPorEdad('Todas edades')">
 
             Todas edades
 
@@ -127,9 +134,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEdad === '+18'"
-            (click)="FiltroEdad('+18')">
+            (click)="filtrarPorEdad('+18')">
 
             +18
 
@@ -137,9 +145,10 @@
 
 
           <button
+            type="button"
             class="filter-btn"
             [class.active]="filtroEdad === '-18'"
-            (click)="FiltroEdad('-18')">
+            (click)="filtrarPorEdad('-18')">
 
             -18
 
@@ -335,7 +344,7 @@
 
 
   <!-- ================================= -->
-  <!-- MODAL: AGREGAR SOCIO -->
+  <!-- MODAL: AGREGAR / EDITAR SOCIO -->
   <!-- ================================= -->
 
   <div
@@ -346,9 +355,18 @@
 
       <div class="modal-header">
 
-        <h2>Agregar Nuevo Socio</h2>
+        <h2>
+
+          {{
+            esEdicion
+              ? 'Editar Socio'
+              : 'Agregar Nuevo Socio'
+          }}
+
+        </h2>
 
         <button
+          type="button"
           (click)="closeModal()"
           class="close-btn">
 
@@ -361,10 +379,7 @@
 
       <form
         #socioForm="ngForm"
-        (ngSubmit)="
-          socioForm.valid &&
-          agregarSocio()
-        ">
+        (ngSubmit)="guardarSocio()">
 
 
         <!-- NOMBRE -->
@@ -377,7 +392,7 @@
 
           <input
             type="text"
-            [(ngModel)]="nuevoNombre"
+            [(ngModel)]="form.nombre"
             name="nombre"
             #nombre="ngModel"
             pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$"
@@ -427,7 +442,7 @@
 
           <input
             type="number"
-            [(ngModel)]="nuevaEdad"
+            [(ngModel)]="form.edad"
             name="edad"
             #edad="ngModel"
             min="4"
@@ -477,7 +492,7 @@
 
           <input
             type="text"
-            [(ngModel)]="nuevoDni"
+            [(ngModel)]="form.dni"
             name="dni"
             #dni="ngModel"
             pattern="^[0-9]{7,}$"
@@ -527,7 +542,7 @@
 
           <input
             type="tel"
-            [(ngModel)]="nuevoTelefono"
+            [(ngModel)]="form.telefono"
             name="telefono"
             #telefono="ngModel"
             pattern="^\+[0-9]{12}$"
@@ -578,7 +593,7 @@
 
           <input
             type="email"
-            [(ngModel)]="nuevoEmail"
+            [(ngModel)]="form.email"
             name="email"
             #email="ngModel"
             pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$"
@@ -618,6 +633,33 @@
         </div>
 
 
+        <!-- ESTADO -->
+
+        <div
+          class="form-group"
+          *ngIf="esEdicion">
+
+          <label>
+            Estado
+          </label>
+
+          <select
+            [(ngModel)]="form.estado"
+            name="estado">
+
+            <option
+              *ngFor="let estado of estadosEditables"
+              [ngValue]="estado">
+
+              {{ estado }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+
         <!-- ACCIONES MODAL -->
 
         <div class="modal-actions">
@@ -627,7 +669,11 @@
             [disabled]="!socioForm.valid"
             class="submit-btn">
 
-            Guardar
+            {{
+              esEdicion
+                ? 'Guardar cambios'
+                : 'Guardar'
+            }}
 
           </button>
 

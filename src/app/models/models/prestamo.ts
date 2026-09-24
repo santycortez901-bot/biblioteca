@@ -5,6 +5,7 @@ export type EstadoPrestamo =
   'suspendido';
 
 export interface Prestamo {
+  actualizarNombreSocio(nombreAnterior: any, nombre: any): unknown;
   id: string;
   socio: string;
   libro: string;

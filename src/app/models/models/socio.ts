@@ -1,15 +1,29 @@
-export type EstadoSocio = 'activo' | 'inactivo' | 'suspendido';
-export type PrestamoActual = 'Encurso' | 'Libre' ;
-export type EstadoCuota = 'pagada' | 'pendiente' | 'vencida';
+export type EstadoSocio =
+  | 'activo'
+  | 'suspendido'
+  | 'bloqueado'
+  | 'inactivo';
+
+export type EstadoCuota =
+  | 'pendiente'
+  | 'pagada'
+  | 'vencida';
+
+export type PrestamoActual =
+  | 'Libre'
+  | 'Encurso';
+
 export interface Socio {
   id: number;
-  nombre: string;
-  dni: string;
   numCarnet: string;
+
+  nombre: string;
   edad: number;
+  dni: string;
+  telefono: string;
   email: string;
-  telefono: string; 
+
   estado: EstadoSocio;
+  cuota: EstadoCuota;
   prestamos: PrestamoActual;
-  cuota: EstadoCuota
-  ;}
+}

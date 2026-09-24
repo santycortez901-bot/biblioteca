@@ -20,7 +20,7 @@ export class PrestamoService {
 
     // Modifica automáticamente la copia física a 'Prestada'
     const exito = this.libroService.prestarCopia(libroId, nuevoPrestamo.inventario);
-    
+
     if (exito) {
       this.prestamos.push(nuevoPrestamo);
       return true;
@@ -54,5 +54,17 @@ export class PrestamoService {
         p.socio = nuevoNombre;
       }
     });
+  }
+  suspenderPrestamo(id: string): void {
+    const p = this.prestamos.find(p => p.id === id);
+    if (p && p.estado !== 'devuelto') p.estado = 'suspendido';
+  }
+
+  quitarSuspension(id: string): void {
+    const p = this.prestamos.find(p => p.id === id);
+    if (p && p.estado === 'suspendido') {
+      const hoy = new Date().toISOString().split('T')[0];
+      p.estado = p.fechaVencimiento < hoy ? 'atrasado' : 'activo';
+    }
   }
 }
