@@ -1,29 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 
+
 import { CommonModule } from '@angular/common';
 
+
 import { FormsModule } from '@angular/forms';
-<<<<<<< ours
 import Swal from 'sweetalert2';
 
 import { Socio, EstadoSocio, EstadoCuota } from '../models/models/socio';
 import { SocioServicio } from '../services/socio';
 import { ActividadServicio } from '../services/actividade-service';
-=======
-
-import { Socio } from '../models/models/socio';
-
-import { SocioServicio } from '../services/socio';
-
-import { ActivatedRoute } from '@angular/router';
-
-import Swal from 'sweetalert2';
-
->>>>>>> theirs
 
 @Component({
 
+
   selector: 'app-socios',
+
 
   standalone: true,
 
@@ -32,39 +24,63 @@ import Swal from 'sweetalert2';
     FormsModule
   ],
 
+
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
+
   templateUrl: './socios.html',
 
+
   styleUrl: './socios.css'
+
 
 })
 
 
-export class Socios implements OnInit {
-  socios: Socio[] = [];
 
-<<<<<<< ours
-  // Filtros y Búsqueda
-=======
+
+export class Socios implements OnInit {
+
   isModalOpen = false;
 
 
   // Variables para Búsqueda y Filtros
 
->>>>>>> theirs
   busqueda: string = '';
 
   filtroEstado: string = 'Todos';
 
   filtroEdad: string = 'Todas edades';
 
-<<<<<<< ours
-  // Modal para Agregar Socio
-  isModalOpen: boolean = false;
-=======
 
   // Variables del Formulario
 
->>>>>>> theirs
+  nuevoNombre: string = '';
+
+  nuevaEdad: number | null = null;
+
+  nuevoDni: string = '';
+
+  nuevoTelefono: string = '';
+
+  nuevoEmail: string = '';
+
+
+  // Lista de socios
+
+  socios: Socio[] = [];
+
+  // Filtros y Búsqueda
+  busqueda: string = '';
+
+  filtroEstado: string = 'Todos';
+
+  filtroEdad: string = 'Todas edades';
+
+  // Modal para Agregar Socio
+  isModalOpen: boolean = false;
   nuevoNombre: string = '';
 
   nuevaEdad: number | null = null;
@@ -91,7 +107,6 @@ export class Socios implements OnInit {
     cuota: 'pagada' as EstadoCuota
   };
 
-<<<<<<< ours
   constructor(
     private socioServicio: SocioServicio,
     private actividadServicio: ActividadServicio
@@ -102,93 +117,6 @@ export class Socios implements OnInit {
   }
 
   obtenerSocios(): void {
-    if (typeof this.socioServicio.tenerSocios === 'function') {
-      this.socios = this.socioServicio.tenerSocios();
-    } else if (typeof (this.socioServicio as any).getSocios === 'function') {
-      this.socios = (this.socioServicio as any).getSocios();
-    }
-  }
-
-  // --- Getter para filtrar socios dinámicamente en la tabla ---
-  get sociosFiltrados(): Socio[] {
-    return this.socios.filter(s => {
-      // Búsqueda por Texto
-      const coincidenciaTexto =
-        s.nombre.toLowerCase().includes(this.busqueda.toLowerCase()) ||
-        s.dni.includes(this.busqueda) ||
-        s.numCarnet.toLowerCase().includes(this.busqueda.toLowerCase());
-
-      // Filtro por Estado
-      const coincidenciaEstado =
-        this.filtroEstado === 'Todos' || s.estado === this.filtroEstado;
-
-      // Filtro por Edad
-      let coincidenciaEdad = true;
-      if (this.filtroEdad === '+18') {
-        coincidenciaEdad = s.edad >= 18;
-      } else if (this.filtroEdad === '-18') {
-        coincidenciaEdad = s.edad < 18;
-      }
-
-      return coincidenciaTexto && coincidenciaEstado && coincidenciaEdad;
-    });
-  }
-=======
-
-  // Lista de socios
-
-  socios: Socio[] = [];
-
-
-  // NO TOCAR JULIETA ELUNEY CHIARA,
-  // NO TOCAR NI BORRAR SINO ME ROMPES EL INICIO, GRACIAS
-  // UN SOLO CONSTRUCTOR
-
-  constructor(
-
-    private route: ActivatedRoute,
-
-    private socioServicio: SocioServicio
-
-  ) {}
-
-
-  // UN SOLO ngOnInit
-
-  ngOnInit(): void {
-
-    // Cargar socios
-
-    this.obtenerSocios();
-
-
-    // Abrir modal automáticamente
-    // si viene el parámetro
-
-    this.route.queryParams.subscribe(
-
-      params => {
-
-        if (
-          params['openModal'] === 'true'
-        ) {
-
-          this.openModal();
-
-        }
-
-      }
-
-    );
-
-  }
-
-
-  // HASTA ACA, DESPUES DE ESTO,
-  // HACE LA VRG Q QIERAS, GRACIAS
-
-
-  obtenerSocios(): void {
 
     this.socios =
       this.socioServicio
@@ -196,7 +124,6 @@ export class Socios implements OnInit {
 
   }
 
->>>>>>> theirs
 
   // =========================
   // FILTROS
@@ -221,9 +148,6 @@ export class Socios implements OnInit {
 
   }
 
-<<<<<<< ours
-  // --- Modal Agregar Socio ---
-=======
 
   // =========================
   // SOCIOS FILTRADOS
@@ -275,54 +199,47 @@ export class Socios implements OnInit {
           this.filtroEstado
             .toLowerCase();
 
-
-        // 3. Filtro por Edad
-
-        let cumpleEdad = true;
-
-
-        if (
-          this.filtroEdad === '+18'
-        ) {
-
-          cumpleEdad =
-            socio.edad >= 18;
-
-        }
-
-        else if (
-          this.filtroEdad === '-18'
-        ) {
-
-          cumpleEdad =
-            socio.edad < 18;
-
-        }
-
-
-        return (
-
-          cumpleBusqueda &&
-
-          cumpleEstado &&
-
-          cumpleEdad
-
-        );
-
+      // Filtro por Edad
+      let coincidenciaEdad = true;
+      if (this.filtroEdad === '+18') {
+        coincidenciaEdad = s.edad >= 18;
+      } else if (this.filtroEdad === '-18') {
+        coincidenciaEdad = s.edad < 18;
       }
 
-    );
+      return coincidenciaTexto && coincidenciaEstado && coincidenciaEdad;
+    });
+  }
+
+  // =========================
+  // FILTROS
+  // =========================
+
+  FiltroEstado(
+    estado: string
+  ): void {
+
+    this.filtroEstado =
+      estado;
 
   }
 
 
-  // =========================
-  // MODAL
-  // =========================
+  FiltroEdad(
+    edad: string
+  ): void {
 
->>>>>>> theirs
+    this.filtroEdad =
+      edad;
+
+  }
+
+  // --- Modal Agregar Socio ---
   openModal(): void {
+
+    this.isModalOpen =
+      true;
+
 
     this.isModalOpen =
       true;
@@ -330,39 +247,40 @@ export class Socios implements OnInit {
   }
 
 
+
   closeModal(): void {
-<<<<<<< ours
     this.isModalOpen = false;
     this.limpiarFormularioNuevo();
   }
 
+
   limpiarFormularioNuevo(): void {
-=======
-
-    this.isModalOpen =
-      false;
-
-    this.limpiarFormulario();
-
-  }
-
-
-  limpiarFormulario(): void {
-
->>>>>>> theirs
     this.nuevoNombre = '';
+
 
     this.nuevaEdad = null;
 
+
     this.nuevoDni = '';
+
 
     this.nuevoTelefono = '';
 
+
     this.nuevoEmail = '';
+
 
   }
 
-<<<<<<< ours
+  // =========================
+  // AGREGAR SOCIO
+  // =========================
+
+
+  // =========================
+  // AGREGAR SOCIO
+  // =========================
+
 agregarSocio(): void {
   this.errorDni = '';
 
@@ -380,63 +298,6 @@ agregarSocio(): void {
     this.errorDni = 'Ya existe un socio registrado con este DNI.';
     return;
   }
-=======
-
-  // =========================
-  // AGREGAR SOCIO
-  // =========================
-
-  agregarSocio(): void {
-
-
-    // Regex de validación
-
-    const regexNombre =
-      /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
-
-
-    const regexDni =
-      /^[0-9]{7,}$/;
-
-
-    const regexTelefono =
-      /^\+[0-9]{12}$/;
-
-
-    const regexEmail =
-      /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
-
-
-    // =========================
-    // VALIDACIÓN NOMBRE
-    // =========================
-
-    if (
-
-      !this.nuevoNombre ||
-
-      !regexNombre.test(
-        this.nuevoNombre.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Nombre Inválido',
-
-        text:
-          'El nombre debe contener al menos dos palabras.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
->>>>>>> theirs
 
   // Primero preguntar
   Swal.fire({
@@ -456,7 +317,6 @@ agregarSocio(): void {
 
     }
 
-<<<<<<< ours
     // Recién después de confirmar generamos y agregamos
     const carnetGenerado = `C-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -531,244 +391,6 @@ agregarSocio(): void {
     }
 
     this.obtenerSocios();
-    this.cerrarModalEditar();
-
-    Swal.fire({
-          title: '¿Estás seguro?',
-          text: `¿Deseas editar el socio "${this.socioEnEdicion.nombre}"?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#0d9488',
-          cancelButtonColor: '#ef4444',
-          confirmButtonText: 'Editar',
-          cancelButtonText: 'Cancelar'
-=======
-
-    // =========================
-    // VALIDACIÓN EDAD
-    // =========================
-
-    if (
-
-      !this.nuevaEdad ||
-
-      this.nuevaEdad < 4
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Edad Inválida',
-
-        text:
-          'La edad debe ser de al menos 4 años.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN DNI
-    // =========================
-
-    if (
-
-      !this.nuevoDni ||
-
-      !regexDni.test(
-        this.nuevoDni.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'DNI Inválido',
-
-        text:
-          'El DNI debe tener un mínimo de 7 dígitos numéricos.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN TELÉFONO
-    // =========================
-
-    if (
-
-      !this.nuevoTelefono ||
-
-      !regexTelefono.test(
-        this.nuevoTelefono.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Teléfono Inválido',
-
-        text:
-          'El teléfono debe iniciar con "+" seguido de 12 dígitos.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN EMAIL
-    // =========================
-
-    if (
-
-      !this.nuevoEmail ||
-
-      !regexEmail.test(
-        this.nuevoEmail.trim()
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Correo Inválido',
-
-        text:
-          'El correo debe ser de dominio @gmail.com o @hotmail.com.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // VALIDACIÓN DUPLICADOS
-    // =========================
-
-    const dniLimpio =
-      this.nuevoDni.trim();
-
-
-    if (
-
-      this.socios.some(
-
-        s =>
-
-          s.dni.trim() ===
-          dniLimpio
-
-      )
-
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Socio Duplicado',
-
-        text:
-          'Ya existe un socio registrado con este número de DNI.',
-
-        icon:
-          'error',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    // =========================
-    // CREAR SOCIO
-    // =========================
-
-    const nuevoSocio:
-      Omit<
-        Socio,
-        'id' | 'numCarnet'
-      > = {
-
-      nombre:
-        this.nuevoNombre.trim(),
-
-      edad:
-        Number(this.nuevaEdad),
-
-      dni:
-        dniLimpio,
-
-      telefono:
-        this.nuevoTelefono.trim(),
-
-      email:
-        this.nuevoEmail.trim(),
-
-      estado:
-        'activo',
-
-      prestamos:
-        'Libre'
-
-    };
-
-
-    // Guardar mediante el servicio
-
-    this.socioServicio
-      .agregarSocio(
-        nuevoSocio
-      );
-
-
-    // Actualizar lista
-
-    this.obtenerSocios();
 
 
     // Cerrar modal
@@ -781,31 +403,16 @@ agregarSocio(): void {
     // =========================
 
     Swal.fire({
-
-      title:
-        '¡Socio Registrado!',
-
-      text:
-        `El socio "${nuevoSocio.nombre}" se ha guardado exitosamente.`,
-
-      icon:
-        'success',
-
-      confirmButtonColor:
-        '#0d9488',
-
-      timer:
-        2000,
-
-      showConfirmButton:
-        false
-
->>>>>>> theirs
+          title: '¿Estás seguro?',
+          text: `¿Deseas editar el socio "${this.socioEnEdicion.nombre}"?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#0d9488',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Editar',
+          cancelButtonText: 'Cancelar'
     });
 
   }
-<<<<<<< ours
-=======
-
->>>>>>> theirs
 }
+
