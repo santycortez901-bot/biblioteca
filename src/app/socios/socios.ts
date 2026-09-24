@@ -330,7 +330,9 @@ agregarSocio(): void {
       email: this.nuevoEmail.trim(),
       estado: 'activo' as EstadoSocio,
       prestamos: 'Libre',
-      cuota: 'pendiente'
+
+      cuota:  'pendiente'
+
     };
 
     if (typeof (this.socioServicio as any).agregarSocio === 'function') {
