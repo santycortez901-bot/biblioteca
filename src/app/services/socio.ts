@@ -65,21 +65,12 @@ export class SocioServicio {
     }
   }
 
-  actualizarEstadoSocio(
-    idSocio: number | string,
-    nuevoEstado:
-      | 'activo'
-      | 'inactivo'
-      | 'suspendido'
-      | 'bloqueado'
-  ): void {
-
-    const socio = this.socios.find(
-      s => s.id === Number(idSocio)
-    );
-
-    if (socio) {
-      socio.estado = nuevoEstado;
+  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pendiente' | 'pagada' | 'vencida'): void {
+    const socio = this.socios.find(s => s.id === Number(idSocio));
+    if (socio) { 
+      socio.cuota = nuevoEstado; 
     }
-  }
+    return socio;
+  });
+}
 }
