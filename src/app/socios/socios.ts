@@ -42,7 +42,7 @@ export class Socios implements OnInit {
     telefono: '',
     estado: 'activo' as EstadoSocio,
     prestamos: 'Libre',
-    cuota: 'al dia' as EstadoCuota
+    cuota: 'pagada' as EstadoCuota
   };
 
   constructor(
@@ -129,7 +129,7 @@ export class Socios implements OnInit {
       estado: 'activo' as EstadoSocio,
       prestamos: 'Libre',
 
-      cuota:  'pendiente'
+      cuota:  'pagada' as EstadoCuota
 
     };
 

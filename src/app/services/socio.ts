@@ -54,10 +54,12 @@ export class SocioServicio {
     }
   }
 
-  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pendiente' | 'pagada' | 'vencida'): void {
-    const socio = this.socios.find(s => s.id === Number(idSocio));
-    if (socio) { 
-      socio.cuota = nuevoEstado; 
+  actualizarEstadoCuota(idSocio: number | string, nuevoEstado: 'pagada' | 'pendiente' | 'vencida'): void {
+  this.socios = this.socios.map(socio => {
+    if (socio.id === idSocio) {
+      return { ...socio, cuota: nuevoEstado };
     }
-  }
+    return socio;
+  });
+}
 }
