@@ -1,5 +1,6 @@
 import {
   Component,
+  ChangeDetectorRef,
   OnInit,
   OnDestroy
 } from '@angular/core';
@@ -11,6 +12,10 @@ import {
 import {
   Subscription
 } from 'rxjs';
+
+import {
+  ActivatedRoute
+} from '@angular/router';
 
 import Swal from 'sweetalert2';
 
@@ -91,7 +96,7 @@ export class Prestamos
 
     {
       valor: 'activo',
-      etiqueta: 'Al día'
+      etiqueta: 'Activo'
     },
 
     {
@@ -148,7 +153,13 @@ export class Prestamos
       SocioServicio,
 
     private libroService:
-      LibroService
+      LibroService,
+
+    private changeDetector:
+      ChangeDetectorRef,
+
+    private route:
+      ActivatedRoute
 
   ) {}
 
@@ -175,6 +186,25 @@ export class Prestamos
 
           }
         );
+
+
+    this.sub.add(
+      this.route.queryParams.subscribe(
+        params => {
+          this.busqueda =
+            params['libro'] || '';
+
+          if (
+            params['mostrarNuevoPrestamo'] ===
+            'true'
+          ) {
+
+            this.openModal();
+
+          }
+        }
+      )
+    );
 
   }
 
@@ -341,15 +371,15 @@ export class Prestamos
   // ==========================================
 
   private obtenerFechaFormateada(
-    dias: number = 0
+    meses: number = 0
   ): string {
 
     const fecha =
       new Date();
 
 
-    fecha.setDate(
-      fecha.getDate() + dias
+    fecha.setMonth(
+      fecha.getMonth() + meses
     );
 
 
@@ -374,7 +404,7 @@ export class Prestamos
 
 
     this.fechaVencimiento =
-      this.obtenerFechaFormateada(30);
+      this.obtenerFechaFormateada(1);
 
   }
 
@@ -519,11 +549,13 @@ export class Prestamos
       this.socioService
         .actualizarEstadoPrestamo(
           socioObj.id,
-          'Encurso'
+          'En curso'
         );
 
 
       this.actualizarPrestamos();
+
+      this.changeDetector.detectChanges();
 
 
       this.closeModal();
@@ -688,6 +720,8 @@ export class Prestamos
 
         this.actualizarPrestamos();
 
+        this.changeDetector.detectChanges();
+
       }
     );
 
@@ -728,7 +762,16 @@ export class Prestamos
           );
 
 
+        this.socioService
+          .actualizarEstadoSocio(
+            prestamo.socioId,
+            'suspendido'
+          );
+
+
         this.actualizarPrestamos();
+
+        this.changeDetector.detectChanges();
 
       }
     );
@@ -769,7 +812,33 @@ export class Prestamos
           );
 
 
+        const socioObj =
+          this.socioService
+            .tenerSocios()
+            .find(
+              s =>
+                s.id ===
+                prestamo.socioId
+            );
+
+
+        if (
+          socioObj?.estado ===
+          'suspendido'
+        ) {
+
+          this.socioService
+            .actualizarEstadoSocio(
+              prestamo.socioId,
+              'activo'
+            );
+
+        }
+
+
         this.actualizarPrestamos();
+
+        this.changeDetector.detectChanges();
 
       }
     );

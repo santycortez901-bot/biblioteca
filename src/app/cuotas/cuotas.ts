@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common'; // 👈 Asegura que reconozca directivas básicas
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 
 import { Socio } from '../models/models/socio';
@@ -20,10 +21,13 @@ export class Cuotas implements OnInit {
 
   constructor(
     private cuotaService: CuotasService,
-    private cdr: ChangeDetectorRef // 👈 Inyección para forzar el renderizado del botón
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.filtroActivo =
+      this.route.snapshot.queryParamMap.get('filtro') || 'todos';
     this.cargarCuotas();
   }
 
@@ -128,4 +132,25 @@ export class Cuotas implements OnInit {
     }
   });
 }
+
+  darDeAlta(id: number): void {
+    const socio = this.cuotas.find(s => s.id === id);
+
+    Swal.fire({
+      title: '¿Dar de alta al socio?',
+      text: `El socio "${socio?.nombre}" volverá a estar activo.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0d9488',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, dar de alta',
+      cancelButtonText: 'Cancelar'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.cuotaService.darDeAlta(id);
+        this.cargarCuotas();
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }

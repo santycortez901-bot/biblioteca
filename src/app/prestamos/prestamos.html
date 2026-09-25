@@ -172,17 +172,20 @@
           <!-- Código de inventario -->
           <div class="form-group">
             <label>Código de Inventario</label>
-            <input
-              type="text"
+            <select
               [(ngModel)]="inventario"
               name="inventario"
               #inventarioModel="ngModel"
-              placeholder="Ej: INV-00123"
-              required />
+              required>
+              <option value="" disabled>Seleccioná un código de inventario</option>
+              @for (copia of copiasDisponiblesParaPrestamo; track copia.id) {
+                <option [value]="copia.id">{{ copia.id }}</option>
+              }
+            </select>
 
             @if (inventarioModel.invalid && inventarioModel.touched) {
               <div class="alert-error">
-                <small>El código de inventario es obligatorio.</small>
+                <small>Debes seleccionar un código de inventario.</small>
               </div>
             }
           </div>

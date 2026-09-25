@@ -129,14 +129,8 @@
           {{ copia.estado }}
         </span>
         <button 
-          *ngIf="copia.estado === 'Disponible'" 
-          (click)="prestarCopiaIndividual(libroSeleccionado, copia)" 
-          class="accion-copia prestar">
-          Prestar
-        </button>
-        <button 
           *ngIf="copia.estado === 'Prestada'" 
-          (click)="devolverCopiaIndividual(libroSeleccionado, copia)" 
+          (click)="irAPrestamo(libroSeleccionado)" 
           class="accion-copia devolver">
           Devolver
         </button>

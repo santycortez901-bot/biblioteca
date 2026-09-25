@@ -1,4 +1,4 @@
-export type EstadoCuota = 'pagada' | 'pendiente' | 'vencida';
+export type EstadoCuota = 'pagada' | 'pendiente' | 'inactivo';
 export interface Cuota {
   id: string;
   nombreSocio: string;

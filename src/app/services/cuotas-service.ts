@@ -92,59 +92,58 @@ export class CuotasService {
     id: number
   ): void {
 
-    const confirmarBaja =
-      confirm(
-        '¿Estás seguro de que deseas ' +
-        'dar de baja a este socio?'
-      );
-
-
-    if (confirmarBaja) {
-
-      const socio =
-        this.socioServicio
-          .tenerSocios()
-          .find(
-            s =>
-              s.id === id
-          );
-
-
-      if (socio) {
-
-        socio.estado =
-          'inactivo';
-
-
-        const mensaje =
-          `Hola ${socio.nombre}, ` +
-          `le avisamos que su estado ` +
-          `ha sido cambiado a "inactivo". ` +
-          `Si desea reactivar su membresía, ` +
-          `por favor póngase en contacto ` +
-          `con nosotros.`;
-
-
-        const url =
-          `https://wa.me/${socio.telefono}` +
-          `?text=${encodeURIComponent(mensaje)}`;
-
-
-        window.open(
-          url,
-          '_blank'
+    const socio =
+      this.socioServicio
+        .tenerSocios()
+        .find(
+          s =>
+            s.id === id
         );
 
-      }
 
-    } else {
+    if (socio) {
 
-      alert(
-        'Operación cancelada. ' +
-        'El socio no ha sido dado de baja.'
+      socio.estado =
+        'inactivo';
+
+
+      const mensaje =
+        `Hola ${socio.nombre}, ` +
+        `le avisamos que su estado ` +
+        `ha sido cambiado a "inactivo". ` +
+        `Si desea reactivar su membresía, ` +
+        `por favor póngase en contacto ` +
+        `con nosotros.`;
+
+
+      const url =
+        `https://wa.me/${socio.telefono}` +
+        `?text=${encodeURIComponent(mensaje)}`;
+
+
+      window.open(
+        url,
+        '_blank'
       );
 
     }
+
+  }
+
+
+  // ==========================================
+  // DAR DE ALTA
+  // ==========================================
+
+  darDeAlta(
+    id: number
+  ): void {
+
+    this.socioServicio
+      .actualizarEstadoSocio(
+        id,
+        'activo'
+      );
 
   }
 

@@ -1,7 +1,6 @@
 export type EstadoSocio =
   | 'activo'
   | 'suspendido'
-  | 'bloqueado'
   | 'inactivo';
 
 export type EstadoCuota =
@@ -11,7 +10,7 @@ export type EstadoCuota =
 
 export type PrestamoActual =
   | 'Libre'
-  | 'Encurso';
+  | 'En curso';
 
 export interface Socio {
   id: number;

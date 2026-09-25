@@ -74,9 +74,6 @@
                   @case ('suspendido') {
                     <span class="badge badge-bloqueado">suspendido</span>
                   }
-                  @case ('bloqueado') {
-                    <span class="badge badge-bloqueado">bloqueado</span>
-                  }
                   @case ('inactivo') {
                     <span class="badge badge-baja">inactivo</span>
                   }
@@ -100,7 +97,11 @@
                   <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar $1.200</button>
                 }
                 
-                <button (click)="darDeBaja(cuota.id)" class="btn-cobrar">Dar de Baja</button>
+                @if (cuota.estado === 'inactivo') {
+                  <button (click)="darDeAlta(cuota.id)" class="btn-cobrar">Dar de Alta</button>
+                } @else {
+                  <button (click)="darDeBaja(cuota.id)" class="btn-cobrar">Dar de Baja</button>
+                }
                 
                 <!-- botón para enviar el mensaje personalizado mediante el servicio -->
                 <button (click)="notificarSocio(cuota)" class="btn-wsp" title="Enviar WhatsApp">

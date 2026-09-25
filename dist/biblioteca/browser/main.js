@@ -1900,7 +1900,7 @@ var require_sweetalert2_all = __commonJS({
         if (innerParams.input) {
           handleConfirmOrDenyWithInput(instance, "confirm");
         } else {
-          confirm2(instance, true);
+          confirm(instance, true);
         }
       };
       const handleDenyButtonClick = (instance) => {
@@ -1932,7 +1932,7 @@ var require_sweetalert2_all = __commonJS({
         } else if (type === "deny") {
           deny(instance, inputValue);
         } else {
-          confirm2(instance, inputValue);
+          confirm(instance, inputValue);
         }
       };
       const handleInputValidator = (instance, inputValue, type) => {
@@ -1947,7 +1947,7 @@ var require_sweetalert2_all = __commonJS({
           } else if (type === "deny") {
             deny(instance, inputValue);
           } else {
-            confirm2(instance, inputValue);
+            confirm(instance, inputValue);
           }
         });
       };
@@ -1995,7 +1995,7 @@ var require_sweetalert2_all = __commonJS({
       const rejectWith = (instance, error2) => {
         instance.rejectPromise(error2);
       };
-      const confirm2 = (instance, value) => {
+      const confirm = (instance, value) => {
         const innerParams = privateProps.innerParams.get(instance);
         if (innerParams.showLoaderOnConfirm) {
           showLoading();
@@ -38385,454 +38385,6 @@ function provideRouterInitializer() {
  * License: MIT
  */
 
-// src/app/services/actividade-service.ts
-var ActividadServicio = class _ActividadServicio {
-  actividades = [
-    {
-      tipo: "login",
-      descripcion: "Inicio de sesi\xF3n del sistema",
-      fecha: "28/08/2026 12:00",
-      user: "admin"
-    },
-    {
-      tipo: "login",
-      descripcion: "Inicio de sesi\xF3n del sistema",
-      fecha: "19/08/2026 10:30",
-      user: "admin"
-    },
-    {
-      tipo: "prestamo",
-      descripcion: "Nuevo pr\xE9stamo: Rayuela \u2192 Florencia Morales",
-      fecha: "19/08/2026 09:15",
-      user: "admin",
-      idrelacionado: "PR005"
-    },
-    {
-      tipo: "cuota",
-      descripcion: "Cuota cobrada: Mar\xEDa Gonz\xE1lez \u2014 Julio 2026 ($1.200)",
-      fecha: "18/08/2026 16:20",
-      user: "admin",
-      idrelacionado: "S001"
-    },
-    {
-      tipo: "socio",
-      descripcion: "Nuevo socio registrado: Pablo Torres (CAR010)",
-      fecha: "18/08/2026 14:45",
-      user: "admin",
-      idrelacionado: "S010"
-    },
-    {
-      tipo: "libro",
-      descripcion: "Nuevo libro registrado: Cien a\xF1os de soledad",
-      fecha: "17/08/2026 11:30",
-      user: "admin",
-      idrelacionado: "L001"
-    },
-    {
-      tipo: "eliminacion",
-      descripcion: "Libro eliminado: Don Quijote de la Mancha",
-      fecha: "16/08/2026 10:15",
-      user: "admin",
-      idrelacionado: "L002"
-    },
-    {
-      tipo: "edicion",
-      descripcion: "Libro editado: El Principito",
-      fecha: "15/08/2026 16:40",
-      user: "admin",
-      idrelacionado: "L003"
-    }
-  ];
-  obtenerActividades() {
-    return this.actividades;
-  }
-  agregarActividad(actividad) {
-    this.actividades.unshift(actividad);
-  }
-  static \u0275fac = function ActividadServicio_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ActividadServicio)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ActividadServicio, factory: _ActividadServicio.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ActividadServicio, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/inicio/inicio.ts
-var _forTrack0 = ($index, $item) => $item.fecha;
-function Inicio_For_85_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 25)(1, "span");
-    \u0275\u0275text(2);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 26);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "span", 27);
-    \u0275\u0275text(6);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "span", 28);
-    \u0275\u0275text(8);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const actividad_r1 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275classMap(\u0275\u0275interpolate1("badge badge-", actividad_r1.tipo));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", actividad_r1.tipo, " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", actividad_r1.descripcion, " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", actividad_r1.fecha, " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", actividad_r1.user, " ");
-  }
-}
-var Inicio = class _Inicio {
-  router;
-  actividadServicio;
-  // ==========================================
-  // FECHA ACTUAL
-  // ==========================================
-  fechaActual = "";
-  intervalo;
-  // ==========================================
-  // ACTIVIDADES
-  // ==========================================
-  actividadesRecientes = [];
-  // ==========================================
-  // CONSTRUCTOR
-  // ==========================================
-  constructor(router, actividadServicio) {
-    this.router = router;
-    this.actividadServicio = actividadServicio;
-  }
-  // ==========================================
-  // AL INICIAR
-  // ==========================================
-  ngOnInit() {
-    this.actualizarFecha();
-    this.intervalo = setInterval(() => {
-      this.actualizarFecha();
-    }, 6e4);
-    this.obtenerActividades();
-  }
-  // ==========================================
-  // OBTENER ACTIVIDADES
-  // ==========================================
-  obtenerActividades() {
-    const actividades = this.actividadServicio.obtenerActividades();
-    this.actividadesRecientes = actividades.slice(0, 4);
-  }
-  // ==========================================
-  // FECHA ACTUAL
-  // ==========================================
-  actualizarFecha() {
-    const ahora = /* @__PURE__ */ new Date();
-    this.fechaActual = ahora.toLocaleDateString("es-AR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
-    });
-  }
-  // ==========================================
-  // DESTRUIR COMPONENTE
-  // ==========================================
-  ngOnDestroy() {
-    clearInterval(this.intervalo);
-  }
-  // ==========================================
-  // NUEVO PRÉSTAMO
-  // ==========================================
-  abrirNuevoPrestamo() {
-    this.router.navigate(["/prestamos"], {
-      queryParams: {
-        mostrarNuevoPrestamo: "true"
-      }
-    });
-  }
-  // ==========================================
-  // CARGAR SOCIO
-  // ==========================================
-  cargarSocio() {
-    this.router.navigate(["/socios"], {
-      queryParams: {
-        openModal: "true"
-      }
-    });
-  }
-  static \u0275fac = function Inicio_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Inicio)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActividadServicio));
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Inicio, selectors: [["app-inicio"]], decls: 86, vars: 1, consts: [[1, "inicio"], [1, "encabezado"], [1, "estadisticas"], ["routerLink", "/prestamos", 1, "tarjeta", "estadistica", "vencidos"], [1, "icono"], ["routerLink", "/socios", 1, "tarjeta", "estadistica", "pendientes"], ["routerLink", "/socios", 1, "tarjeta", "estadistica", "activos"], [1, "busqueda"], [1, "titulo-busqueda"], [1, "icono-lupa"], [1, "filtros"], [1, "filtro", "activo"], [1, "filtro"], [1, "campo-busqueda"], ["type", "text", "placeholder", "Ej: CAR001"], [1, "btn-buscar"], [1, "acciones"], [1, "accion", "nuevo-prestamo"], [1, "accion-icono"], ["routerLink", "/cuotas", 1, "accion", "cobrar-cuota"], [1, "accion", "cargar-socio", 3, "click"], [1, "actividad"], [1, "actividad-header"], ["routerLink", "/actividades"], [1, "actividad-lista"], [1, "actividad-item"], [1, "descripcion"], [1, "fecha"], [1, "usuario"]], template: function Inicio_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "h1");
-      \u0275\u0275text(3, "Inicio");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(4, "span");
-      \u0275\u0275text(5);
-      \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(6, "div", 2)(7, "div", 3)(8, "div", 4);
-      \u0275\u0275text(9, "\u25F7");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(10, "div")(11, "strong");
-      \u0275\u0275text(12, "2");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(13, "span");
-      \u0275\u0275text(14, "Pr\xE9stamos vencidos");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(15, "div", 5)(16, "div", 4);
-      \u0275\u0275text(17, "\u25A4");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(18, "div")(19, "strong");
-      \u0275\u0275text(20, "10");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(21, "span");
-      \u0275\u0275text(22, "Socios con cuotas pendientes");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(23, "div", 6)(24, "div", 4);
-      \u0275\u0275text(25, "\u2659");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(26, "div")(27, "strong");
-      \u0275\u0275text(28, "7");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(29, "span");
-      \u0275\u0275text(30, "Socios activos");
-      \u0275\u0275elementEnd()()()();
-      \u0275\u0275elementStart(31, "div", 7)(32, "div", 8)(33, "span", 9);
-      \u0275\u0275text(34, "\u2315");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(35, "div")(36, "h3");
-      \u0275\u0275text(37, "B\xFAsqueda Express");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(38, "small");
-      \u0275\u0275text(39, "Presion\xE1 Enter o hac\xE9 clic en Buscar");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(40, "div", 10)(41, "button", 11);
-      \u0275\u0275text(42, "DNI / APELLIDO / N\xBA CARNET");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(43, "button", 12);
-      \u0275\u0275text(44, "N\xB0 INVENTARIO / ID");
-      \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(45, "div", 13)(46, "span");
-      \u0275\u0275text(47, "\u2315");
-      \u0275\u0275elementEnd();
-      \u0275\u0275element(48, "input", 14);
-      \u0275\u0275elementStart(49, "button", 15);
-      \u0275\u0275text(50, " Buscar ");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(51, "div", 16)(52, "div", 17)(53, "div", 18);
-      \u0275\u0275text(54, "\uFF0B");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(55, "div")(56, "h3");
-      \u0275\u0275text(57, "Nuevo pr\xE9stamo");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(58, "span");
-      \u0275\u0275text(59, "Registrar un pr\xE9stamo");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(60, "div", 19)(61, "div", 18);
-      \u0275\u0275text(62, "\u25A4");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(63, "div")(64, "h3");
-      \u0275\u0275text(65, "Cobrar cuota");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(66, "span");
-      \u0275\u0275text(67, "Gestionar cobros");
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(68, "div", 20);
-      \u0275\u0275listener("click", function Inicio_Template_div_click_68_listener() {
-        return ctx.cargarSocio();
-      });
-      \u0275\u0275elementStart(69, "div", 18);
-      \u0275\u0275text(70, "\u2659+");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(71, "div")(72, "h3");
-      \u0275\u0275text(73, "Cargar socio");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(74, "span");
-      \u0275\u0275text(75, "Registrar nuevo socio");
-      \u0275\u0275elementEnd()()()();
-      \u0275\u0275elementStart(76, "div", 21)(77, "div", 22)(78, "h3");
-      \u0275\u0275text(79, "Actividad reciente");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(80, "a", 23);
-      \u0275\u0275text(81, " Ver todo \u2192 ");
-      \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(82, "div", 24)(83, "div", 24);
-      \u0275\u0275repeaterCreate(84, Inicio_For_85_Template, 9, 7, "div", 25, _forTrack0);
-      \u0275\u0275elementEnd()()()();
-    }
-    if (rf & 2) {
-      \u0275\u0275advance(5);
-      \u0275\u0275textInterpolate(ctx.fechaActual);
-      \u0275\u0275advance(79);
-      \u0275\u0275repeater(ctx.actividadesRecientes);
-    }
-  }, dependencies: [RouterLink], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.inicio[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.encabezado[_ngcontent-%COMP%] {\n  margin-bottom: 25px;\n}\n.encabezado[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.encabezado[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #718096;\n  font-size: 13px;\n}\n.estadisticas[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.tarjeta[_ngcontent-%COMP%] {\n  background: white;\n  border-radius: 16px;\n  min-height: 92px;\n  padding: 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);\n}\n.tarjeta[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n}\n.estadistica[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  width: 48px;\n  height: 48px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 25px;\n}\n.estadistica[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  display: block;\n  font-size: 23px;\n  margin-bottom: 4px;\n  color: #12263a;\n}\n.estadistica[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: block;\n  font-size: 12px;\n  color: #718096;\n}\n.vencidos[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #fff0f1;\n  color: #ff5360;\n}\n.pendientes[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #fff7eb;\n  color: #ff9718;\n}\n.activos[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #e7f8f7;\n  color: #20b5ac;\n}\n.busqueda[_ngcontent-%COMP%] {\n  background: white;\n  border-radius: 16px;\n  padding: 27px 25px 25px;\n  margin-bottom: 24px;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);\n}\n.titulo-busqueda[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 17px;\n}\n.icono-lupa[_ngcontent-%COMP%] {\n  font-size: 30px;\n  color: #20b5ac;\n}\n.titulo-busqueda[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0 0 3px;\n  font-size: 15px;\n}\n.titulo-busqueda[_ngcontent-%COMP%]   small[_ngcontent-%COMP%] {\n  color: #8995a5;\n  font-size: 11px;\n}\n.filtros[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 9px;\n  margin-bottom: 15px;\n}\n.filtro[_ngcontent-%COMP%] {\n  border: 1px solid #dce3e9;\n  background: white;\n  color: #30445a;\n  border-radius: 20px;\n  padding: 9px 16px;\n  font-size: 13px;\n  cursor: pointer;\n}\n.filtro[_ngcontent-%COMP%]:hover {\n  border-color: #20b5ac;\n}\n.filtro.activo[_ngcontent-%COMP%] {\n  background: #2bb5aa;\n  border-color: #2bb5aa;\n  color: white;\n}\n.campo-busqueda[_ngcontent-%COMP%] {\n  height: 46px;\n  border: 1px solid #dce2e8;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  padding-left: 15px;\n  overflow: hidden;\n}\n.campo-busqueda[_ngcontent-%COMP%]    > span[_ngcontent-%COMP%] {\n  color: #91a0af;\n  font-size: 20px;\n}\n.campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 100%;\n  border: none;\n  outline: none;\n  padding: 0 12px;\n  font-size: 13px;\n  color: #34495e;\n}\n.campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #9aa6b4;\n}\n.btn-buscar[_ngcontent-%COMP%] {\n  height: 100%;\n  border: none;\n  background: #2bb5aa;\n  color: white;\n  font-weight: 600;\n  padding: 0 25px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.btn-buscar[_ngcontent-%COMP%]:hover {\n  background: #20a69c;\n}\n.acciones[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.accion[_ngcontent-%COMP%] {\n  height: 150px;\n  border-radius: 16px;\n  color: white;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n}\n.accion[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n}\n.accion-icono[_ngcontent-%COMP%] {\n  width: 49px;\n  height: 49px;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.22);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 27px;\n  margin-bottom: 13px;\n}\n.accion[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 15px;\n}\n.accion[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 11px;\n  opacity: 0.85;\n}\n.nuevo-prestamo[_ngcontent-%COMP%] {\n  background: #2bb5aa;\n}\n.cobrar-cuota[_ngcontent-%COMP%] {\n  background: #ff9619;\n}\n.cargar-socio[_ngcontent-%COMP%] {\n  background: #1d3345;\n}\n.actividad[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.actividad-header[_ngcontent-%COMP%] {\n  height: 56px;\n  padding: 0 25px;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  border-bottom: 1px solid #edf0f3;\n}\n.actividad-header[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 15px;\n  color: #12263a;\n}\n.actividad-header[_ngcontent-%COMP%]   a[_ngcontent-%COMP%] {\n  color: #16aaa1;\n  text-decoration: none;\n  font-size: 11px;\n  font-weight: 600;\n}\n.actividad-item[_ngcontent-%COMP%] {\n  min-height: 48px;\n  padding: 0 25px;\n  display: grid;\n  grid-template-columns: max-content minmax(0, 1fr) auto 50px;\n  align-items: center;\n  gap: 12px;\n  border-bottom: 1px solid #f0f2f4;\n  font-size: 12px;\n}\n.descripcion[_ngcontent-%COMP%] {\n  color: #293d50;\n}\n.fecha[_ngcontent-%COMP%] {\n  color: #8491a0;\n  font-size: 11px;\n}\n.usuario[_ngcontent-%COMP%] {\n  color: #8491a0;\n  font-size: 11px;\n  text-align: right;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login[_ngcontent-%COMP%] {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo[_ngcontent-%COMP%] {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio[_ngcontent-%COMP%] {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro[_ngcontent-%COMP%] {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-eliminacion[_ngcontent-%COMP%] {\n  background-color: #ffe8e8;\n  color: #ea3333;\n}\n.badge-edicion[_ngcontent-%COMP%] {\n  background-color: #ffe8fd;\n  color: #ea33d2;\n}\n@media (max-width: 900px) {\n  .estadisticas[_ngcontent-%COMP%], \n   .acciones[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n  }\n  .actividad-item[_ngcontent-%COMP%] {\n    grid-template-columns: 65px 1fr;\n    padding: 12px 20px;\n  }\n  .fecha[_ngcontent-%COMP%], \n   .usuario[_ngcontent-%COMP%] {\n    display: none;\n  }\n}\n@media (max-width: 600px) {\n  .inicio[_ngcontent-%COMP%] {\n    padding: 20px 15px;\n  }\n  .busqueda[_ngcontent-%COMP%] {\n    padding: 20px 16px;\n  }\n  .filtros[_ngcontent-%COMP%] {\n    flex-wrap: wrap;\n  }\n  .campo-busqueda[_ngcontent-%COMP%] {\n    height: auto;\n    flex-wrap: wrap;\n    padding: 8px;\n  }\n  .campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n    height: 42px;\n    min-width: 150px;\n  }\n  .btn-buscar[_ngcontent-%COMP%] {\n    height: 42px;\n    border-radius: 8px;\n  }\n  .actividad-header[_ngcontent-%COMP%] {\n    padding: 0 18px;\n  }\n  .actividad-item[_ngcontent-%COMP%] {\n    padding: 12px 18px;\n  }\n}\n/*# sourceMappingURL=inicio.css.map */"] });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Inicio, [{
-    type: Component,
-    args: [{ selector: "app-inicio", standalone: true, imports: [RouterLink], template: `<div class="inicio">\r
-\r
-  <!-- Encabezado -->\r
-  <div class="encabezado">\r
-    <h1>Inicio</h1>\r
-    <span>{{ fechaActual }}</span>\r
-  </div>\r
-\r
-  <!-- Estad\xEDsticas -->\r
-  <div class="estadisticas">\r
-\r
-    <div class="tarjeta estadistica vencidos" routerLink='/prestamos'>\r
-      <div class="icono">\u25F7</div>\r
-      <div>\r
-        <strong>2</strong>\r
-        <span>Pr\xE9stamos vencidos</span>\r
-      </div>\r
-    </div>\r
-\r
-    <div class="tarjeta estadistica pendientes" routerLink='/socios'>\r
-      <div class="icono">\u25A4</div>\r
-      <div>\r
-        <strong>10</strong>\r
-        <span>Socios con cuotas pendientes</span>\r
-      </div>\r
-    </div>\r
-\r
-    <div class="tarjeta estadistica activos" routerLink='/socios'>\r
-\r
-      <div class="icono">\u2659</div>\r
-      <div>\r
-        <strong>7</strong>\r
-        <span>Socios activos</span>\r
-      </div>\r
-    </div>\r
-\r
-  </div>\r
-\r
-  <!-- B\xFAsqueda express -->\r
-  <div class="busqueda">\r
-\r
-    <div class="titulo-busqueda">\r
-      <span class="icono-lupa">\u2315</span>\r
-\r
-      <div>\r
-        <h3>B\xFAsqueda Express</h3>\r
-        <small>Presion\xE1 Enter o hac\xE9 clic en Buscar</small>\r
-      </div>\r
-    </div>\r
-\r
-    <div class="filtros">\r
-\r
-      <button class="filtro activo">DNI / APELLIDO / N\xBA CARNET</button>\r
-      <button class="filtro">N\xB0 INVENTARIO / ID</button>\r
-    </div>\r
-\r
-    <div class="campo-busqueda">\r
-      <span>\u2315</span>\r
-\r
-      <input type="text" placeholder="Ej: CAR001" />\r
-\r
-      <button class="btn-buscar">\r
-        Buscar\r
-      </button>\r
-    </div>\r
-\r
-  </div>\r
-\r
-  <!-- Acciones r\xE1pidas -->\r
-  <div class="acciones">\r
-\r
-    <div class="accion nuevo-prestamo">\r
-      <div class="accion-icono">\uFF0B</div>\r
-\r
-      <div>\r
-        <h3>Nuevo pr\xE9stamo</h3>\r
-        <span>Registrar un pr\xE9stamo</span>\r
-      </div>\r
-    </div>\r
-\r
-    <div class="accion cobrar-cuota" routerLink='/cuotas'>\r
-      <div class="accion-icono">\u25A4</div>\r
-\r
-      <div>\r
-        <h3>Cobrar cuota</h3>\r
-        <span>Gestionar cobros</span>\r
-      </div>\r
-    </div>\r
-\r
-    <div class="accion cargar-socio" (click)="cargarSocio()">\r
-      <div class="accion-icono">\u2659+</div>\r
-\r
-      <div>\r
-        <h3>Cargar socio</h3>\r
-        <span>Registrar nuevo socio</span>\r
-      </div>\r
-    </div>\r
-\r
-  </div>\r
-\r
-  <!-- ACTIVIDAD RECIENTE -->\r
-  <div class="actividad">\r
-\r
-    <div class="actividad-header">\r
-      <h3>Actividad reciente</h3>\r
-\r
-      <a routerLink='/actividades'>\r
-        Ver todo \u2192\r
-      </a>\r
-    </div>\r
-\r
-    <div class="actividad-lista">\r
-\r
-      \r
-      <div class="actividad-lista">\r
-\r
-  @for (actividad of actividadesRecientes; track actividad.fecha) {\r
-\r
-    <div class="actividad-item">\r
-\r
-      <span class="badge badge-{{ actividad.tipo }}">\r
-        {{ actividad.tipo }}\r
-      </span>\r
-\r
-      <span class="descripcion">\r
-        {{ actividad.descripcion }}\r
-      </span>\r
-\r
-      <span class="fecha">\r
-        {{ actividad.fecha }}\r
-      </span>\r
-\r
-      <span class="usuario">\r
-        {{ actividad.user }}\r
-      </span>\r
-\r
-    </div>\r
-\r
-  }\r
-\r
-</div>\r
-\r
-    </div>\r
-\r
-  </div>\r
-\r
-</div>`, styles: ["/* src/app/inicio/inicio.css */\n* {\n  box-sizing: border-box;\n}\n.inicio {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.encabezado {\n  margin-bottom: 25px;\n}\n.encabezado h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.encabezado span {\n  color: #718096;\n  font-size: 13px;\n}\n.estadisticas {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.tarjeta {\n  background: white;\n  border-radius: 16px;\n  min-height: 92px;\n  padding: 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);\n}\n.tarjeta:hover {\n  transform: translateY(-2px);\n}\n.estadistica .icono {\n  width: 48px;\n  height: 48px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 25px;\n}\n.estadistica strong {\n  display: block;\n  font-size: 23px;\n  margin-bottom: 4px;\n  color: #12263a;\n}\n.estadistica span {\n  display: block;\n  font-size: 12px;\n  color: #718096;\n}\n.vencidos .icono {\n  background: #fff0f1;\n  color: #ff5360;\n}\n.pendientes .icono {\n  background: #fff7eb;\n  color: #ff9718;\n}\n.activos .icono {\n  background: #e7f8f7;\n  color: #20b5ac;\n}\n.busqueda {\n  background: white;\n  border-radius: 16px;\n  padding: 27px 25px 25px;\n  margin-bottom: 24px;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);\n}\n.titulo-busqueda {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 17px;\n}\n.icono-lupa {\n  font-size: 30px;\n  color: #20b5ac;\n}\n.titulo-busqueda h3 {\n  margin: 0 0 3px;\n  font-size: 15px;\n}\n.titulo-busqueda small {\n  color: #8995a5;\n  font-size: 11px;\n}\n.filtros {\n  display: flex;\n  gap: 9px;\n  margin-bottom: 15px;\n}\n.filtro {\n  border: 1px solid #dce3e9;\n  background: white;\n  color: #30445a;\n  border-radius: 20px;\n  padding: 9px 16px;\n  font-size: 13px;\n  cursor: pointer;\n}\n.filtro:hover {\n  border-color: #20b5ac;\n}\n.filtro.activo {\n  background: #2bb5aa;\n  border-color: #2bb5aa;\n  color: white;\n}\n.campo-busqueda {\n  height: 46px;\n  border: 1px solid #dce2e8;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  padding-left: 15px;\n  overflow: hidden;\n}\n.campo-busqueda > span {\n  color: #91a0af;\n  font-size: 20px;\n}\n.campo-busqueda input {\n  flex: 1;\n  height: 100%;\n  border: none;\n  outline: none;\n  padding: 0 12px;\n  font-size: 13px;\n  color: #34495e;\n}\n.campo-busqueda input::placeholder {\n  color: #9aa6b4;\n}\n.btn-buscar {\n  height: 100%;\n  border: none;\n  background: #2bb5aa;\n  color: white;\n  font-weight: 600;\n  padding: 0 25px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.btn-buscar:hover {\n  background: #20a69c;\n}\n.acciones {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.accion {\n  height: 150px;\n  border-radius: 16px;\n  color: white;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n}\n.accion:hover {\n  transform: translateY(-2px);\n}\n.accion-icono {\n  width: 49px;\n  height: 49px;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.22);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 27px;\n  margin-bottom: 13px;\n}\n.accion h3 {\n  margin: 0 0 5px;\n  font-size: 15px;\n}\n.accion span {\n  font-size: 11px;\n  opacity: 0.85;\n}\n.nuevo-prestamo {\n  background: #2bb5aa;\n}\n.cobrar-cuota {\n  background: #ff9619;\n}\n.cargar-socio {\n  background: #1d3345;\n}\n.actividad {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.actividad-header {\n  height: 56px;\n  padding: 0 25px;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  border-bottom: 1px solid #edf0f3;\n}\n.actividad-header h3 {\n  margin: 0;\n  font-size: 15px;\n  color: #12263a;\n}\n.actividad-header a {\n  color: #16aaa1;\n  text-decoration: none;\n  font-size: 11px;\n  font-weight: 600;\n}\n.actividad-item {\n  min-height: 48px;\n  padding: 0 25px;\n  display: grid;\n  grid-template-columns: max-content minmax(0, 1fr) auto 50px;\n  align-items: center;\n  gap: 12px;\n  border-bottom: 1px solid #f0f2f4;\n  font-size: 12px;\n}\n.descripcion {\n  color: #293d50;\n}\n.fecha {\n  color: #8491a0;\n  font-size: 11px;\n}\n.usuario {\n  color: #8491a0;\n  font-size: 11px;\n  text-align: right;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-eliminacion {\n  background-color: #ffe8e8;\n  color: #ea3333;\n}\n.badge-edicion {\n  background-color: #ffe8fd;\n  color: #ea33d2;\n}\n@media (max-width: 900px) {\n  .estadisticas,\n  .acciones {\n    grid-template-columns: 1fr;\n  }\n  .actividad-item {\n    grid-template-columns: 65px 1fr;\n    padding: 12px 20px;\n  }\n  .fecha,\n  .usuario {\n    display: none;\n  }\n}\n@media (max-width: 600px) {\n  .inicio {\n    padding: 20px 15px;\n  }\n  .busqueda {\n    padding: 20px 16px;\n  }\n  .filtros {\n    flex-wrap: wrap;\n  }\n  .campo-busqueda {\n    height: auto;\n    flex-wrap: wrap;\n    padding: 8px;\n  }\n  .campo-busqueda input {\n    height: 42px;\n    min-width: 150px;\n  }\n  .btn-buscar {\n    height: 42px;\n    border-radius: 8px;\n  }\n  .actividad-header {\n    padding: 0 18px;\n  }\n  .actividad-item {\n    padding: 12px 18px;\n  }\n}\n/*# sourceMappingURL=inicio.css.map */\n"] }]
-  }], () => [{ type: Router }, { type: ActividadServicio }], null);
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Inicio, { className: "Inicio", filePath: "app/inicio/inicio.ts", lineNumber: 18 });
-})();
-
 // node_modules/@angular/forms/fesm2022/forms.mjs
 /**
  * @license Angular v21.2.19
@@ -43462,118 +43014,232 @@ var ReactiveFormsModule = class _ReactiveFormsModule {
   }], null, null);
 })();
 
-// src/app/inicio-sesion/inicio-sesion.ts
-var import_sweetalert2 = __toESM(require_sweetalert2_all());
-var InicioSesion = class _InicioSesion {
-  router;
-  email = "";
-  password = "";
-  constructor(router) {
-    this.router = router;
-  }
-  iniciarSesion() {
-    const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
-    if (!this.email || !regexEmail.test(this.email.trim())) {
-      import_sweetalert2.default.fire({
-        title: "Correo Inv\xE1lido",
-        text: "Por favor ingres\xE1 un correo v\xE1lido (@gmail.com o @hotmail.com).",
-        icon: "warning",
-        confirmButtonColor: "#0d9488"
-      });
-      return;
+// src/app/services/actividade-service.ts
+var ActividadServicio = class _ActividadServicio {
+  actividades = [
+    {
+      tipo: "login",
+      descripcion: "Inicio de sesi\xF3n del sistema",
+      fecha: "28/08/2026 12:00",
+      user: "admin"
+    },
+    {
+      tipo: "login",
+      descripcion: "Inicio de sesi\xF3n del sistema",
+      fecha: "19/08/2026 10:30",
+      user: "admin"
+    },
+    {
+      tipo: "prestamo",
+      descripcion: "Nuevo pr\xE9stamo: Rayuela \u2192 Florencia Morales",
+      fecha: "19/08/2026 09:15",
+      user: "admin",
+      idrelacionado: "PR005"
+    },
+    {
+      tipo: "cuota",
+      descripcion: "Cuota cobrada: Mar\xEDa Gonz\xE1lez \u2014 Julio 2026 ($1.200)",
+      fecha: "18/08/2026 16:20",
+      user: "admin",
+      idrelacionado: "S001"
+    },
+    {
+      tipo: "socio",
+      descripcion: "Nuevo socio registrado: Pablo Torres (CAR010)",
+      fecha: "18/08/2026 14:45",
+      user: "admin",
+      idrelacionado: "S010"
+    },
+    {
+      tipo: "libro",
+      descripcion: "Nuevo libro registrado: Cien a\xF1os de soledad",
+      fecha: "17/08/2026 11:30",
+      user: "admin",
+      idrelacionado: "L001"
+    },
+    {
+      tipo: "eliminacion",
+      descripcion: "Libro eliminado: Don Quijote de la Mancha",
+      fecha: "16/08/2026 10:15",
+      user: "admin",
+      idrelacionado: "L002"
+    },
+    {
+      tipo: "edicion",
+      descripcion: "Libro editado: El Principito",
+      fecha: "15/08/2026 16:40",
+      user: "admin",
+      idrelacionado: "L003"
     }
-    if (!this.password || this.password.length < 4) {
-      import_sweetalert2.default.fire({
-        title: "Contrase\xF1a Corta",
-        text: "La contrase\xF1a debe tener al menos 4 caracteres.",
-        icon: "warning",
-        confirmButtonColor: "#0d9488"
-      });
-      return;
-    }
-    import_sweetalert2.default.fire({
-      title: "\xA1Bienvenido!",
-      text: "Inicio de sesi\xF3n exitoso.",
-      icon: "success",
-      confirmButtonColor: "#0d9488",
-      timer: 1500,
-      showConfirmButton: false
-    }).then(() => {
-      this.router.navigate(["/inicio"]);
-    });
+  ];
+  obtenerActividades() {
+    return this.actividades;
   }
-  static \u0275fac = function InicioSesion_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _InicioSesion)(\u0275\u0275directiveInject(Router));
+  agregarActividad(actividad) {
+    this.actividades.unshift(actividad);
+  }
+  static \u0275fac = function ActividadServicio_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ActividadServicio)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _InicioSesion, selectors: [["app-inicio-sesion"]], decls: 28, vars: 2, consts: [[1, "login-container"], [1, "login-card"], [1, "login-header"], [1, "logo-icon"], ["src", "/OIP.webp", "alt", "logo"], [1, "subtitle"], [1, "login-form", 3, "ngSubmit"], [1, "form-group"], ["for", "email"], [1, "input-wrapper"], ["viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "input-icon"], ["d", "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"], ["points", "22,6 12,13 2,6"], ["type", "email", "id", "email", "name", "email", "placeholder", "ejemplo@gmail.com", "required", "", 3, "ngModelChange", "ngModel"], ["for", "password"], ["x", "3", "y", "11", "width", "18", "height", "11", "rx", "2", "ry", "2"], ["d", "M7 11V7a5 5 0 0 1 10 0v4"], ["type", "password", "id", "password", "name", "password", "placeholder", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", "required", "", 3, "ngModelChange", "ngModel"], ["type", "submit", 1, "btn-login"]], template: function InicioSesion_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div", 3);
-      \u0275\u0275element(4, "img", 4);
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(5, "h2");
-      \u0275\u0275text(6, "Sistema de Biblioteca");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(7, "p", 5);
-      \u0275\u0275text(8, "Ingres\xE1 tus credenciales para acceder");
-      \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(9, "form", 6);
-      \u0275\u0275listener("ngSubmit", function InicioSesion_Template_form_ngSubmit_9_listener() {
-        return ctx.iniciarSesion();
-      });
-      \u0275\u0275elementStart(10, "div", 7)(11, "label", 8);
-      \u0275\u0275text(12, "Correo Electr\xF3nico");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(13, "div", 9);
-      \u0275\u0275namespaceSVG();
-      \u0275\u0275elementStart(14, "svg", 10);
-      \u0275\u0275element(15, "path", 11)(16, "polyline", 12);
-      \u0275\u0275elementEnd();
-      \u0275\u0275namespaceHTML();
-      \u0275\u0275elementStart(17, "input", 13);
-      \u0275\u0275twoWayListener("ngModelChange", function InicioSesion_Template_input_ngModelChange_17_listener($event) {
-        \u0275\u0275twoWayBindingSet(ctx.email, $event) || (ctx.email = $event);
-        return $event;
-      });
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(18, "div", 7)(19, "label", 14);
-      \u0275\u0275text(20, "Contrase\xF1a");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(21, "div", 9);
-      \u0275\u0275namespaceSVG();
-      \u0275\u0275elementStart(22, "svg", 10);
-      \u0275\u0275element(23, "rect", 15)(24, "path", 16);
-      \u0275\u0275elementEnd();
-      \u0275\u0275namespaceHTML();
-      \u0275\u0275elementStart(25, "input", 17);
-      \u0275\u0275twoWayListener("ngModelChange", function InicioSesion_Template_input_ngModelChange_25_listener($event) {
-        \u0275\u0275twoWayBindingSet(ctx.password, $event) || (ctx.password = $event);
-        return $event;
-      });
-      \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(26, "button", 18);
-      \u0275\u0275text(27, " Iniciar Sesi\xF3n ");
-      \u0275\u0275elementEnd()()()();
-    }
-    if (rf & 2) {
-      \u0275\u0275advance(17);
-      \u0275\u0275twoWayProperty("ngModel", ctx.email);
-      \u0275\u0275advance(8);
-      \u0275\u0275twoWayProperty("ngModel", ctx.password);
-    }
-  }, dependencies: [FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.login-container[_ngcontent-%COMP%] {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header[_ngcontent-%COMP%] {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon[_ngcontent-%COMP%] {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper[_ngcontent-%COMP%] {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login[_ngcontent-%COMP%] {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */"] });
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ActividadServicio, factory: _ActividadServicio.\u0275fac, providedIn: "root" });
 };
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InicioSesion, [{
-    type: Component,
-    args: [{ selector: "app-inicio-sesion", imports: [FormsModule], template: '<div class="login-container">\r\n  <div class="login-card">\r\n    \r\n    <!-- Header / Logo de la Biblioteca -->\r\n    <div class="login-header">\r\n      <div class="logo-icon">\r\n        <img src="/OIP.webp" alt="logo">\r\n      </div>\r\n      <h2>Sistema de Biblioteca</h2>\r\n      <p class="subtitle">Ingres\xE1 tus credenciales para acceder</p>\r\n    </div>\r\n\r\n    <!-- Formulario -->\r\n    <form (ngSubmit)="iniciarSesion()" class="login-form">\r\n      \r\n      <!-- Campo Email -->\r\n      <div class="form-group">\r\n        <label for="email">Correo Electr\xF3nico</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>\r\n            <polyline points="22,6 12,13 2,6"></polyline>\r\n          </svg>\r\n          <input \r\n            type="email" \r\n            id="email" \r\n            [(ngModel)]="email" \r\n            name="email" \r\n            placeholder="ejemplo@gmail.com" \r\n            required />\r\n        </div>\r\n      </div>\r\n\r\n      <!-- Campo Contrase\xF1a -->\r\n      <div class="form-group">\r\n        <label for="password">Contrase\xF1a</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>\r\n            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>\r\n          </svg>\r\n          <input \r\n            type="password" \r\n            id="password" \r\n            [(ngModel)]="password" \r\n            name="password" \r\n            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" \r\n            required />\r\n        </div>\r\n      </div>\r\n      <!-- Bot\xF3n de Ingreso -->\r\n      <button type="submit" class="btn-login">\r\n        Iniciar Sesi\xF3n\r\n      </button>\r\n    </form>\r\n\r\n  </div>\r\n</div>', styles: ["/* src/app/inicio-sesion/inicio-sesion.css */\n.login-container {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon svg {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon img {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header h2 {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper input {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */\n"] }]
-  }], () => [{ type: Router }], null);
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InicioSesion, { className: "InicioSesion", filePath: "app/inicio-sesion/inicio-sesion.ts", lineNumber: 12 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ActividadServicio, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
 })();
 
-// src/app/libros/libros.ts
-var import_sweetalert22 = __toESM(require_sweetalert2_all());
+// src/app/services/socio.ts
+var SocioServicio = class _SocioServicio {
+  socios = [];
+  contadorSocio = 1;
+  constructor() {
+    this.cargarSociosDePrueba();
+  }
+  // ==========================================
+  // SOCIOS DE PRUEBA
+  // ==========================================
+  cargarSociosDePrueba() {
+    const sociosDePrueba = [
+      {
+        nombre: "Ana Mart\xEDnez",
+        edad: 28,
+        dni: "30111222",
+        telefono: "+549111111111",
+        email: "ana.martinez@gmail.com",
+        estado: "activo",
+        cuota: "pagada",
+        prestamos: "Libre"
+      },
+      {
+        nombre: "Bruno Fern\xE1ndez",
+        edad: 35,
+        dni: "30222333",
+        telefono: "+549222222222",
+        email: "bruno.fernandez@gmail.com",
+        estado: "activo",
+        cuota: "pendiente",
+        prestamos: "En curso"
+      },
+      {
+        nombre: "Carla G\xF3mez",
+        edad: 22,
+        dni: "30333444",
+        telefono: "+549333333333",
+        email: "carla.gomez@gmail.com",
+        estado: "suspendido",
+        cuota: "pendiente",
+        prestamos: "En curso"
+      },
+      {
+        nombre: "Diego Rodr\xEDguez",
+        edad: 41,
+        dni: "30444555",
+        telefono: "+549444444444",
+        email: "diego.rodriguez@gmail.com",
+        estado: "inactivo",
+        cuota: "vencida",
+        prestamos: "Libre"
+      },
+      {
+        nombre: "Elena L\xF3pez",
+        edad: 17,
+        dni: "30555666",
+        telefono: "+549555555555",
+        email: "elena.lopez@gmail.com",
+        estado: "activo",
+        cuota: "vencida",
+        prestamos: "Libre"
+      },
+      {
+        nombre: "Florencia Silva",
+        edad: 19,
+        dni: "30666777",
+        telefono: "+549666666666",
+        email: "florencia.silva@gmail.com",
+        estado: "inactivo",
+        cuota: "pagada",
+        prestamos: "Libre"
+      }
+    ];
+    sociosDePrueba.forEach((socio) => this.agregarSocio(socio));
+  }
+  // ==========================================
+  // OBTENER SOCIOS
+  // ==========================================
+  tenerSocios() {
+    return this.socios;
+  }
+  // ==========================================
+  // AGREGAR SOCIO
+  // ==========================================
+  agregarSocio(socioData) {
+    const idSecuencia = this.contadorSocio.toString().padStart(3, "0");
+    const nuevoSocio = __spreadProps(__spreadValues({}, socioData), {
+      id: this.contadorSocio,
+      numCarnet: `c-${idSecuencia}`
+    });
+    this.socios.push(nuevoSocio);
+    this.contadorSocio++;
+  }
+  // ==========================================
+  // ACTUALIZAR SOCIO
+  // ==========================================
+  actualizarSocio(socioActualizado) {
+    const index = this.socios.findIndex((s) => s.id === socioActualizado.id);
+    if (index !== -1) {
+      this.socios[index] = __spreadValues({}, socioActualizado);
+    }
+  }
+  // ==========================================
+  // MODIFICAR SOCIO
+  // ==========================================
+  modificarSocio(socioActualizado) {
+    this.actualizarSocio(socioActualizado);
+  }
+  // ==========================================
+  // ACTUALIZAR ESTADO PRÉSTAMO
+  // ==========================================
+  actualizarEstadoPrestamo(idSocio, nuevoEstado) {
+    const socio = this.socios.find((s) => s.id === Number(idSocio));
+    if (socio) {
+      socio.prestamos = nuevoEstado;
+    }
+  }
+  // ==========================================
+  // ACTUALIZAR ESTADO DEL SOCIO
+  // ==========================================
+  actualizarEstadoSocio(idSocio, nuevoEstado) {
+    const socio = this.socios.find((s) => s.id === Number(idSocio));
+    if (socio) {
+      socio.estado = nuevoEstado;
+    }
+  }
+  // ==========================================
+  // ACTUALIZAR ESTADO CUOTA
+  // ==========================================
+  actualizarEstadoCuota(idSocio, nuevoEstado) {
+    const socio = this.socios.find((s) => s.id === Number(idSocio));
+    if (socio) {
+      socio.cuota = nuevoEstado;
+    }
+  }
+  static \u0275fac = function SocioServicio_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SocioServicio)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SocioServicio, factory: _SocioServicio.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SocioServicio, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [], null);
+})();
 
 // src/app/services/libro-service.ts
 var LibroService = class _LibroService {
@@ -43686,7 +43352,766 @@ var LibroService = class _LibroService {
   }], () => [], null);
 })();
 
+// src/app/services/prestamo.ts
+var PrestamoService = class _PrestamoService {
+  libroService = inject2(LibroService);
+  prestamos = [];
+  // ==========================================
+  // OBTENER PRÉSTAMOS
+  // ==========================================
+  obtenerPrestamos() {
+    return this.prestamos;
+  }
+  // ==========================================
+  // AGREGAR PRÉSTAMO
+  // ==========================================
+  agregarPrestamo(nuevoPrestamo) {
+    const libroId = nuevoPrestamo.libroId || this.libroService.libros.find((l) => l.titulo.toLowerCase() === nuevoPrestamo.libro.toLowerCase())?.id || "";
+    const exito = this.libroService.prestarCopia(libroId, nuevoPrestamo.inventario);
+    if (exito) {
+      this.prestamos.push(nuevoPrestamo);
+      return true;
+    }
+    return false;
+  }
+  // ==========================================
+  // DEVOLVER PRÉSTAMO
+  // ==========================================
+  devolverPrestamo(id) {
+    const prestamo = this.prestamos.find((p) => p.id === id);
+    if (prestamo) {
+      prestamo.estado = "devuelto";
+      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
+    }
+  }
+  // ==========================================
+  // RENOVAR PRÉSTAMO
+  // ==========================================
+  renovarPrestamo(id) {
+    const prestamo = this.prestamos.find((p) => p.id === id);
+    if (prestamo) {
+      prestamo.renovaciones += 1;
+      const fechaActual = new Date(prestamo.fechaVencimiento);
+      fechaActual.setMonth(fechaActual.getMonth() + 1);
+      prestamo.fechaVencimiento = fechaActual.toISOString().split("T")[0];
+    }
+  }
+  // ==========================================
+  // ACTUALIZAR DATOS DEL SOCIO
+  // ==========================================
+  actualizarDatosSocio(socioId, nombreAnterior, nuevoNombre) {
+    this.prestamos.forEach((prestamo) => {
+      if (prestamo.socioId === socioId) {
+        prestamo.socio = nuevoNombre;
+        return;
+      }
+      if (prestamo.socio.trim().toLowerCase() === nombreAnterior.trim().toLowerCase()) {
+        prestamo.socioId = socioId;
+        prestamo.socio = nuevoNombre;
+      }
+    });
+  }
+  // ==========================================
+  // SUSPENDER PRÉSTAMO
+  // ==========================================
+  suspenderPrestamo(id) {
+    const p = this.prestamos.find((p2) => p2.id === id);
+    if (p && p.estado !== "devuelto") {
+      p.estado = "suspendido";
+    }
+  }
+  // ==========================================
+  // QUITAR SUSPENSIÓN
+  // ==========================================
+  quitarSuspension(id) {
+    const p = this.prestamos.find((p2) => p2.id === id);
+    if (p && p.estado === "suspendido") {
+      const hoy = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+      p.estado = p.fechaVencimiento < hoy ? "atrasado" : "activo";
+    }
+  }
+  static \u0275fac = function PrestamoService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _PrestamoService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _PrestamoService, factory: _PrestamoService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PrestamoService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/inicio/inicio.ts
+var _c0 = () => ["/cuotas"];
+var _c1 = () => ({ filtro: "pendiente" });
+var _forTrack0 = ($index, $item) => $item.fecha;
+function Inicio_Conditional_51_Conditional_18_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span");
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1("Vence: ", ctx_r0.prestamoEncontrado.fechaVencimiento);
+  }
+}
+function Inicio_Conditional_51_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 28);
+    \u0275\u0275element(2, "span", 29);
+    \u0275\u0275elementStart(3, "strong");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "span", 30);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "div", 31)(8, "span");
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "span");
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "span");
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(14, "span");
+    \u0275\u0275text(15);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(16, "span");
+    \u0275\u0275text(17);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(18, Inicio_Conditional_51_Conditional_18_Template, 2, 1, "span");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(19, "span", 32);
+    \u0275\u0275text(20);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const socio_r2 = ctx;
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275classProp("inactivo", socio_r2.estado !== "activo");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(socio_r2.nombre);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(socio_r2.numCarnet);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate1("DNI: ", socio_r2.dni);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("Tel: ", socio_r2.telefono);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("Email: ", socio_r2.email);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1("Cuota: ", socio_r2.cuota);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" Pr\xE9stamo: ", (ctx_r0.prestamoEncontrado == null ? null : ctx_r0.prestamoEncontrado.libro) || socio_r2.prestamos, " ");
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r0.prestamoEncontrado ? 18 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275classProp("estado-alerta", socio_r2.estado !== "activo" || socio_r2.cuota !== "pagada");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", socio_r2.estado === "activo" && socio_r2.cuota === "pagada" ? "Todo al d\xEDa" : "Atenci\xF3n requerida", " ");
+  }
+}
+function Inicio_Conditional_52_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 17);
+    \u0275\u0275text(1, " No se encontr\xF3 ning\xFAn socio con esa b\xFAsqueda. ");
+    \u0275\u0275elementEnd();
+  }
+}
+function Inicio_For_87_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 27)(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "span", 33);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "span", 34);
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "span", 35);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const actividad_r3 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275classMap(\u0275\u0275interpolate1("badge badge-", actividad_r3.tipo));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", actividad_r3.tipo, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", actividad_r3.descripcion, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", actividad_r3.fecha, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", actividad_r3.user, " ");
+  }
+}
+var Inicio = class _Inicio {
+  router;
+  actividadServicio;
+  socioServicio;
+  prestamoService;
+  // ==========================================
+  // FECHA ACTUAL
+  // ==========================================
+  fechaActual = "";
+  intervalo;
+  // ==========================================
+  // ACTIVIDADES
+  // ==========================================
+  actividadesRecientes = [];
+  prestamosVencidos = 0;
+  cuotasPendientes = 0;
+  sociosActivos = 0;
+  terminoBusquedaExpress = "";
+  socioEncontrado = null;
+  prestamoEncontrado = null;
+  // ==========================================
+  // CONSTRUCTOR
+  // ==========================================
+  constructor(router, actividadServicio, socioServicio, prestamoService) {
+    this.router = router;
+    this.actividadServicio = actividadServicio;
+    this.socioServicio = socioServicio;
+    this.prestamoService = prestamoService;
+  }
+  // ==========================================
+  // AL INICIAR
+  // ==========================================
+  ngOnInit() {
+    this.actualizarFecha();
+    this.intervalo = setInterval(() => {
+      this.actualizarFecha();
+      this.actualizarEstadisticas();
+    }, 6e4);
+    this.obtenerActividades();
+    this.actualizarEstadisticas();
+  }
+  // ==========================================
+  // ESTADÍSTICAS
+  // ==========================================
+  actualizarEstadisticas() {
+    const socios = this.socioServicio.tenerSocios();
+    this.sociosActivos = socios.filter((socio) => socio.estado === "activo").length;
+    this.cuotasPendientes = socios.filter((socio) => socio.cuota === "pendiente").length;
+    const hoy = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+    this.prestamosVencidos = this.prestamoService.obtenerPrestamos().filter((prestamo) => prestamo.estado !== "devuelto" && (prestamo.estado === "atrasado" || prestamo.fechaVencimiento < hoy)).length;
+  }
+  buscarExpress() {
+    const termino = this.terminoBusquedaExpress.trim().toLowerCase();
+    if (!termino) {
+      this.socioEncontrado = null;
+      this.prestamoEncontrado = null;
+      return;
+    }
+    this.socioEncontrado = this.socioServicio.tenerSocios().find((socio) => socio.nombre.toLowerCase().includes(termino) || socio.dni.toLowerCase().includes(termino) || socio.numCarnet.toLowerCase().includes(termino)) || null;
+    this.prestamoEncontrado = this.socioEncontrado ? this.prestamoService.obtenerPrestamos().find((prestamo) => prestamo.socioId === this.socioEncontrado?.id && prestamo.estado !== "devuelto") || null : null;
+  }
+  // ==========================================
+  // OBTENER ACTIVIDADES
+  // ==========================================
+  obtenerActividades() {
+    const actividades = this.actividadServicio.obtenerActividades();
+    this.actividadesRecientes = actividades.slice(0, 4);
+  }
+  // ==========================================
+  // FECHA ACTUAL
+  // ==========================================
+  actualizarFecha() {
+    const ahora = /* @__PURE__ */ new Date();
+    this.fechaActual = ahora.toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+  }
+  // ==========================================
+  // DESTRUIR COMPONENTE
+  // ==========================================
+  ngOnDestroy() {
+    clearInterval(this.intervalo);
+  }
+  // ==========================================
+  // NUEVO PRÉSTAMO
+  // ==========================================
+  abrirNuevoPrestamo() {
+    this.router.navigate(["/prestamos"], {
+      queryParams: {
+        mostrarNuevoPrestamo: "true"
+      }
+    });
+  }
+  // ==========================================
+  // CARGAR SOCIO
+  // ==========================================
+  cargarSocio() {
+    this.router.navigate(["/socios"], {
+      queryParams: {
+        openModal: "true"
+      }
+    });
+  }
+  static \u0275fac = function Inicio_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _Inicio)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(PrestamoService));
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Inicio, selectors: [["app-inicio"]], decls: 88, vars: 10, consts: [[1, "inicio"], [1, "encabezado"], [1, "estadisticas"], ["routerLink", "/prestamos", 1, "tarjeta", "estadistica", "vencidos"], [1, "icono"], [1, "tarjeta", "estadistica", "pendientes", 3, "routerLink", "queryParams"], ["routerLink", "/socios", 1, "tarjeta", "estadistica", "activos"], [1, "busqueda"], [1, "titulo-busqueda"], [1, "icono-lupa"], [1, "filtros"], ["type", "button", 1, "filtro", "activo"], ["type", "button", 1, "filtro"], [1, "campo-busqueda"], ["type", "text", "placeholder", "Ej: Ana Mart\xEDnez, DNI o c-001", 3, "ngModelChange", "keyup.enter", "ngModel"], ["type", "button", 1, "btn-buscar", 3, "click"], [1, "resultado-express"], [1, "sin-resultado-express"], [1, "acciones"], [1, "accion", "nuevo-prestamo", 3, "click"], [1, "accion-icono"], ["routerLink", "/cuotas", 1, "accion", "cobrar-cuota"], [1, "accion", "cargar-socio", 3, "click"], [1, "actividad"], [1, "actividad-header"], ["routerLink", "/actividades"], [1, "actividad-lista"], [1, "actividad-item"], [1, "resultado-identidad"], [1, "resultado-punto"], [1, "resultado-carnet"], [1, "resultado-datos"], [1, "resultado-estado"], [1, "descripcion"], [1, "fecha"], [1, "usuario"]], template: function Inicio_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "h1");
+      \u0275\u0275text(3, "Inicio");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(4, "span");
+      \u0275\u0275text(5);
+      \u0275\u0275elementEnd()();
+      \u0275\u0275elementStart(6, "div", 2)(7, "div", 3)(8, "div", 4);
+      \u0275\u0275text(9, "\u25F7");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(10, "div")(11, "strong");
+      \u0275\u0275text(12);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(13, "span");
+      \u0275\u0275text(14, "Pr\xE9stamos vencidos");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(15, "div", 5)(16, "div", 4);
+      \u0275\u0275text(17, "\u25A4");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(18, "div")(19, "strong");
+      \u0275\u0275text(20);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(21, "span");
+      \u0275\u0275text(22, "Socios con cuotas pendientes");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(23, "div", 6)(24, "div", 4);
+      \u0275\u0275text(25, "\u2659");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(26, "div")(27, "strong");
+      \u0275\u0275text(28);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(29, "span");
+      \u0275\u0275text(30, "Socios activos");
+      \u0275\u0275elementEnd()()()();
+      \u0275\u0275elementStart(31, "div", 7)(32, "div", 8)(33, "span", 9);
+      \u0275\u0275text(34, "\u2315");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(35, "div")(36, "h3");
+      \u0275\u0275text(37, "B\xFAsqueda Express");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(38, "small");
+      \u0275\u0275text(39, "Presion\xE1 Enter o hac\xE9 clic en Buscar");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(40, "div", 10)(41, "button", 11);
+      \u0275\u0275text(42, " DNI / APELLIDO / N\xBA CARNET ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(43, "button", 12);
+      \u0275\u0275text(44, " N\xB0 INVENTARIO / ID ");
+      \u0275\u0275elementEnd()();
+      \u0275\u0275elementStart(45, "div", 13)(46, "span");
+      \u0275\u0275text(47, "\u2315");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(48, "input", 14);
+      \u0275\u0275twoWayListener("ngModelChange", function Inicio_Template_input_ngModelChange_48_listener($event) {
+        \u0275\u0275twoWayBindingSet(ctx.terminoBusquedaExpress, $event) || (ctx.terminoBusquedaExpress = $event);
+        return $event;
+      });
+      \u0275\u0275listener("keyup.enter", function Inicio_Template_input_keyup_enter_48_listener() {
+        return ctx.buscarExpress();
+      });
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(49, "button", 15);
+      \u0275\u0275listener("click", function Inicio_Template_button_click_49_listener() {
+        return ctx.buscarExpress();
+      });
+      \u0275\u0275text(50, " Buscar ");
+      \u0275\u0275elementEnd()();
+      \u0275\u0275conditionalCreate(51, Inicio_Conditional_51_Template, 21, 13, "div", 16)(52, Inicio_Conditional_52_Template, 2, 0, "div", 17);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(53, "div", 18)(54, "div", 19);
+      \u0275\u0275listener("click", function Inicio_Template_div_click_54_listener() {
+        return ctx.abrirNuevoPrestamo();
+      });
+      \u0275\u0275elementStart(55, "div", 20);
+      \u0275\u0275text(56, "\uFF0B");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(57, "div")(58, "h3");
+      \u0275\u0275text(59, "Nuevo pr\xE9stamo");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(60, "span");
+      \u0275\u0275text(61, "Registrar un pr\xE9stamo");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(62, "div", 21)(63, "div", 20);
+      \u0275\u0275text(64, "\u25A4");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(65, "div")(66, "h3");
+      \u0275\u0275text(67, "Cobrar cuota");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(68, "span");
+      \u0275\u0275text(69, "Gestionar cobros");
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(70, "div", 22);
+      \u0275\u0275listener("click", function Inicio_Template_div_click_70_listener() {
+        return ctx.cargarSocio();
+      });
+      \u0275\u0275elementStart(71, "div", 20);
+      \u0275\u0275text(72, "\u2659+");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(73, "div")(74, "h3");
+      \u0275\u0275text(75, "Cargar socio");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(76, "span");
+      \u0275\u0275text(77, "Registrar nuevo socio");
+      \u0275\u0275elementEnd()()()();
+      \u0275\u0275elementStart(78, "div", 23)(79, "div", 24)(80, "h3");
+      \u0275\u0275text(81, "Actividad reciente");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(82, "a", 25);
+      \u0275\u0275text(83, " Ver todo \u2192 ");
+      \u0275\u0275elementEnd()();
+      \u0275\u0275elementStart(84, "div", 26)(85, "div", 26);
+      \u0275\u0275repeaterCreate(86, Inicio_For_87_Template, 9, 7, "div", 27, _forTrack0);
+      \u0275\u0275elementEnd()()()();
+    }
+    if (rf & 2) {
+      let tmp_7_0;
+      \u0275\u0275advance(5);
+      \u0275\u0275textInterpolate(ctx.fechaActual);
+      \u0275\u0275advance(7);
+      \u0275\u0275textInterpolate(ctx.prestamosVencidos);
+      \u0275\u0275advance(3);
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(8, _c0))("queryParams", \u0275\u0275pureFunction0(9, _c1));
+      \u0275\u0275advance(5);
+      \u0275\u0275textInterpolate(ctx.cuotasPendientes);
+      \u0275\u0275advance(8);
+      \u0275\u0275textInterpolate(ctx.sociosActivos);
+      \u0275\u0275advance(20);
+      \u0275\u0275twoWayProperty("ngModel", ctx.terminoBusquedaExpress);
+      \u0275\u0275advance(3);
+      \u0275\u0275conditional((tmp_7_0 = ctx.socioEncontrado) ? 51 : ctx.terminoBusquedaExpress.trim() ? 52 : -1, tmp_7_0);
+      \u0275\u0275advance(35);
+      \u0275\u0275repeater(ctx.actividadesRecientes);
+    }
+  }, dependencies: [RouterLink, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.inicio[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.encabezado[_ngcontent-%COMP%] {\n  margin-bottom: 25px;\n}\n.encabezado[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.encabezado[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #718096;\n  font-size: 13px;\n}\n.estadisticas[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.tarjeta[_ngcontent-%COMP%] {\n  background: white;\n  border-radius: 16px;\n  min-height: 92px;\n  padding: 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);\n}\n.tarjeta[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n}\n.estadistica[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  width: 48px;\n  height: 48px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 25px;\n}\n.estadistica[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  display: block;\n  font-size: 23px;\n  margin-bottom: 4px;\n  color: #12263a;\n}\n.estadistica[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: block;\n  font-size: 12px;\n  color: #718096;\n}\n.vencidos[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #fff0f1;\n  color: #ff5360;\n}\n.pendientes[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #fff7eb;\n  color: #ff9718;\n}\n.activos[_ngcontent-%COMP%]   .icono[_ngcontent-%COMP%] {\n  background: #e7f8f7;\n  color: #20b5ac;\n}\n.busqueda[_ngcontent-%COMP%] {\n  background: white;\n  border-radius: 16px;\n  padding: 27px 25px 25px;\n  margin-bottom: 24px;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);\n}\n.titulo-busqueda[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 17px;\n}\n.icono-lupa[_ngcontent-%COMP%] {\n  font-size: 30px;\n  color: #20b5ac;\n}\n.titulo-busqueda[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0 0 3px;\n  font-size: 15px;\n}\n.titulo-busqueda[_ngcontent-%COMP%]   small[_ngcontent-%COMP%] {\n  color: #8995a5;\n  font-size: 11px;\n}\n.filtros[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 9px;\n  margin-bottom: 15px;\n}\n.filtro[_ngcontent-%COMP%] {\n  border: 1px solid #dce3e9;\n  background: white;\n  color: #30445a;\n  border-radius: 20px;\n  padding: 9px 16px;\n  font-size: 13px;\n  cursor: pointer;\n}\n.filtro[_ngcontent-%COMP%]:hover {\n  border-color: #20b5ac;\n}\n.filtro.activo[_ngcontent-%COMP%] {\n  background: #2bb5aa;\n  border-color: #2bb5aa;\n  color: white;\n}\n.campo-busqueda[_ngcontent-%COMP%] {\n  height: 46px;\n  border: 1px solid #dce2e8;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  padding-left: 15px;\n  overflow: hidden;\n}\n.campo-busqueda[_ngcontent-%COMP%]    > span[_ngcontent-%COMP%] {\n  color: #91a0af;\n  font-size: 20px;\n}\n.campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 100%;\n  border: none;\n  outline: none;\n  padding: 0 12px;\n  font-size: 13px;\n  color: #34495e;\n}\n.campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #9aa6b4;\n}\n.btn-buscar[_ngcontent-%COMP%] {\n  height: 100%;\n  border: none;\n  background: #2bb5aa;\n  color: white;\n  font-weight: 600;\n  padding: 0 25px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.btn-buscar[_ngcontent-%COMP%]:hover {\n  background: #20a69c;\n}\n.resultado-express[_ngcontent-%COMP%] {\n  position: relative;\n  margin-top: 16px;\n  padding: 16px 18px;\n  border: 2px solid #22c55e;\n  border-radius: 12px;\n  background: #f0fdf4;\n}\n.resultado-identidad[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  color: #12263a;\n  font-size: 14px;\n}\n.resultado-punto[_ngcontent-%COMP%] {\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: #22c55e;\n}\n.resultado-punto.inactivo[_ngcontent-%COMP%] {\n  background: #fb7185;\n}\n.resultado-carnet[_ngcontent-%COMP%] {\n  color: #718096;\n  font-size: 12px;\n}\n.resultado-datos[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 6px 24px;\n  margin-top: 12px;\n  color: #30445a;\n  font-size: 12px;\n}\n.resultado-estado[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 16px;\n  right: 18px;\n  padding: 5px 12px;\n  border-radius: 20px;\n  background: #dcfce7;\n  color: #15803d;\n  font-size: 11px;\n  font-weight: 700;\n}\n.resultado-estado.estado-alerta[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  color: #b45309;\n}\n.sin-resultado-express[_ngcontent-%COMP%] {\n  margin-top: 16px;\n  padding: 16px;\n  border: 1px solid #fecaca;\n  border-radius: 12px;\n  background: #fef2f2;\n  color: #b91c1c;\n  font-size: 12px;\n}\n.acciones[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.accion[_ngcontent-%COMP%] {\n  height: 150px;\n  border-radius: 16px;\n  color: white;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n}\n.accion[_ngcontent-%COMP%]:hover {\n  transform: translateY(-2px);\n}\n.accion-icono[_ngcontent-%COMP%] {\n  width: 49px;\n  height: 49px;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.22);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 27px;\n  margin-bottom: 13px;\n}\n.accion[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 15px;\n}\n.accion[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 11px;\n  opacity: 0.85;\n}\n.nuevo-prestamo[_ngcontent-%COMP%] {\n  background: #2bb5aa;\n}\n.cobrar-cuota[_ngcontent-%COMP%] {\n  background: #ff9619;\n}\n.cargar-socio[_ngcontent-%COMP%] {\n  background: #1d3345;\n}\n.actividad[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.actividad-header[_ngcontent-%COMP%] {\n  height: 56px;\n  padding: 0 25px;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  border-bottom: 1px solid #edf0f3;\n}\n.actividad-header[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 15px;\n  color: #12263a;\n}\n.actividad-header[_ngcontent-%COMP%]   a[_ngcontent-%COMP%] {\n  color: #16aaa1;\n  text-decoration: none;\n  font-size: 11px;\n  font-weight: 600;\n}\n.actividad-item[_ngcontent-%COMP%] {\n  min-height: 48px;\n  padding: 0 25px;\n  display: grid;\n  grid-template-columns: max-content minmax(0, 1fr) auto 50px;\n  align-items: center;\n  gap: 12px;\n  border-bottom: 1px solid #f0f2f4;\n  font-size: 12px;\n}\n.descripcion[_ngcontent-%COMP%] {\n  color: #293d50;\n}\n.fecha[_ngcontent-%COMP%] {\n  color: #8491a0;\n  font-size: 11px;\n}\n.usuario[_ngcontent-%COMP%] {\n  color: #8491a0;\n  font-size: 11px;\n  text-align: right;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login[_ngcontent-%COMP%] {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo[_ngcontent-%COMP%] {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio[_ngcontent-%COMP%] {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro[_ngcontent-%COMP%] {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-eliminacion[_ngcontent-%COMP%] {\n  background-color: #ffe8e8;\n  color: #ea3333;\n}\n.badge-edicion[_ngcontent-%COMP%] {\n  background-color: #ffe8fd;\n  color: #ea33d2;\n}\n@media (max-width: 900px) {\n  .estadisticas[_ngcontent-%COMP%], \n   .acciones[_ngcontent-%COMP%] {\n    grid-template-columns: 1fr;\n  }\n  .actividad-item[_ngcontent-%COMP%] {\n    grid-template-columns: 65px 1fr;\n    padding: 12px 20px;\n  }\n  .fecha[_ngcontent-%COMP%], \n   .usuario[_ngcontent-%COMP%] {\n    display: none;\n  }\n}\n@media (max-width: 600px) {\n  .inicio[_ngcontent-%COMP%] {\n    padding: 20px 15px;\n  }\n  .busqueda[_ngcontent-%COMP%] {\n    padding: 20px 16px;\n  }\n  .filtros[_ngcontent-%COMP%] {\n    flex-wrap: wrap;\n  }\n  .campo-busqueda[_ngcontent-%COMP%] {\n    height: auto;\n    flex-wrap: wrap;\n    padding: 8px;\n  }\n  .campo-busqueda[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n    height: 42px;\n    min-width: 150px;\n  }\n  .btn-buscar[_ngcontent-%COMP%] {\n    height: 42px;\n    border-radius: 8px;\n  }\n  .actividad-header[_ngcontent-%COMP%] {\n    padding: 0 18px;\n  }\n  .actividad-item[_ngcontent-%COMP%] {\n    padding: 12px 18px;\n  }\n}\n/*# sourceMappingURL=inicio.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Inicio, [{
+    type: Component,
+    args: [{ selector: "app-inicio", standalone: true, imports: [RouterLink, FormsModule], template: `<div class="inicio">\r
+\r
+  <!-- Encabezado -->\r
+  <div class="encabezado">\r
+    <h1>Inicio</h1>\r
+    <span>{{ fechaActual }}</span>\r
+  </div>\r
+\r
+  <!-- Estad\xEDsticas -->\r
+  <div class="estadisticas">\r
+\r
+    <div class="tarjeta estadistica vencidos" routerLink='/prestamos'>\r
+      <div class="icono">\u25F7</div>\r
+      <div>\r
+        <strong>{{ prestamosVencidos }}</strong>\r
+        <span>Pr\xE9stamos vencidos</span>\r
+      </div>\r
+    </div>\r
+\r
+    <div\r
+      class="tarjeta estadistica pendientes"\r
+      [routerLink]="['/cuotas']"\r
+      [queryParams]="{ filtro: 'pendiente' }">\r
+      <div class="icono">\u25A4</div>\r
+      <div>\r
+        <strong>{{ cuotasPendientes }}</strong>\r
+        <span>Socios con cuotas pendientes</span>\r
+      </div>\r
+    </div>\r
+\r
+    <div class="tarjeta estadistica activos" routerLink='/socios'>\r
+\r
+      <div class="icono">\u2659</div>\r
+      <div>\r
+        <strong>{{ sociosActivos }}</strong>\r
+        <span>Socios activos</span>\r
+      </div>\r
+    </div>\r
+\r
+  </div>\r
+\r
+  <!-- B\xFAsqueda express -->\r
+  <div class="busqueda">\r
+\r
+    <div class="titulo-busqueda">\r
+      <span class="icono-lupa">\u2315</span>\r
+\r
+      <div>\r
+        <h3>B\xFAsqueda Express</h3>\r
+        <small>Presion\xE1 Enter o hac\xE9 clic en Buscar</small>\r
+      </div>\r
+    </div>\r
+\r
+    <div class="filtros">\r
+\r
+      <button class="filtro activo" type="button">\r
+        DNI / APELLIDO / N\xBA CARNET\r
+      </button>\r
+      <button class="filtro" type="button">\r
+        N\xB0 INVENTARIO / ID\r
+      </button>\r
+    </div>\r
+\r
+    <div class="campo-busqueda">\r
+      <span>\u2315</span>\r
+\r
+      <input\r
+        type="text"\r
+        [(ngModel)]="terminoBusquedaExpress"\r
+        (keyup.enter)="buscarExpress()"\r
+        placeholder="Ej: Ana Mart\xEDnez, DNI o c-001" />\r
+\r
+      <button class="btn-buscar" type="button" (click)="buscarExpress()">\r
+        Buscar\r
+      </button>\r
+    </div>\r
+\r
+    @if (socioEncontrado; as socio) {\r
+      <div class="resultado-express">\r
+        <div class="resultado-identidad">\r
+          <span class="resultado-punto" [class.inactivo]="socio.estado !== 'activo'"></span>\r
+          <strong>{{ socio.nombre }}</strong>\r
+          <span class="resultado-carnet">{{ socio.numCarnet }}</span>\r
+        </div>\r
+\r
+        <div class="resultado-datos">\r
+          <span>DNI: {{ socio.dni }}</span>\r
+          <span>Tel: {{ socio.telefono }}</span>\r
+          <span>Email: {{ socio.email }}</span>\r
+          <span>Cuota: {{ socio.cuota }}</span>\r
+          <span>\r
+            Pr\xE9stamo:\r
+            {{ prestamoEncontrado?.libro || socio.prestamos }}\r
+          </span>\r
+          @if (prestamoEncontrado) {\r
+            <span>Vence: {{ prestamoEncontrado.fechaVencimiento }}</span>\r
+          }\r
+        </div>\r
+\r
+        <span\r
+          class="resultado-estado"\r
+          [class.estado-alerta]="socio.estado !== 'activo' || socio.cuota !== 'pagada'">\r
+          {{ socio.estado === 'activo' && socio.cuota === 'pagada' ? 'Todo al d\xEDa' : 'Atenci\xF3n requerida' }}\r
+        </span>\r
+      </div>\r
+    } @else if (terminoBusquedaExpress.trim()) {\r
+      <div class="sin-resultado-express">\r
+        No se encontr\xF3 ning\xFAn socio con esa b\xFAsqueda.\r
+      </div>\r
+    }\r
+\r
+  </div>\r
+\r
+  <!-- Acciones r\xE1pidas -->\r
+  <div class="acciones">\r
+\r
+    <div class="accion nuevo-prestamo" (click)="abrirNuevoPrestamo()">\r
+      <div class="accion-icono">\uFF0B</div>\r
+\r
+      <div>\r
+        <h3>Nuevo pr\xE9stamo</h3>\r
+        <span>Registrar un pr\xE9stamo</span>\r
+      </div>\r
+    </div>\r
+\r
+    <div class="accion cobrar-cuota" routerLink='/cuotas'>\r
+      <div class="accion-icono">\u25A4</div>\r
+\r
+      <div>\r
+        <h3>Cobrar cuota</h3>\r
+        <span>Gestionar cobros</span>\r
+      </div>\r
+    </div>\r
+\r
+    <div class="accion cargar-socio" (click)="cargarSocio()">\r
+      <div class="accion-icono">\u2659+</div>\r
+\r
+      <div>\r
+        <h3>Cargar socio</h3>\r
+        <span>Registrar nuevo socio</span>\r
+      </div>\r
+    </div>\r
+\r
+  </div>\r
+\r
+  <!-- ACTIVIDAD RECIENTE -->\r
+  <div class="actividad">\r
+\r
+    <div class="actividad-header">\r
+      <h3>Actividad reciente</h3>\r
+\r
+      <a routerLink='/actividades'>\r
+        Ver todo \u2192\r
+      </a>\r
+    </div>\r
+\r
+    <div class="actividad-lista">\r
+\r
+      \r
+      <div class="actividad-lista">\r
+\r
+  @for (actividad of actividadesRecientes; track actividad.fecha) {\r
+\r
+    <div class="actividad-item">\r
+\r
+      <span class="badge badge-{{ actividad.tipo }}">\r
+        {{ actividad.tipo }}\r
+      </span>\r
+\r
+      <span class="descripcion">\r
+        {{ actividad.descripcion }}\r
+      </span>\r
+\r
+      <span class="fecha">\r
+        {{ actividad.fecha }}\r
+      </span>\r
+\r
+      <span class="usuario">\r
+        {{ actividad.user }}\r
+      </span>\r
+\r
+    </div>\r
+\r
+  }\r
+\r
+</div>\r
+\r
+    </div>\r
+\r
+  </div>\r
+\r
+</div>`, styles: ["/* src/app/inicio/inicio.css */\n* {\n  box-sizing: border-box;\n}\n.inicio {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.encabezado {\n  margin-bottom: 25px;\n}\n.encabezado h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.encabezado span {\n  color: #718096;\n  font-size: 13px;\n}\n.estadisticas {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.tarjeta {\n  background: white;\n  border-radius: 16px;\n  min-height: 92px;\n  padding: 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);\n}\n.tarjeta:hover {\n  transform: translateY(-2px);\n}\n.estadistica .icono {\n  width: 48px;\n  height: 48px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 25px;\n}\n.estadistica strong {\n  display: block;\n  font-size: 23px;\n  margin-bottom: 4px;\n  color: #12263a;\n}\n.estadistica span {\n  display: block;\n  font-size: 12px;\n  color: #718096;\n}\n.vencidos .icono {\n  background: #fff0f1;\n  color: #ff5360;\n}\n.pendientes .icono {\n  background: #fff7eb;\n  color: #ff9718;\n}\n.activos .icono {\n  background: #e7f8f7;\n  color: #20b5ac;\n}\n.busqueda {\n  background: white;\n  border-radius: 16px;\n  padding: 27px 25px 25px;\n  margin-bottom: 24px;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);\n}\n.titulo-busqueda {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 17px;\n}\n.icono-lupa {\n  font-size: 30px;\n  color: #20b5ac;\n}\n.titulo-busqueda h3 {\n  margin: 0 0 3px;\n  font-size: 15px;\n}\n.titulo-busqueda small {\n  color: #8995a5;\n  font-size: 11px;\n}\n.filtros {\n  display: flex;\n  gap: 9px;\n  margin-bottom: 15px;\n}\n.filtro {\n  border: 1px solid #dce3e9;\n  background: white;\n  color: #30445a;\n  border-radius: 20px;\n  padding: 9px 16px;\n  font-size: 13px;\n  cursor: pointer;\n}\n.filtro:hover {\n  border-color: #20b5ac;\n}\n.filtro.activo {\n  background: #2bb5aa;\n  border-color: #2bb5aa;\n  color: white;\n}\n.campo-busqueda {\n  height: 46px;\n  border: 1px solid #dce2e8;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  padding-left: 15px;\n  overflow: hidden;\n}\n.campo-busqueda > span {\n  color: #91a0af;\n  font-size: 20px;\n}\n.campo-busqueda input {\n  flex: 1;\n  height: 100%;\n  border: none;\n  outline: none;\n  padding: 0 12px;\n  font-size: 13px;\n  color: #34495e;\n}\n.campo-busqueda input::placeholder {\n  color: #9aa6b4;\n}\n.btn-buscar {\n  height: 100%;\n  border: none;\n  background: #2bb5aa;\n  color: white;\n  font-weight: 600;\n  padding: 0 25px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.btn-buscar:hover {\n  background: #20a69c;\n}\n.resultado-express {\n  position: relative;\n  margin-top: 16px;\n  padding: 16px 18px;\n  border: 2px solid #22c55e;\n  border-radius: 12px;\n  background: #f0fdf4;\n}\n.resultado-identidad {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  color: #12263a;\n  font-size: 14px;\n}\n.resultado-punto {\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: #22c55e;\n}\n.resultado-punto.inactivo {\n  background: #fb7185;\n}\n.resultado-carnet {\n  color: #718096;\n  font-size: 12px;\n}\n.resultado-datos {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 6px 24px;\n  margin-top: 12px;\n  color: #30445a;\n  font-size: 12px;\n}\n.resultado-estado {\n  position: absolute;\n  top: 16px;\n  right: 18px;\n  padding: 5px 12px;\n  border-radius: 20px;\n  background: #dcfce7;\n  color: #15803d;\n  font-size: 11px;\n  font-weight: 700;\n}\n.resultado-estado.estado-alerta {\n  background: #fef3c7;\n  color: #b45309;\n}\n.sin-resultado-express {\n  margin-top: 16px;\n  padding: 16px;\n  border: 1px solid #fecaca;\n  border-radius: 12px;\n  background: #fef2f2;\n  color: #b91c1c;\n  font-size: 12px;\n}\n.acciones {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.accion {\n  height: 150px;\n  border-radius: 16px;\n  color: white;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n}\n.accion:hover {\n  transform: translateY(-2px);\n}\n.accion-icono {\n  width: 49px;\n  height: 49px;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.22);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 27px;\n  margin-bottom: 13px;\n}\n.accion h3 {\n  margin: 0 0 5px;\n  font-size: 15px;\n}\n.accion span {\n  font-size: 11px;\n  opacity: 0.85;\n}\n.nuevo-prestamo {\n  background: #2bb5aa;\n}\n.cobrar-cuota {\n  background: #ff9619;\n}\n.cargar-socio {\n  background: #1d3345;\n}\n.actividad {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.actividad-header {\n  height: 56px;\n  padding: 0 25px;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  border-bottom: 1px solid #edf0f3;\n}\n.actividad-header h3 {\n  margin: 0;\n  font-size: 15px;\n  color: #12263a;\n}\n.actividad-header a {\n  color: #16aaa1;\n  text-decoration: none;\n  font-size: 11px;\n  font-weight: 600;\n}\n.actividad-item {\n  min-height: 48px;\n  padding: 0 25px;\n  display: grid;\n  grid-template-columns: max-content minmax(0, 1fr) auto 50px;\n  align-items: center;\n  gap: 12px;\n  border-bottom: 1px solid #f0f2f4;\n  font-size: 12px;\n}\n.descripcion {\n  color: #293d50;\n}\n.fecha {\n  color: #8491a0;\n  font-size: 11px;\n}\n.usuario {\n  color: #8491a0;\n  font-size: 11px;\n  text-align: right;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-eliminacion {\n  background-color: #ffe8e8;\n  color: #ea3333;\n}\n.badge-edicion {\n  background-color: #ffe8fd;\n  color: #ea33d2;\n}\n@media (max-width: 900px) {\n  .estadisticas,\n  .acciones {\n    grid-template-columns: 1fr;\n  }\n  .actividad-item {\n    grid-template-columns: 65px 1fr;\n    padding: 12px 20px;\n  }\n  .fecha,\n  .usuario {\n    display: none;\n  }\n}\n@media (max-width: 600px) {\n  .inicio {\n    padding: 20px 15px;\n  }\n  .busqueda {\n    padding: 20px 16px;\n  }\n  .filtros {\n    flex-wrap: wrap;\n  }\n  .campo-busqueda {\n    height: auto;\n    flex-wrap: wrap;\n    padding: 8px;\n  }\n  .campo-busqueda input {\n    height: 42px;\n    min-width: 150px;\n  }\n  .btn-buscar {\n    height: 42px;\n    border-radius: 8px;\n  }\n  .actividad-header {\n    padding: 0 18px;\n  }\n  .actividad-item {\n    padding: 12px 18px;\n  }\n}\n/*# sourceMappingURL=inicio.css.map */\n"] }]
+  }], () => [{ type: Router }, { type: ActividadServicio }, { type: SocioServicio }, { type: PrestamoService }], null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Inicio, { className: "Inicio", filePath: "app/inicio/inicio.ts", lineNumber: 23 });
+})();
+
+// src/app/inicio-sesion/inicio-sesion.ts
+var import_sweetalert2 = __toESM(require_sweetalert2_all());
+var InicioSesion = class _InicioSesion {
+  router;
+  email = "";
+  password = "";
+  constructor(router) {
+    this.router = router;
+  }
+  iniciarSesion() {
+    const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
+    if (!this.email || !regexEmail.test(this.email.trim())) {
+      import_sweetalert2.default.fire({
+        title: "Correo Inv\xE1lido",
+        text: "Por favor ingres\xE1 un correo v\xE1lido (@gmail.com o @hotmail.com).",
+        icon: "warning",
+        confirmButtonColor: "#0d9488"
+      });
+      return;
+    }
+    if (!this.password || this.password.length < 4) {
+      import_sweetalert2.default.fire({
+        title: "Contrase\xF1a Corta",
+        text: "La contrase\xF1a debe tener al menos 4 caracteres.",
+        icon: "warning",
+        confirmButtonColor: "#0d9488"
+      });
+      return;
+    }
+    import_sweetalert2.default.fire({
+      title: "\xA1Bienvenido!",
+      text: "Inicio de sesi\xF3n exitoso.",
+      icon: "success",
+      confirmButtonColor: "#0d9488",
+      timer: 1500,
+      showConfirmButton: false
+    }).then(() => {
+      this.router.navigate(["/inicio"]);
+    });
+  }
+  static \u0275fac = function InicioSesion_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _InicioSesion)(\u0275\u0275directiveInject(Router));
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _InicioSesion, selectors: [["app-inicio-sesion"]], decls: 28, vars: 2, consts: [[1, "login-container"], [1, "login-card"], [1, "login-header"], [1, "logo-icon"], ["src", "/OIP.webp", "alt", "logo"], [1, "subtitle"], [1, "login-form", 3, "ngSubmit"], [1, "form-group"], ["for", "email"], [1, "input-wrapper"], ["viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "input-icon"], ["d", "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"], ["points", "22,6 12,13 2,6"], ["type", "email", "id", "email", "name", "email", "placeholder", "ejemplo@gmail.com", "required", "", 3, "ngModelChange", "ngModel"], ["for", "password"], ["x", "3", "y", "11", "width", "18", "height", "11", "rx", "2", "ry", "2"], ["d", "M7 11V7a5 5 0 0 1 10 0v4"], ["type", "password", "id", "password", "name", "password", "placeholder", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", "required", "", 3, "ngModelChange", "ngModel"], ["type", "submit", 1, "btn-login"]], template: function InicioSesion_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div", 3);
+      \u0275\u0275element(4, "img", 4);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(5, "h2");
+      \u0275\u0275text(6, "Sistema de Biblioteca");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(7, "p", 5);
+      \u0275\u0275text(8, "Ingres\xE1 tus credenciales para acceder");
+      \u0275\u0275elementEnd()();
+      \u0275\u0275elementStart(9, "form", 6);
+      \u0275\u0275listener("ngSubmit", function InicioSesion_Template_form_ngSubmit_9_listener() {
+        return ctx.iniciarSesion();
+      });
+      \u0275\u0275elementStart(10, "div", 7)(11, "label", 8);
+      \u0275\u0275text(12, "Correo Electr\xF3nico");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(13, "div", 9);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(14, "svg", 10);
+      \u0275\u0275element(15, "path", 11)(16, "polyline", 12);
+      \u0275\u0275elementEnd();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(17, "input", 13);
+      \u0275\u0275twoWayListener("ngModelChange", function InicioSesion_Template_input_ngModelChange_17_listener($event) {
+        \u0275\u0275twoWayBindingSet(ctx.email, $event) || (ctx.email = $event);
+        return $event;
+      });
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(18, "div", 7)(19, "label", 14);
+      \u0275\u0275text(20, "Contrase\xF1a");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(21, "div", 9);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(22, "svg", 10);
+      \u0275\u0275element(23, "rect", 15)(24, "path", 16);
+      \u0275\u0275elementEnd();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(25, "input", 17);
+      \u0275\u0275twoWayListener("ngModelChange", function InicioSesion_Template_input_ngModelChange_25_listener($event) {
+        \u0275\u0275twoWayBindingSet(ctx.password, $event) || (ctx.password = $event);
+        return $event;
+      });
+      \u0275\u0275elementEnd()()();
+      \u0275\u0275elementStart(26, "button", 18);
+      \u0275\u0275text(27, " Iniciar Sesi\xF3n ");
+      \u0275\u0275elementEnd()()()();
+    }
+    if (rf & 2) {
+      \u0275\u0275advance(17);
+      \u0275\u0275twoWayProperty("ngModel", ctx.email);
+      \u0275\u0275advance(8);
+      \u0275\u0275twoWayProperty("ngModel", ctx.password);
+    }
+  }, dependencies: [FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.login-container[_ngcontent-%COMP%] {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header[_ngcontent-%COMP%] {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon[_ngcontent-%COMP%] {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper[_ngcontent-%COMP%] {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login[_ngcontent-%COMP%] {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InicioSesion, [{
+    type: Component,
+    args: [{ selector: "app-inicio-sesion", imports: [FormsModule], template: '<div class="login-container">\r\n  <div class="login-card">\r\n    \r\n    <!-- Header / Logo de la Biblioteca -->\r\n    <div class="login-header">\r\n      <div class="logo-icon">\r\n        <img src="/OIP.webp" alt="logo">\r\n      </div>\r\n      <h2>Sistema de Biblioteca</h2>\r\n      <p class="subtitle">Ingres\xE1 tus credenciales para acceder</p>\r\n    </div>\r\n\r\n    <!-- Formulario -->\r\n    <form (ngSubmit)="iniciarSesion()" class="login-form">\r\n      \r\n      <!-- Campo Email -->\r\n      <div class="form-group">\r\n        <label for="email">Correo Electr\xF3nico</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>\r\n            <polyline points="22,6 12,13 2,6"></polyline>\r\n          </svg>\r\n          <input \r\n            type="email" \r\n            id="email" \r\n            [(ngModel)]="email" \r\n            name="email" \r\n            placeholder="ejemplo@gmail.com" \r\n            required />\r\n        </div>\r\n      </div>\r\n\r\n      <!-- Campo Contrase\xF1a -->\r\n      <div class="form-group">\r\n        <label for="password">Contrase\xF1a</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>\r\n            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>\r\n          </svg>\r\n          <input \r\n            type="password" \r\n            id="password" \r\n            [(ngModel)]="password" \r\n            name="password" \r\n            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" \r\n            required />\r\n        </div>\r\n      </div>\r\n      <!-- Bot\xF3n de Ingreso -->\r\n      <button type="submit" class="btn-login">\r\n        Iniciar Sesi\xF3n\r\n      </button>\r\n    </form>\r\n\r\n  </div>\r\n</div>', styles: ["/* src/app/inicio-sesion/inicio-sesion.css */\n.login-container {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon svg {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon img {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header h2 {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper input {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */\n"] }]
+  }], () => [{ type: Router }], null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InicioSesion, { className: "InicioSesion", filePath: "app/inicio-sesion/inicio-sesion.ts", lineNumber: 12 });
+})();
+
 // src/app/libros/libros.ts
+var import_sweetalert22 = __toESM(require_sweetalert2_all());
 var _forTrack02 = ($index, $item) => $item.id;
 function Libros_Conditional_34_For_1_Template(rf, ctx) {
   if (rf & 1) {
@@ -43830,26 +44255,11 @@ function Libros_div_36_Template(rf, ctx) {
 function Libros_div_37_div_27_button_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 46);
+    \u0275\u0275elementStart(0, "button", 45);
     \u0275\u0275listener("click", function Libros_div_37_div_27_button_8_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r6);
-      const copia_r7 = \u0275\u0275nextContext().$implicit;
-      const ctx_r2 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r2.prestarCopiaIndividual(ctx_r2.libroSeleccionado, copia_r7));
-    });
-    \u0275\u0275text(1, " Prestar ");
-    \u0275\u0275elementEnd();
-  }
-}
-function Libros_div_37_div_27_button_9_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 47);
-    \u0275\u0275listener("click", function Libros_div_37_div_27_button_9_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r8);
-      const copia_r7 = \u0275\u0275nextContext().$implicit;
-      const ctx_r2 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r2.devolverCopiaIndividual(ctx_r2.libroSeleccionado, copia_r7));
+      const ctx_r2 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r2.irAPrestamo(ctx_r2.libroSeleccionado));
     });
     \u0275\u0275text(1, " Devolver ");
     \u0275\u0275elementEnd();
@@ -43866,7 +44276,7 @@ function Libros_div_37_div_27_Template(rf, ctx) {
     \u0275\u0275elementStart(6, "span", 43);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(8, Libros_div_37_div_27_button_8_Template, 2, 0, "button", 44)(9, Libros_div_37_div_27_button_9_Template, 2, 0, "button", 45);
+    \u0275\u0275template(8, Libros_div_37_div_27_button_8_Template, 2, 0, "button", 44);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -43877,8 +44287,6 @@ function Libros_div_37_div_27_Template(rf, ctx) {
     \u0275\u0275property("ngClass", copia_r7.estado === "Disponible" ? "disponible" : "prestada");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", copia_r7.estado, " ");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", copia_r7.estado === "Disponible");
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", copia_r7.estado === "Prestada");
   }
@@ -43919,7 +44327,7 @@ function Libros_div_37_Template(rf, ctx) {
     \u0275\u0275text(25);
     \u0275\u0275elementEnd()()();
     \u0275\u0275elementStart(26, "div", 37);
-    \u0275\u0275template(27, Libros_div_37_div_27_Template, 10, 5, "div", 38);
+    \u0275\u0275template(27, Libros_div_37_div_27_Template, 9, 4, "div", 38);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(28, "div", 39)(29, "button", 40);
     \u0275\u0275listener("click", function Libros_div_37_Template_button_click_29_listener() {
@@ -43946,6 +44354,7 @@ function Libros_div_37_Template(rf, ctx) {
 }
 var Libros = class _Libros {
   libroService = inject2(LibroService);
+  router = inject2(Router);
   sub = new Subscription();
   isModalOpen = false;
   isCopiasModalOpen = false;
@@ -44052,43 +44461,11 @@ var Libros = class _Libros {
     libro.copias = libro.listaCopias.filter((c) => c.estado === "Disponible").length;
     libro.estado = libro.copias === 0 ? "sin copias" : "disponible";
   }
-  prestarCopiaIndividual(libro, copia) {
-    if (copia.estado !== "Disponible")
-      return;
-    this.libroService.prestarCopia(libro.id, copia.id);
-    import_sweetalert22.default.fire({
-      title: "Pr\xE9stamo Registrado",
-      text: `La copia ${copia.id} de "${libro.titulo}" fue prestada.`,
-      icon: "info",
-      confirmButtonColor: "#0d9488",
-      timer: 2e3,
-      showConfirmButton: false
+  irAPrestamo(libro) {
+    this.cerrarCopias();
+    this.router.navigate(["/prestamos"], {
+      queryParams: { libro: libro.titulo }
     });
-  }
-  devolverCopiaIndividual(libro, copia) {
-    if (copia.estado !== "Prestada")
-      return;
-    this.libroService.devolverCopiaPorInventario(copia.id);
-    import_sweetalert22.default.fire({
-      title: "Devoluci\xF3n Exitosa",
-      text: `La copia ${copia.id} vuelve a estar disponible.`,
-      icon: "success",
-      confirmButtonColor: "#0d9488",
-      timer: 2e3,
-      showConfirmButton: false
-    });
-  }
-  prestarCopia(libro) {
-    const copiaDisponible = libro.listaCopias.find((c) => c.estado === "Disponible");
-    if (!copiaDisponible)
-      return;
-    this.prestarCopiaIndividual(libro, copiaDisponible);
-  }
-  devolverCopia(libro) {
-    const copiaPrestada = libro.listaCopias.find((c) => c.estado === "Prestada");
-    if (!copiaPrestada)
-      return;
-    this.devolverCopiaIndividual(libro, copiaPrestada);
   }
   get librosFiltrados() {
     const busqueda = this.searchTerm.trim().toLowerCase();
@@ -44105,7 +44482,7 @@ var Libros = class _Libros {
   static \u0275fac = function Libros_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _Libros)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Libros, selectors: [["app-libros"]], decls: 38, vars: 6, consts: [[1, "body"], [1, "main-content"], [1, "header"], [1, "h1"], [1, "add-button", 3, "click"], [1, "search-card"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por t\xEDtulo, autor, ID o copia...", 3, "ngModelChange", "ngModel"], [1, "book-count"], [1, "table-container"], [1, "table"], ["class", "modal-overlay", 4, "ngIf"], [1, "text-muted"], [1, "title"], [1, "author"], [1, "copies"], [1, "status", 3, "ngClass"], [1, "view-button", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], [1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "titulo", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "autor", "required", "", 3, "ngModelChange", "ngModel"], ["type", "number", "name", "copias", "min", "1", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "modal-card", "copias-card"], [1, "nombre-libro"], [1, "info-libro"], [1, "lista-copias"], ["class", "copia-row", 4, "ngFor", "ngForOf"], [1, "copias-footer"], [1, "cancel-btn", 3, "click"], [1, "copia-row"], [1, "copia-info"], [1, "copia-status", 3, "ngClass"], ["class", "accion-copia prestar", 3, "click", 4, "ngIf"], ["class", "accion-copia devolver", 3, "click", 4, "ngIf"], [1, "accion-copia", "prestar", 3, "click"], [1, "accion-copia", "devolver", 3, "click"]], template: function Libros_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Libros, selectors: [["app-libros"]], decls: 38, vars: 6, consts: [[1, "body"], [1, "main-content"], [1, "header"], [1, "h1"], [1, "add-button", 3, "click"], [1, "search-card"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por t\xEDtulo, autor, ID o copia...", 3, "ngModelChange", "ngModel"], [1, "book-count"], [1, "table-container"], [1, "table"], ["class", "modal-overlay", 4, "ngIf"], [1, "text-muted"], [1, "title"], [1, "author"], [1, "copies"], [1, "status", 3, "ngClass"], [1, "view-button", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], [1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "titulo", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "autor", "required", "", 3, "ngModelChange", "ngModel"], ["type", "number", "name", "copias", "min", "1", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "modal-card", "copias-card"], [1, "nombre-libro"], [1, "info-libro"], [1, "lista-copias"], ["class", "copia-row", 4, "ngFor", "ngForOf"], [1, "copias-footer"], [1, "cancel-btn", 3, "click"], [1, "copia-row"], [1, "copia-info"], [1, "copia-status", 3, "ngClass"], ["class", "accion-copia devolver", 3, "click", 4, "ngIf"], [1, "accion-copia", "devolver", 3, "click"]], template: function Libros_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "main", 1)(2, "header", 2)(3, "h1", 3);
       \u0275\u0275text(4, "Libros");
@@ -44173,7 +44550,7 @@ var Libros = class _Libros {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isCopiasModalOpen && ctx.libroSeleccionado);
     }
-  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, MinValidator, NgModel, NgForm], styles: ["\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card[_ngcontent-%COMP%], \n.books-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card[_ngcontent-%COMP%] {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.book-count[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.empty-state-row[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%], \n.copies[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author[_ngcontent-%COMP%] {\n  color: #475569;\n  font-size: 13px;\n}\n.status[_ngcontent-%COMP%] {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button[_ngcontent-%COMP%] {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button[_ngcontent-%COMP%]:hover {\n  background: #bae6fd;\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card[_ngcontent-%COMP%] {\n  max-width: 580px;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn[_ngcontent-%COMP%], \n.cancel-btn[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro[_ngcontent-%COMP%] {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro[_ngcontent-%COMP%]   div[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr auto auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status[_ngcontent-%COMP%] {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia[_ngcontent-%COMP%] {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.prestar[_ngcontent-%COMP%] {\n  background: #e0f2fe;\n  color: #0369a1;\n}\n.accion-copia.devolver[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, MinValidator, NgModel, NgForm], styles: ["\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card[_ngcontent-%COMP%], \n.books-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card[_ngcontent-%COMP%] {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.book-count[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.empty-state-row[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%], \n.copies[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author[_ngcontent-%COMP%] {\n  color: #475569;\n  font-size: 13px;\n}\n.status[_ngcontent-%COMP%] {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button[_ngcontent-%COMP%] {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button[_ngcontent-%COMP%]:hover {\n  background: #bae6fd;\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card[_ngcontent-%COMP%] {\n  max-width: 580px;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn[_ngcontent-%COMP%], \n.cancel-btn[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro[_ngcontent-%COMP%] {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro[_ngcontent-%COMP%]   div[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status[_ngcontent-%COMP%] {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia[_ngcontent-%COMP%] {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Libros, [{
@@ -44309,14 +44686,8 @@ var Libros = class _Libros {
           {{ copia.estado }}\r
         </span>\r
         <button \r
-          *ngIf="copia.estado === 'Disponible'" \r
-          (click)="prestarCopiaIndividual(libroSeleccionado, copia)" \r
-          class="accion-copia prestar">\r
-          Prestar\r
-        </button>\r
-        <button \r
           *ngIf="copia.estado === 'Prestada'" \r
-          (click)="devolverCopiaIndividual(libroSeleccionado, copia)" \r
+          (click)="irAPrestamo(libroSeleccionado)" \r
           class="accion-copia devolver">\r
           Devolver\r
         </button>\r
@@ -44329,178 +44700,15 @@ var Libros = class _Libros {
   </div>\r
 </div>\r
  </div>\r
-`, styles: ["/* src/app/libros/libros.css */\n.body {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card,\n.books-card {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.book-count {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.empty-state-row {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title strong,\n.copies strong {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author {\n  color: #475569;\n  font-size: 13px;\n}\n.status {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button:hover {\n  background: #bae6fd;\n}\n.modal-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card {\n  max-width: 580px;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n}\n.modal-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn,\n.cancel-btn {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro div {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro span {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row {\n  display: grid;\n  grid-template-columns: 1fr auto auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info span {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.prestar {\n  background: #e0f2fe;\n  color: #0369a1;\n}\n.accion-copia.devolver {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */\n"] }]
+`, styles: ["/* src/app/libros/libros.css */\n.body {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card,\n.books-card {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.book-count {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.empty-state-row {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title strong,\n.copies strong {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author {\n  color: #475569;\n  font-size: 13px;\n}\n.status {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button:hover {\n  background: #bae6fd;\n}\n.modal-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card {\n  max-width: 580px;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n}\n.modal-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn,\n.cancel-btn {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro div {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro span {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info span {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Libros, { className: "Libros", filePath: "app/libros/libros.ts", lineNumber: 15 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Libros, { className: "Libros", filePath: "app/libros/libros.ts", lineNumber: 16 });
 })();
 
 // src/app/prestamos/prestamos.ts
 var import_sweetalert23 = __toESM(require_sweetalert2_all());
-
-// src/app/services/prestamo.ts
-var PrestamoService = class _PrestamoService {
-  libroService = inject2(LibroService);
-  prestamos = [];
-  // ==========================================
-  // OBTENER PRÉSTAMOS
-  // ==========================================
-  obtenerPrestamos() {
-    return this.prestamos;
-  }
-  // ==========================================
-  // AGREGAR PRÉSTAMO
-  // ==========================================
-  agregarPrestamo(nuevoPrestamo) {
-    const libroId = nuevoPrestamo.libroId || this.libroService.libros.find((l) => l.titulo.toLowerCase() === nuevoPrestamo.libro.toLowerCase())?.id || "";
-    const exito = this.libroService.prestarCopia(libroId, nuevoPrestamo.inventario);
-    if (exito) {
-      this.prestamos.push(nuevoPrestamo);
-      return true;
-    }
-    return false;
-  }
-  // ==========================================
-  // DEVOLVER PRÉSTAMO
-  // ==========================================
-  devolverPrestamo(id) {
-    const prestamo = this.prestamos.find((p) => p.id === id);
-    if (prestamo) {
-      prestamo.estado = "devuelto";
-      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
-    }
-  }
-  // ==========================================
-  // RENOVAR PRÉSTAMO
-  // ==========================================
-  renovarPrestamo(id) {
-    const prestamo = this.prestamos.find((p) => p.id === id);
-    if (prestamo) {
-      prestamo.renovaciones += 1;
-      const fechaActual = new Date(prestamo.fechaVencimiento);
-      fechaActual.setDate(fechaActual.getDate() + 7);
-      prestamo.fechaVencimiento = fechaActual.toISOString().split("T")[0];
-    }
-  }
-  // ==========================================
-  // ACTUALIZAR DATOS DEL SOCIO
-  // ==========================================
-  actualizarDatosSocio(socioId, nombreAnterior, nuevoNombre) {
-    this.prestamos.forEach((prestamo) => {
-      if (prestamo.socioId === socioId) {
-        prestamo.socio = nuevoNombre;
-        return;
-      }
-      if (prestamo.socio.trim().toLowerCase() === nombreAnterior.trim().toLowerCase()) {
-        prestamo.socioId = socioId;
-        prestamo.socio = nuevoNombre;
-      }
-    });
-  }
-  // ==========================================
-  // SUSPENDER PRÉSTAMO
-  // ==========================================
-  suspenderPrestamo(id) {
-    const p = this.prestamos.find((p2) => p2.id === id);
-    if (p && p.estado !== "devuelto") {
-      p.estado = "suspendido";
-    }
-  }
-  // ==========================================
-  // QUITAR SUSPENSIÓN
-  // ==========================================
-  quitarSuspension(id) {
-    const p = this.prestamos.find((p2) => p2.id === id);
-    if (p && p.estado === "suspendido") {
-      const hoy = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-      p.estado = p.fechaVencimiento < hoy ? "atrasado" : "activo";
-    }
-  }
-  static \u0275fac = function PrestamoService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _PrestamoService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _PrestamoService, factory: _PrestamoService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PrestamoService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/services/socio.ts
-var SocioServicio = class _SocioServicio {
-  socios = [];
-  contadorSocio = 1;
-  // ==========================================
-  // OBTENER SOCIOS
-  // ==========================================
-  tenerSocios() {
-    return this.socios;
-  }
-  // ==========================================
-  // AGREGAR SOCIO
-  // ==========================================
-  agregarSocio(socioData) {
-    const idSecuencia = this.contadorSocio.toString().padStart(3, "0");
-    const nuevoSocio = __spreadProps(__spreadValues({}, socioData), {
-      id: this.contadorSocio,
-      numCarnet: `c-${idSecuencia}`
-    });
-    this.socios.push(nuevoSocio);
-    this.contadorSocio++;
-  }
-  // ==========================================
-  // ACTUALIZAR SOCIO
-  // ==========================================
-  actualizarSocio(socioActualizado) {
-    const index = this.socios.findIndex((s) => s.id === socioActualizado.id);
-    if (index !== -1) {
-      this.socios[index] = __spreadValues({}, socioActualizado);
-    }
-  }
-  // ==========================================
-  // MODIFICAR SOCIO
-  // ==========================================
-  modificarSocio(socioActualizado) {
-    this.actualizarSocio(socioActualizado);
-  }
-  // ==========================================
-  // ACTUALIZAR ESTADO PRÉSTAMO
-  // ==========================================
-  actualizarEstadoPrestamo(idSocio, nuevoEstado) {
-    const socio = this.socios.find((s) => s.id === Number(idSocio));
-    if (socio) {
-      socio.prestamos = nuevoEstado;
-    }
-  }
-  // ==========================================
-  // ACTUALIZAR ESTADO CUOTA
-  // ==========================================
-  actualizarEstadoCuota(idSocio, nuevoEstado) {
-    const socio = this.socios.find((s) => s.id === Number(idSocio));
-    if (socio) {
-      socio.cuota = nuevoEstado;
-    }
-  }
-  static \u0275fac = function SocioServicio_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _SocioServicio)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SocioServicio, factory: _SocioServicio.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SocioServicio, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/prestamos/prestamos.ts
 var _forTrack03 = ($index, $item) => $item.valor;
 var _forTrack1 = ($index, $item) => $item.id;
 function Prestamos_For_14_Template(rf, ctx) {
@@ -44689,10 +44897,23 @@ function Prestamos_Conditional_41_Conditional_28_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
   }
 }
-function Prestamos_Conditional_41_Conditional_34_Template(rf, ctx) {
+function Prestamos_Conditional_41_For_37_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "option", 47);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const copia_r12 = ctx.$implicit;
+    \u0275\u0275property("value", copia_r12.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(copia_r12.id);
+  }
+}
+function Prestamos_Conditional_41_Conditional_38_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 44)(1, "small");
-    \u0275\u0275text(2, "El c\xF3digo de inventario es obligatorio.");
+    \u0275\u0275text(2, "Debes seleccionar un c\xF3digo de inventario.");
     \u0275\u0275elementEnd()();
   }
 }
@@ -44754,55 +44975,59 @@ function Prestamos_Conditional_41_Template(rf, ctx) {
     \u0275\u0275elementStart(29, "div", 40)(30, "label");
     \u0275\u0275text(31, "C\xF3digo de Inventario");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(32, "input", 48, 3);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_32_listener($event) {
+    \u0275\u0275elementStart(32, "select", 48, 3);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_select_ngModelChange_32_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.inventario, $event) || (ctx_r2.inventario = $event);
       return \u0275\u0275resetView($event);
     });
+    \u0275\u0275elementStart(34, "option", 46);
+    \u0275\u0275text(35, "Seleccion\xE1 un c\xF3digo de inventario");
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(34, Prestamos_Conditional_41_Conditional_34_Template, 3, 0, "div", 44);
+    \u0275\u0275repeaterCreate(36, Prestamos_Conditional_41_For_37_Template, 2, 2, "option", 47, _forTrack1);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(35, "div", 40)(36, "label");
-    \u0275\u0275text(37, "Fecha de Inicio");
+    \u0275\u0275conditionalCreate(38, Prestamos_Conditional_41_Conditional_38_Template, 3, 0, "div", 44);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(38, "input", 49);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_38_listener($event) {
+    \u0275\u0275elementStart(39, "div", 40)(40, "label");
+    \u0275\u0275text(41, "Fecha de Inicio");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(42, "input", 49);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_42_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.fechaInicio, $event) || (ctx_r2.fechaInicio = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(39, "div", 40)(40, "label");
-    \u0275\u0275text(41, "Fecha de Vencimiento");
+    \u0275\u0275elementStart(43, "div", 40)(44, "label");
+    \u0275\u0275text(45, "Fecha de Vencimiento");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(42, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_42_listener($event) {
+    \u0275\u0275elementStart(46, "input", 50);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_46_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.fechaVencimiento, $event) || (ctx_r2.fechaVencimiento = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(43, "div", 51)(44, "button", 52);
-    \u0275\u0275text(45, "Guardar");
+    \u0275\u0275elementStart(47, "div", 51)(48, "button", 52);
+    \u0275\u0275text(49, "Guardar");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(46, "button", 53);
-    \u0275\u0275listener("click", function Prestamos_Conditional_41_Template_button_click_46_listener() {
+    \u0275\u0275elementStart(50, "button", 53);
+    \u0275\u0275listener("click", function Prestamos_Conditional_41_Template_button_click_50_listener() {
       \u0275\u0275restoreView(_r8);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.closeModal());
     });
-    \u0275\u0275text(47, "Cancelar");
+    \u0275\u0275text(51, "Cancelar");
     \u0275\u0275elementEnd()()()()();
   }
   if (rf & 2) {
     const prestamoForm_r9 = \u0275\u0275reference(8);
-    const socioModel_r12 = \u0275\u0275reference(13);
-    const libroModel_r13 = \u0275\u0275reference(23);
-    const inventarioModel_r14 = \u0275\u0275reference(33);
+    const socioModel_r13 = \u0275\u0275reference(13);
+    const libroModel_r14 = \u0275\u0275reference(23);
+    const inventarioModel_r15 = \u0275\u0275reference(33);
     const ctx_r2 = \u0275\u0275nextContext();
     \u0275\u0275advance(12);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.socioSeleccionadoId);
@@ -44811,17 +45036,19 @@ function Prestamos_Conditional_41_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275repeater(ctx_r2.sociosDisponibles);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(socioModel_r12.invalid && socioModel_r12.touched ? 18 : -1);
+    \u0275\u0275conditional(socioModel_r13.invalid && socioModel_r13.touched ? 18 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275property("ngModel", ctx_r2.libroSeleccionadoId);
     \u0275\u0275advance(4);
     \u0275\u0275repeater(ctx_r2.librosDisponibles);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(libroModel_r13.invalid && libroModel_r13.touched ? 28 : -1);
+    \u0275\u0275conditional(libroModel_r14.invalid && libroModel_r14.touched ? 28 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.inventario);
+    \u0275\u0275advance(4);
+    \u0275\u0275repeater(ctx_r2.copiasDisponiblesParaPrestamo);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(inventarioModel_r14.invalid && inventarioModel_r14.touched ? 34 : -1);
+    \u0275\u0275conditional(inventarioModel_r15.invalid && inventarioModel_r15.touched ? 38 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.fechaInicio);
     \u0275\u0275advance(4);
@@ -44834,6 +45061,8 @@ var Prestamos = class _Prestamos {
   prestamoService;
   socioService;
   libroService;
+  changeDetector;
+  route;
   prestamos = [];
   librosDisponibles = [];
   busqueda = "";
@@ -44845,7 +45074,7 @@ var Prestamos = class _Prestamos {
     },
     {
       valor: "activo",
-      etiqueta: "Al d\xEDa"
+      etiqueta: "Activo"
     },
     {
       valor: "atrasado",
@@ -44864,10 +45093,12 @@ var Prestamos = class _Prestamos {
   fechaInicio = "";
   fechaVencimiento = "";
   sub = new Subscription();
-  constructor(prestamoService, socioService, libroService) {
+  constructor(prestamoService, socioService, libroService, changeDetector, route) {
     this.prestamoService = prestamoService;
     this.socioService = socioService;
     this.libroService = libroService;
+    this.changeDetector = changeDetector;
+    this.route = route;
   }
   // ==========================================
   // INICIO
@@ -44877,6 +45108,12 @@ var Prestamos = class _Prestamos {
     this.sub = this.libroService.libros$.subscribe((libros) => {
       this.librosDisponibles = libros.filter((l) => l.copias > 0);
     });
+    this.sub.add(this.route.queryParams.subscribe((params) => {
+      this.busqueda = params["libro"] || "";
+      if (params["mostrarNuevoPrestamo"] === "true") {
+        this.openModal();
+      }
+    }));
   }
   // ==========================================
   // DESTRUIR
@@ -44927,9 +45164,9 @@ var Prestamos = class _Prestamos {
   // ==========================================
   // FECHA
   // ==========================================
-  obtenerFechaFormateada(dias = 0) {
+  obtenerFechaFormateada(meses = 0) {
     const fecha = /* @__PURE__ */ new Date();
-    fecha.setDate(fecha.getDate() + dias);
+    fecha.setMonth(fecha.getMonth() + meses);
     return fecha.toISOString().split("T")[0];
   }
   // ==========================================
@@ -44938,7 +45175,7 @@ var Prestamos = class _Prestamos {
   openModal() {
     this.isModalOpen = true;
     this.fechaInicio = this.obtenerFechaFormateada(0);
-    this.fechaVencimiento = this.obtenerFechaFormateada(30);
+    this.fechaVencimiento = this.obtenerFechaFormateada(1);
   }
   // ==========================================
   // CERRAR MODAL
@@ -44980,8 +45217,9 @@ var Prestamos = class _Prestamos {
       renovaciones: 0
     };
     if (this.prestamoService.agregarPrestamo(nuevoPrestamo)) {
-      this.socioService.actualizarEstadoPrestamo(socioObj.id, "Encurso");
+      this.socioService.actualizarEstadoPrestamo(socioObj.id, "En curso");
       this.actualizarPrestamos();
+      this.changeDetector.detectChanges();
       this.closeModal();
       return true;
     }
@@ -45020,6 +45258,7 @@ var Prestamos = class _Prestamos {
         this.socioService.actualizarEstadoPrestamo(socioObj.id, "Libre");
       }
       this.actualizarPrestamos();
+      this.changeDetector.detectChanges();
     });
   }
   // ==========================================
@@ -45031,7 +45270,9 @@ var Prestamos = class _Prestamos {
         return;
       }
       this.prestamoService.suspenderPrestamo(prestamo.id);
+      this.socioService.actualizarEstadoSocio(prestamo.socioId, "suspendido");
       this.actualizarPrestamos();
+      this.changeDetector.detectChanges();
     });
   }
   // ==========================================
@@ -45043,7 +45284,12 @@ var Prestamos = class _Prestamos {
         return;
       }
       this.prestamoService.quitarSuspension(prestamo.id);
+      const socioObj = this.socioService.tenerSocios().find((s) => s.id === prestamo.socioId);
+      if (socioObj?.estado === "suspendido") {
+        this.socioService.actualizarEstadoSocio(prestamo.socioId, "activo");
+      }
       this.actualizarPrestamos();
+      this.changeDetector.detectChanges();
     });
   }
   // ==========================================
@@ -45063,9 +45309,9 @@ var Prestamos = class _Prestamos {
     return isConfirmed;
   }
   static \u0275fac = function Prestamos_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Prestamos)(\u0275\u0275directiveInject(PrestamoService), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(LibroService));
+    return new (__ngFactoryType__ || _Prestamos)(\u0275\u0275directiveInject(PrestamoService), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(LibroService), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ActivatedRoute));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Prestamos, selectors: [["app-prestamos"]], decls: 42, vars: 4, consts: [["prestamoForm", "ngForm"], ["socioModel", "ngModel"], ["libroModel", "ngModel"], ["inventarioModel", "ngModel"], [1, "prestamos-container"], [1, "main"], [1, "page-header"], [1, "btn-nuevo", 3, "click"], [1, "toolbar"], [1, "search-box"], [1, "search-icon"], ["type", "text", "placeholder", "Buscar por socio, libro o ID de inventario...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter", 3, "active"], [1, "records"], [1, "table-container"], [1, "modal-overlay"], [1, "filter", 3, "click"], [1, "prestamo-id"], [1, "socio"], [1, "socio-nombre"], [1, "libro"], [1, "libro-nombre"], [1, "inventario"], [1, "fecha"], [1, "fecha", "vencimiento"], [1, "estado"], [1, "renovaciones"], [1, "acciones"], [1, "btn-quitar-suspension"], [1, "btn-quitar-suspension", 3, "click"], [1, "btn-renovar"], [1, "btn-suspender", 3, "click"], [1, "btn-devolver", 3, "click"], [1, "btn-renovar", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["name", "socioSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["disabled", "", 3, "ngValue"], [3, "ngValue"], [1, "alert-error"], ["name", "libroSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["value", "", "disabled", ""], [3, "value"], ["type", "text", "name", "inventario", "placeholder", "Ej: INV-00123", "required", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaInicio", "readonly", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaVencimiento", "readonly", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"]], template: function Prestamos_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Prestamos, selectors: [["app-prestamos"]], decls: 42, vars: 4, consts: [["prestamoForm", "ngForm"], ["socioModel", "ngModel"], ["libroModel", "ngModel"], ["inventarioModel", "ngModel"], [1, "prestamos-container"], [1, "main"], [1, "page-header"], [1, "btn-nuevo", 3, "click"], [1, "toolbar"], [1, "search-box"], [1, "search-icon"], ["type", "text", "placeholder", "Buscar por socio, libro o ID de inventario...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter", 3, "active"], [1, "records"], [1, "table-container"], [1, "modal-overlay"], [1, "filter", 3, "click"], [1, "prestamo-id"], [1, "socio"], [1, "socio-nombre"], [1, "libro"], [1, "libro-nombre"], [1, "inventario"], [1, "fecha"], [1, "fecha", "vencimiento"], [1, "estado"], [1, "renovaciones"], [1, "acciones"], [1, "btn-quitar-suspension"], [1, "btn-quitar-suspension", 3, "click"], [1, "btn-renovar"], [1, "btn-suspender", 3, "click"], [1, "btn-devolver", 3, "click"], [1, "btn-renovar", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["name", "socioSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["disabled", "", 3, "ngValue"], [3, "ngValue"], [1, "alert-error"], ["name", "libroSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["value", "", "disabled", ""], [3, "value"], ["name", "inventario", "required", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaInicio", "readonly", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaVencimiento", "readonly", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"]], template: function Prestamos_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 4)(1, "div", 5)(2, "div", 6)(3, "h1");
       \u0275\u0275text(4, "Pr\xE9stamos");
@@ -45117,7 +45363,7 @@ var Prestamos = class _Prestamos {
       \u0275\u0275elementStart(37, "tbody");
       \u0275\u0275repeaterCreate(38, Prestamos_For_39_Template, 30, 17, "tr", null, _forTrack1, false, Prestamos_ForEmpty_40_Template, 3, 0, "tr");
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275conditionalCreate(41, Prestamos_Conditional_41_Template, 48, 10, "div", 16);
+      \u0275\u0275conditionalCreate(41, Prestamos_Conditional_41_Template, 52, 10, "div", 16);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -45313,17 +45559,20 @@ var Prestamos = class _Prestamos {
           <!-- C\xF3digo de inventario -->\r
           <div class="form-group">\r
             <label>C\xF3digo de Inventario</label>\r
-            <input\r
-              type="text"\r
+            <select\r
               [(ngModel)]="inventario"\r
               name="inventario"\r
               #inventarioModel="ngModel"\r
-              placeholder="Ej: INV-00123"\r
-              required />\r
+              required>\r
+              <option value="" disabled>Seleccion\xE1 un c\xF3digo de inventario</option>\r
+              @for (copia of copiasDisponiblesParaPrestamo; track copia.id) {\r
+                <option [value]="copia.id">{{ copia.id }}</option>\r
+              }\r
+            </select>\r
 \r
             @if (inventarioModel.invalid && inventarioModel.touched) {\r
               <div class="alert-error">\r
-                <small>El c\xF3digo de inventario es obligatorio.</small>\r
+                <small>Debes seleccionar un c\xF3digo de inventario.</small>\r
               </div>\r
             }\r
           </div>\r
@@ -45351,15 +45600,15 @@ var Prestamos = class _Prestamos {
   }\r
 </div>\r
 `, styles: ["/* src/app/prestamos/prestamos.css */\n.prestamos-container {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.page-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.page-header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-nuevo {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-nuevo:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.plus {\n  font-size: 18px;\n  font-weight: 500;\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.records {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nthead {\n  background-color: #ffffff;\n}\nthead tr {\n  height: auto;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody tr {\n  height: auto;\n  transition: background-color 0.15s ease;\n}\ntbody tr:nth-child(even) {\n  background-color: #ffffff;\n}\ntbody tr:hover {\n  background-color: #f8fafc;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody tr:last-child td {\n  border-bottom: none;\n}\n.prestamo-id {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n}\n.socio {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.socio-nombre {\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n}\n.socio-estado {\n  color: #23b2a0;\n  font-size: 12px;\n  font-weight: 600;\n}\n.libro {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  max-width: 220px;\n}\n.libro-nombre {\n  display: block;\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.inventario {\n  color: #94a3b8;\n  font-size: 12px;\n  margin-top: 2px;\n}\n.fecha {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.vencimiento {\n  color: #0f172a;\n}\n.estado {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.estado-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.estado-vencido {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\n.estado-devuelto {\n  background-color: #f1f5f9;\n  color: #64748b;\n}\n.renovaciones {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.acciones {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-renovar {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #e0f7f4;\n  color: #168f81;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-renovar:hover {\n  background-color: #c9f0eb;\n  transform: translateY(-1px);\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.btn-renovar span {\n  font-size: 14px;\n}\n.btn-devolver {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #dcfce7;\n  color: #15803d;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-devolver:hover {\n  background-color: #bbf7d0;\n  transform: translateY(-1px);\n}\n.btn-devolver span {\n  font-size: 12px;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #94a3b8;\n  font-size: 13px;\n}\n@media (max-width: 768px) {\n  .prestamos-container {\n    padding: 16px 12px;\n  }\n  .page-header {\n    margin-bottom: 16px;\n  }\n  .page-header h1 {\n    font-size: 24px;\n  }\n  .toolbar {\n    padding: 16px;\n    border-radius: 18px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .records {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n  .table-container {\n    border-radius: 18px;\n    padding: 10px;\n  }\n  th {\n    padding: 14px;\n    font-size: 10px;\n  }\n  td {\n    padding: 14px;\n    font-size: 13px;\n  }\n}\n@media (max-width: 600px) {\n  .prestamos-container {\n    padding: 16px 10px;\n  }\n  .page-header {\n    align-items: center;\n    gap: 12px;\n  }\n  .page-header h1 {\n    font-size: 22px;\n  }\n  .btn-nuevo {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .plus {\n    font-size: 16px;\n  }\n  .toolbar {\n    padding: 14px;\n    gap: 14px;\n    border-radius: 18px;\n  }\n  .search-box input {\n    padding: 11px 14px 11px 40px;\n    font-size: 13px;\n  }\n  .search-icon {\n    left: 14px;\n    font-size: 17px;\n  }\n  .filter-group {\n    width: 100%;\n    gap: 6px;\n  }\n  .filter {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tbody tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  tbody tr:nth-child(even) {\n    background-color: #ffffff;\n  }\n  tbody tr:hover {\n    background-color: #ffffff;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n    font-size: 13px;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .socio {\n    align-items: flex-end;\n  }\n  .socio-nombre {\n    font-size: 13px;\n  }\n  .libro {\n    align-items: flex-end;\n    max-width: 55%;\n  }\n  .libro-nombre {\n    font-size: 13px;\n  }\n  .acciones {\n    display: flex;\n    justify-content: flex-end;\n    flex-wrap: wrap;\n    gap: 6px;\n  }\n  .btn-renovar,\n  .btn-devolver {\n    padding: 7px 12px;\n    font-size: 11px;\n  }\n}\n@media (max-width: 400px) {\n  .prestamos-container {\n    padding-left: 8px;\n    padding-right: 8px;\n  }\n  .page-header h1 {\n    font-size: 20px;\n  }\n  .btn-nuevo {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .toolbar {\n    padding: 12px;\n  }\n  .filter {\n    padding: 7px 8px;\n    font-size: 11px;\n  }\n  tbody tr {\n    padding: 12px 14px;\n  }\n  td {\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  border-radius: 8px;\n  width: 100%;\n  max-width: 500px;\n  padding: 24px;\n  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  color: #1f2937;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 1.5rem;\n  cursor: pointer;\n  color: #6b7280;\n}\n.form-group {\n  margin-bottom: 16px;\n  display: flex;\n  flex-direction: column;\n}\n.form-group label {\n  font-size: 0.875rem;\n  font-weight: 600;\n  margin-bottom: 6px;\n  color: #374151;\n}\n.form-group input,\n.form-group select {\n  padding: 10px 12px;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  font-size: 0.875rem;\n  outline: none;\n}\n.form-group input:focus,\n.form-group select:focus {\n  border-color: #0d9488;\n}\n.alert-error {\n  color: #ef4444;\n  margin-top: 4px;\n}\n.modal-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-weight: 500;\n}\n.submit-btn:disabled {\n  background-color: #9ca3af;\n  cursor: not-allowed;\n}\n.cancel-btn {\n  background-color: transparent;\n  color: #4b5563;\n  border: 1px solid #d1d5db;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=prestamos.css.map */\n"] }]
-  }], () => [{ type: PrestamoService }, { type: SocioServicio }, { type: LibroService }], null);
+  }], () => [{ type: PrestamoService }, { type: SocioServicio }, { type: LibroService }, { type: ChangeDetectorRef }, { type: ActivatedRoute }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Prestamos, { className: "Prestamos", filePath: "app/prestamos/prestamos.ts", lineNumber: 63 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Prestamos, { className: "Prestamos", filePath: "app/prestamos/prestamos.ts", lineNumber: 68 });
 })();
 
 // src/app/socios/socios.ts
 var import_sweetalert24 = __toESM(require_sweetalert2_all());
-var _c0 = (a0, a1, a2) => ({ "badge-activo": a0, "badge-inactivo": a1, "badge-suspendido": a2 });
+var _c02 = (a0, a1, a2) => ({ "badge-activo": a0, "badge-inactivo": a1, "badge-suspendido": a2 });
 var _forTrack04 = ($index, $item) => $item.id;
 function Socios_For_52_Template(rf, ctx) {
   if (rf & 1) {
@@ -45412,11 +45661,11 @@ function Socios_For_52_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate1(" ", s_r2.email, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction3(13, _c0, s_r2.estado === "activo", s_r2.estado === "inactivo", s_r2.estado === "suspendido"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction3(13, _c02, s_r2.estado === "activo", s_r2.estado === "inactivo", s_r2.estado === "suspendido"));
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", s_r2.estado, " ");
     \u0275\u0275advance();
-    \u0275\u0275classProp("prestamo-encurso", s_r2.prestamos === "Encurso")("prestamo-libre", s_r2.prestamos === "Libre");
+    \u0275\u0275classProp("prestamo-encurso", s_r2.prestamos === "En curso")("prestamo-libre", s_r2.prestamos === "Libre");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", s_r2.prestamos, " ");
   }
@@ -46075,7 +46324,7 @@ var Socios = class _Socios {
       \u0275\u0275listener("click", function Socios_Template_button_click_21_listener() {
         return ctx.filtrarPorEstado("inactivo");
       });
-      \u0275\u0275text(22, " Baja ");
+      \u0275\u0275text(22, " Inactivos ");
       \u0275\u0275elementEnd()();
       \u0275\u0275elementStart(23, "div", 17)(24, "button", 19);
       \u0275\u0275listener("click", function Socios_Template_button_click_24_listener() {
@@ -46152,7 +46401,7 @@ var Socios = class _Socios {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isModalOpen);
     }
-  }, dependencies: [CommonModule, NgClass, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, PatternValidator, MinValidator, NgModel, NgForm], styles: ["\n.btn-editar[_ngcontent-%COMP%] {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar[_ngcontent-%COMP%]:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar[_ngcontent-%COMP%]:active {\n  transform: translateY(0);\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active[_ngcontent-%COMP%] {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo[_ngcontent-%COMP%] {\n  background-color: #dbeafe;\n  color: #1e40af;\n}\n.badge-suspendido[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\n.badge-bloqueado[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\ntd[data-label=PR\\c9STAMO][_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso[_ngcontent-%COMP%] {\n  color: #ef4444;\n}\n.prestamo-libre[_ngcontent-%COMP%] {\n  color: #23b2a0;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-primary[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .filter-btn[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay[_ngcontent-%COMP%], \n.modal-backdrop[_ngcontent-%COMP%], \n.modal-card[_ngcontent-%COMP%] {\n  z-index: 1000;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, PatternValidator, MinValidator, NgModel, NgForm], styles: ["\n.btn-editar[_ngcontent-%COMP%] {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar[_ngcontent-%COMP%]:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar[_ngcontent-%COMP%]:active {\n  transform: translateY(0);\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active[_ngcontent-%COMP%] {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO][_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso[_ngcontent-%COMP%] {\n  color: #ef4444;\n}\n.prestamo-libre[_ngcontent-%COMP%] {\n  color: #23b2a0;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-primary[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .filter-btn[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay[_ngcontent-%COMP%], \n.modal-backdrop[_ngcontent-%COMP%], \n.modal-card[_ngcontent-%COMP%] {\n  z-index: 1000;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Socios, [{
@@ -46267,7 +46516,7 @@ var Socios = class _Socios {
             [class.active]="filtroEstado === 'inactivo'"\r
             (click)="filtrarPorEstado('inactivo')">\r
 \r
-            Baja\r
+            Inactivos\r
 \r
           </button>\r
 \r
@@ -46455,7 +46704,7 @@ var Socios = class _Socios {
                 data-label="PR\xC9STAMO"\r
 \r
                 [class.prestamo-encurso]="\r
-                  s.prestamos === 'Encurso'\r
+                  s.prestamos === 'En curso'\r
                 "\r
 \r
                 [class.prestamo-libre]="\r
@@ -46846,7 +47095,7 @@ var Socios = class _Socios {
 \r
   </div>\r
 \r
-</div>`, styles: ["/* src/app/socios/socios.css */\n.btn-editar {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar:active {\n  transform: translateY(0);\n}\n.body {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo {\n  background-color: #dbeafe;\n  color: #1e40af;\n}\n.badge-suspendido {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\n.badge-bloqueado {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\ntd[data-label=PR\\c9STAMO] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso {\n  color: #ef4444;\n}\n.prestamo-libre {\n  color: #23b2a0;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container {\n    padding: 16px 12px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header h1 {\n    font-size: 22px;\n  }\n  .btn-primary {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .filter-btn {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: fadeIn 0.2s ease-out;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay,\n.modal-backdrop,\n.modal-card {\n  z-index: 1000;\n}\n.modal-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn:hover {\n  background-color: #0f766e;\n}\n.cancel-btn {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */\n"] }]
+</div>`, styles: ["/* src/app/socios/socios.css */\n.btn-editar {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar:active {\n  transform: translateY(0);\n}\n.body {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso {\n  color: #ef4444;\n}\n.prestamo-libre {\n  color: #23b2a0;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container {\n    padding: 16px 12px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header h1 {\n    font-size: 22px;\n  }\n  .btn-primary {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .filter-btn {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: fadeIn 0.2s ease-out;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay,\n.modal-backdrop,\n.modal-card {\n  z-index: 1000;\n}\n.modal-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn:hover {\n  background-color: #0f766e;\n}\n.cancel-btn {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */\n"] }]
   }], () => [{ type: ActivatedRoute }, { type: NgZone }, { type: ChangeDetectorRef }, { type: SocioServicio }, { type: ActividadServicio }, { type: PrestamoService }], null);
 })();
 (() => {
@@ -46889,18 +47138,19 @@ var CuotasService = class _CuotasService {
   // DAR DE BAJA
   // ==========================================
   darDeBaja(id) {
-    const confirmarBaja = confirm("\xBFEst\xE1s seguro de que deseas dar de baja a este socio?");
-    if (confirmarBaja) {
-      const socio = this.socioServicio.tenerSocios().find((s) => s.id === id);
-      if (socio) {
-        socio.estado = "inactivo";
-        const mensaje = `Hola ${socio.nombre}, le avisamos que su estado ha sido cambiado a "inactivo". Si desea reactivar su membres\xEDa, por favor p\xF3ngase en contacto con nosotros.`;
-        const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
-        window.open(url, "_blank");
-      }
-    } else {
-      alert("Operaci\xF3n cancelada. El socio no ha sido dado de baja.");
+    const socio = this.socioServicio.tenerSocios().find((s) => s.id === id);
+    if (socio) {
+      socio.estado = "inactivo";
+      const mensaje = `Hola ${socio.nombre}, le avisamos que su estado ha sido cambiado a "inactivo". Si desea reactivar su membres\xEDa, por favor p\xF3ngase en contacto con nosotros.`;
+      const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, "_blank");
     }
+  }
+  // ==========================================
+  // DAR DE ALTA
+  // ==========================================
+  darDeAlta(id) {
+    this.socioServicio.actualizarEstadoSocio(id, "activo");
   }
   static \u0275fac = function CuotasService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _CuotasService)(\u0275\u0275inject(SocioServicio));
@@ -46934,29 +47184,50 @@ function Cuotas_For_38_Case_7_Template(rf, ctx) {
 }
 function Cuotas_For_38_Case_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 21);
-    \u0275\u0275text(1, "bloqueado");
-    \u0275\u0275elementEnd();
-  }
-}
-function Cuotas_For_38_Case_9_Template(rf, ctx) {
-  if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 22);
     \u0275\u0275text(1, "inactivo");
     \u0275\u0275elementEnd();
   }
 }
-function Cuotas_For_38_Conditional_16_Template(rf, ctx) {
+function Cuotas_For_38_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 28);
-    \u0275\u0275listener("click", function Cuotas_For_38_Conditional_16_Template_button_click_0_listener() {
+    \u0275\u0275elementStart(0, "button", 31);
+    \u0275\u0275listener("click", function Cuotas_For_38_Conditional_15_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r2);
       const cuota_r3 = \u0275\u0275nextContext().$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.cobrar(cuota_r3.id));
     });
     \u0275\u0275text(1, "Cobrar $1.200");
+    \u0275\u0275elementEnd();
+  }
+}
+function Cuotas_For_38_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 31);
+    \u0275\u0275listener("click", function Cuotas_For_38_Conditional_16_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r5);
+      const cuota_r3 = \u0275\u0275nextContext().$implicit;
+      const ctx_r3 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r3.darDeAlta(cuota_r3.id));
+    });
+    \u0275\u0275text(1, "Dar de Alta");
+    \u0275\u0275elementEnd();
+  }
+}
+function Cuotas_For_38_Conditional_17_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 31);
+    \u0275\u0275listener("click", function Cuotas_For_38_Conditional_17_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r6);
+      const cuota_r3 = \u0275\u0275nextContext().$implicit;
+      const ctx_r3 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r3.darDeBaja(cuota_r3.id));
+    });
+    \u0275\u0275text(1, "Dar de Baja");
     \u0275\u0275elementEnd();
   }
 }
@@ -46969,33 +47240,26 @@ function Cuotas_For_38_Template(rf, ctx) {
     \u0275\u0275elementStart(4, "div", 19);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(6, Cuotas_For_38_Case_6_Template, 2, 0, "span", 20)(7, Cuotas_For_38_Case_7_Template, 2, 0, "span", 21)(8, Cuotas_For_38_Case_8_Template, 2, 0, "span", 21)(9, Cuotas_For_38_Case_9_Template, 2, 0, "span", 22);
+    \u0275\u0275conditionalCreate(6, Cuotas_For_38_Case_6_Template, 2, 0, "span", 20)(7, Cuotas_For_38_Case_7_Template, 2, 0, "span", 21)(8, Cuotas_For_38_Case_8_Template, 2, 0, "span", 22);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "td", 23)(11, "span", 24);
-    \u0275\u0275text(12);
+    \u0275\u0275elementStart(9, "td", 23)(10, "span", 24);
+    \u0275\u0275text(11);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "span", 25);
-    \u0275\u0275text(14);
+    \u0275\u0275elementStart(12, "span", 25);
+    \u0275\u0275text(13);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(15, "td", 26);
-    \u0275\u0275conditionalCreate(16, Cuotas_For_38_Conditional_16_Template, 2, 0, "button", 27);
-    \u0275\u0275elementStart(17, "button", 28);
-    \u0275\u0275listener("click", function Cuotas_For_38_Template_button_click_17_listener() {
-      const cuota_r3 = \u0275\u0275restoreView(_r1).$implicit;
-      const ctx_r3 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r3.darDeBaja(cuota_r3.id));
-    });
-    \u0275\u0275text(18, "Dar de Baja");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "button", 29);
-    \u0275\u0275listener("click", function Cuotas_For_38_Template_button_click_19_listener() {
+    \u0275\u0275elementStart(14, "td", 26);
+    \u0275\u0275conditionalCreate(15, Cuotas_For_38_Conditional_15_Template, 2, 0, "button", 27);
+    \u0275\u0275conditionalCreate(16, Cuotas_For_38_Conditional_16_Template, 2, 0, "button", 27)(17, Cuotas_For_38_Conditional_17_Template, 2, 0, "button", 27);
+    \u0275\u0275elementStart(18, "button", 28);
+    \u0275\u0275listener("click", function Cuotas_For_38_Template_button_click_18_listener() {
       const cuota_r3 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.notificarSocio(cuota_r3));
     });
     \u0275\u0275namespaceSVG();
-    \u0275\u0275elementStart(20, "svg", 30);
-    \u0275\u0275element(21, "path", 31);
+    \u0275\u0275elementStart(19, "svg", 29);
+    \u0275\u0275element(20, "path", 30);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -47007,13 +47271,15 @@ function Cuotas_For_38_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate2("", cuota_r3.id, " \xB7 ", cuota_r3.dni);
     \u0275\u0275advance();
-    \u0275\u0275conditional((tmp_14_0 = cuota_r3.estado) === "activo" ? 6 : tmp_14_0 === "suspendido" ? 7 : tmp_14_0 === "bloqueado" ? 8 : tmp_14_0 === "inactivo" ? 9 : -1);
-    \u0275\u0275advance(6);
+    \u0275\u0275conditional((tmp_14_0 = cuota_r3.estado) === "activo" ? 6 : tmp_14_0 === "suspendido" ? 7 : tmp_14_0 === "inactivo" ? 8 : -1);
+    \u0275\u0275advance(5);
     \u0275\u0275textInterpolate1(" ", cuota_r3.cuota === "pagada" ? "$0" : "$1.200", " ");
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate1(" ", cuota_r3.cuota === "pagada" ? "Al d\xEDa" : "1 mes(es)", " ");
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(cuota_r3.cuota !== "pagada" ? 16 : -1);
+    \u0275\u0275conditional(cuota_r3.cuota !== "pagada" ? 15 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(cuota_r3.estado === "inactivo" ? 16 : 17);
   }
 }
 function Cuotas_ForEmpty_39_Template(rf, ctx) {
@@ -47026,14 +47292,17 @@ function Cuotas_ForEmpty_39_Template(rf, ctx) {
 var Cuotas = class _Cuotas {
   cuotaService;
   cdr;
+  route;
   cuotas = [];
   filtroActivo = "todos";
   terminoBusqueda = "";
-  constructor(cuotaService, cdr) {
+  constructor(cuotaService, cdr, route) {
     this.cuotaService = cuotaService;
     this.cdr = cdr;
+    this.route = route;
   }
   ngOnInit() {
+    this.filtroActivo = this.route.snapshot.queryParamMap.get("filtro") || "todos";
     this.cargarCuotas();
   }
   cargarCuotas() {
@@ -47108,10 +47377,29 @@ var Cuotas = class _Cuotas {
       }
     });
   }
+  darDeAlta(id) {
+    const socio = this.cuotas.find((s) => s.id === id);
+    import_sweetalert25.default.fire({
+      title: "\xBFDar de alta al socio?",
+      text: `El socio "${socio?.nombre}" volver\xE1 a estar activo.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "S\xED, dar de alta",
+      cancelButtonText: "Cancelar"
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.cuotaService.darDeAlta(id);
+        this.cargarCuotas();
+        this.cdr.detectChanges();
+      }
+    });
+  }
   static \u0275fac = function Cuotas_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Cuotas)(\u0275\u0275directiveInject(CuotasService), \u0275\u0275directiveInject(ChangeDetectorRef));
+    return new (__ngFactoryType__ || _Cuotas)(\u0275\u0275directiveInject(CuotasService), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ActivatedRoute));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Cuotas, selectors: [["app-cuotas"]], decls: 40, vars: 11, consts: [[1, "body"], [1, "header"], [1, "h1"], [1, "badge-monto"], [1, "main-card"], [1, "toolbar"], [1, "search-box"], ["xmlns", "http://www.w3.org/2000/svg", "width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filter-group"], [1, "btn-filter", 3, "click"], [1, "count-label"], [1, "table-container"], [1, "cuotas-table"], [3, "row-warning", "row-danger"], [1, "socio-info"], [1, "nombre"], [1, "meta"], [1, "badge", "badge-activo"], [1, "badge", "badge-bloqueado"], [1, "badge", "badge-baja"], [1, "deuda-col"], [1, "deuda-monto"], [1, "deuda-meses"], [1, "acciones-col"], [1, "btn-cobrar"], [1, "btn-cobrar", 3, "click"], ["title", "Enviar WhatsApp", 1, "btn-wsp", 3, "click"], ["xmlns", "http://www.w3.org/2000/svg", "width", "18", "height", "18", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"], ["colspan", "3", 2, "text-align", "center", "padding", "20px"]], template: function Cuotas_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Cuotas, selectors: [["app-cuotas"]], decls: 40, vars: 11, consts: [[1, "body"], [1, "header"], [1, "h1"], [1, "badge-monto"], [1, "main-card"], [1, "toolbar"], [1, "search-box"], ["xmlns", "http://www.w3.org/2000/svg", "width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filter-group"], [1, "btn-filter", 3, "click"], [1, "count-label"], [1, "table-container"], [1, "cuotas-table"], [3, "row-warning", "row-danger"], [1, "socio-info"], [1, "nombre"], [1, "meta"], [1, "badge", "badge-activo"], [1, "badge", "badge-bloqueado"], [1, "badge", "badge-baja"], [1, "deuda-col"], [1, "deuda-monto"], [1, "deuda-meses"], [1, "acciones-col"], [1, "btn-cobrar"], ["title", "Enviar WhatsApp", 1, "btn-wsp", 3, "click"], ["xmlns", "http://www.w3.org/2000/svg", "width", "18", "height", "18", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"], [1, "btn-cobrar", 3, "click"], ["colspan", "3", 2, "text-align", "center", "padding", "20px"]], template: function Cuotas_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "h1", 2);
       \u0275\u0275text(3, "Cuotas");
@@ -47170,7 +47458,7 @@ var Cuotas = class _Cuotas {
       \u0275\u0275text(35, "ACCIONES");
       \u0275\u0275elementEnd()()();
       \u0275\u0275elementStart(36, "tbody");
-      \u0275\u0275repeaterCreate(37, Cuotas_For_38_Template, 22, 11, "tr", 16, _forTrack05, false, Cuotas_ForEmpty_39_Template, 3, 0, "tr");
+      \u0275\u0275repeaterCreate(37, Cuotas_For_38_Template, 21, 12, "tr", 16, _forTrack05, false, Cuotas_ForEmpty_39_Template, 3, 0, "tr");
       \u0275\u0275elementEnd()()()()();
     }
     if (rf & 2) {
@@ -47189,7 +47477,7 @@ var Cuotas = class _Cuotas {
       \u0275\u0275advance(12);
       \u0275\u0275repeater(ctx.cuotasFiltradas);
     }
-  }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto[_ngcontent-%COMP%] {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.count-label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container[_ngcontent-%COMP%] {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\n.row-warning[_ngcontent-%COMP%] {\n  background-color: #fefce8;\n}\n.row-danger[_ngcontent-%COMP%] {\n  background-color: #fef2f2;\n}\n.socio-info[_ngcontent-%COMP%] {\n  width: 40%;\n}\n.socio-info[_ngcontent-%COMP%]   .nombre[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info[_ngcontent-%COMP%]   .meta[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 2px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #166534;\n}\n.badge-bloqueado[_ngcontent-%COMP%] {\n  background-color: #fef08a;\n  color: #854d0e;\n}\n.badge-baja[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.deuda-col[_ngcontent-%COMP%] {\n  width: 30%;\n}\n.deuda-monto[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #dc2626;\n  display: block;\n}\n.deuda-meses[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #94a3b8;\n  display: block;\n}\n.acciones-col[_ngcontent-%COMP%] {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar[_ngcontent-%COMP%] {\n  background-color: #f97316;\n  color: #ffffff;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n  display: inline-block;\n  vertical-align: middle;\n}\n.btn-cobrar[_ngcontent-%COMP%]:hover {\n  background-color: #ea580c;\n}\n.btn-wsp[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp[_ngcontent-%COMP%]:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */"] });
+  }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto[_ngcontent-%COMP%] {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.count-label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container[_ngcontent-%COMP%] {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\n.row-warning[_ngcontent-%COMP%] {\n  background-color: #fefce8;\n}\n.row-danger[_ngcontent-%COMP%] {\n  background-color: #fef2f2;\n}\n.socio-info[_ngcontent-%COMP%] {\n  width: 40%;\n}\n.socio-info[_ngcontent-%COMP%]   .nombre[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info[_ngcontent-%COMP%]   .meta[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 2px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #166534;\n}\n.badge-bloqueado[_ngcontent-%COMP%] {\n  background-color: #fef08a;\n  color: #854d0e;\n}\n.badge-baja[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.deuda-col[_ngcontent-%COMP%] {\n  width: 30%;\n}\n.deuda-monto[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #dc2626;\n  display: block;\n}\n.deuda-meses[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #94a3b8;\n  display: block;\n}\n.acciones-col[_ngcontent-%COMP%] {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n  display: inline-block;\n  vertical-align: middle;\n}\n.btn-cobrar[_ngcontent-%COMP%]:hover {\n  background-color: #ea580c;\n}\n.btn-wsp[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp[_ngcontent-%COMP%]:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Cuotas, [{
@@ -47270,9 +47558,6 @@ var Cuotas = class _Cuotas {
                   @case ('suspendido') {\r
                     <span class="badge badge-bloqueado">suspendido</span>\r
                   }\r
-                  @case ('bloqueado') {\r
-                    <span class="badge badge-bloqueado">bloqueado</span>\r
-                  }\r
                   @case ('inactivo') {\r
                     <span class="badge badge-baja">inactivo</span>\r
                   }\r
@@ -47296,7 +47581,11 @@ var Cuotas = class _Cuotas {
                   <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar $1.200</button>\r
                 }\r
                 \r
-                <button (click)="darDeBaja(cuota.id)" class="btn-cobrar">Dar de Baja</button>\r
+                @if (cuota.estado === 'inactivo') {\r
+                  <button (click)="darDeAlta(cuota.id)" class="btn-cobrar">Dar de Alta</button>\r
+                } @else {\r
+                  <button (click)="darDeBaja(cuota.id)" class="btn-cobrar">Dar de Baja</button>\r
+                }\r
                 \r
                 <!-- bot\xF3n para enviar el mensaje personalizado mediante el servicio -->\r
                 <button (click)="notificarSocio(cuota)" class="btn-wsp" title="Enviar WhatsApp">\r
@@ -47317,11 +47606,11 @@ var Cuotas = class _Cuotas {
       </table>\r
     </div>\r
   </div>\r
-</div>`, styles: ["/* src/app/cuotas/cuotas.css */\n* {\n  box-sizing: border-box;\n}\n.body {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box svg {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.count-label {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table td {\n  padding: 16px;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\n.row-warning {\n  background-color: #fefce8;\n}\n.row-danger {\n  background-color: #fef2f2;\n}\n.socio-info {\n  width: 40%;\n}\n.socio-info .nombre {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info .meta {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.badge {\n  display: inline-block;\n  padding: 2px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #166534;\n}\n.badge-bloqueado {\n  background-color: #fef08a;\n  color: #854d0e;\n}\n.badge-baja {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.deuda-col {\n  width: 30%;\n}\n.deuda-monto {\n  font-weight: 700;\n  font-size: 14px;\n  color: #dc2626;\n  display: block;\n}\n.deuda-meses {\n  font-size: 11px;\n  color: #94a3b8;\n  display: block;\n}\n.acciones-col {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar {\n  background-color: #f97316;\n  color: #ffffff;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n  display: inline-block;\n  vertical-align: middle;\n}\n.btn-cobrar:hover {\n  background-color: #ea580c;\n}\n.btn-wsp {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */\n"] }]
-  }], () => [{ type: CuotasService }, { type: ChangeDetectorRef }], null);
+</div>`, styles: ["/* src/app/cuotas/cuotas.css */\n* {\n  box-sizing: border-box;\n}\n.body {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box svg {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.count-label {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table td {\n  padding: 16px;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\n.row-warning {\n  background-color: #fefce8;\n}\n.row-danger {\n  background-color: #fef2f2;\n}\n.socio-info {\n  width: 40%;\n}\n.socio-info .nombre {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info .meta {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.badge {\n  display: inline-block;\n  padding: 2px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #166534;\n}\n.badge-bloqueado {\n  background-color: #fef08a;\n  color: #854d0e;\n}\n.badge-baja {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.deuda-col {\n  width: 30%;\n}\n.deuda-monto {\n  font-weight: 700;\n  font-size: 14px;\n  color: #dc2626;\n  display: block;\n}\n.deuda-meses {\n  font-size: 11px;\n  color: #94a3b8;\n  display: block;\n}\n.acciones-col {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  border: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n  display: inline-block;\n  vertical-align: middle;\n}\n.btn-cobrar:hover {\n  background-color: #ea580c;\n}\n.btn-wsp {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */\n"] }]
+  }], () => [{ type: CuotasService }, { type: ChangeDetectorRef }, { type: ActivatedRoute }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Cuotas, { className: "Cuotas", filePath: "app/cuotas/cuotas.ts", lineNumber: 16 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Cuotas, { className: "Cuotas", filePath: "app/cuotas/cuotas.ts", lineNumber: 17 });
 })();
 
 // src/app/actividades/actividades.ts

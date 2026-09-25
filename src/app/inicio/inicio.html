@@ -12,15 +12,18 @@
     <div class="tarjeta estadistica vencidos" routerLink='/prestamos'>
       <div class="icono">◷</div>
       <div>
-        <strong>2</strong>
+        <strong>{{ prestamosVencidos }}</strong>
         <span>Préstamos vencidos</span>
       </div>
     </div>
 
-    <div class="tarjeta estadistica pendientes" routerLink='/socios'>
+    <div
+      class="tarjeta estadistica pendientes"
+      [routerLink]="['/cuotas']"
+      [queryParams]="{ filtro: 'pendiente' }">
       <div class="icono">▤</div>
       <div>
-        <strong>10</strong>
+        <strong>{{ cuotasPendientes }}</strong>
         <span>Socios con cuotas pendientes</span>
       </div>
     </div>
@@ -29,7 +32,7 @@
 
       <div class="icono">♙</div>
       <div>
-        <strong>7</strong>
+        <strong>{{ sociosActivos }}</strong>
         <span>Socios activos</span>
       </div>
     </div>
@@ -50,26 +53,68 @@
 
     <div class="filtros">
 
-      <button class="filtro activo">DNI / APELLIDO / Nº CARNET</button>
-      <button class="filtro">N° INVENTARIO / ID</button>
+      <button class="filtro activo" type="button">
+        DNI / APELLIDO / Nº CARNET
+      </button>
+      <button class="filtro" type="button">
+        N° INVENTARIO / ID
+      </button>
     </div>
 
     <div class="campo-busqueda">
       <span>⌕</span>
 
-      <input type="text" placeholder="Ej: CAR001" />
+      <input
+        type="text"
+        [(ngModel)]="terminoBusquedaExpress"
+        (keyup.enter)="buscarExpress()"
+        placeholder="Ej: Ana Martínez, DNI o c-001" />
 
-      <button class="btn-buscar">
+      <button class="btn-buscar" type="button" (click)="buscarExpress()">
         Buscar
       </button>
     </div>
+
+    @if (socioEncontrado; as socio) {
+      <div class="resultado-express">
+        <div class="resultado-identidad">
+          <span class="resultado-punto" [class.inactivo]="socio.estado !== 'activo'"></span>
+          <strong>{{ socio.nombre }}</strong>
+          <span class="resultado-carnet">{{ socio.numCarnet }}</span>
+        </div>
+
+        <div class="resultado-datos">
+          <span>DNI: {{ socio.dni }}</span>
+          <span>Tel: {{ socio.telefono }}</span>
+          <span>Email: {{ socio.email }}</span>
+          <span>Cuota: {{ socio.cuota }}</span>
+          <span>
+            Préstamo:
+            {{ prestamoEncontrado?.libro || socio.prestamos }}
+          </span>
+          @if (prestamoEncontrado) {
+            <span>Vence: {{ prestamoEncontrado.fechaVencimiento }}</span>
+          }
+        </div>
+
+        <span
+          class="resultado-estado"
+          [class.estado-alerta]="socio.estado !== 'activo' || socio.cuota !== 'pagada'">
+          {{ socio.estado === 'activo' && socio.cuota === 'pagada' ? 'Todo al día' : 'Atención requerida' }}
+        </span>
+      </div>
+    } @else if (terminoBusquedaExpress.trim()) {
+      <div class="sin-resultado-express">
+        No se encontró ningún socio con esa búsqueda.
+      </div>
+    }
 
   </div>
 
   <!-- Acciones rápidas -->
   <div class="acciones">
 
-    <div class="accion nuevo-prestamo">
+    <div class="accion nuevo-prestamo" (click)="abrirNuevoPrestamo()">
       <div class="accion-icono">＋</div>
 
       <div>

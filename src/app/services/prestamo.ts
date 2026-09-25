@@ -145,8 +145,8 @@ export class PrestamoService {
         );
 
 
-      fechaActual.setDate(
-        fechaActual.getDate() + 7
+      fechaActual.setMonth(
+        fechaActual.getMonth() + 1
       );
 
 

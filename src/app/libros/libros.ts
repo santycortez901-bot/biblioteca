@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { LibroService, Libro, Copia } from '../services/libro-service';
 
@@ -14,6 +15,7 @@ import { LibroService, Libro, Copia } from '../services/libro-service';
 })
 export class Libros implements OnInit, OnDestroy {
   private libroService = inject(LibroService);
+  private router = inject(Router);
   private sub: Subscription = new Subscription();
 
   isModalOpen = false;
@@ -146,46 +148,11 @@ export class Libros implements OnInit, OnDestroy {
     libro.estado = libro.copias === 0 ? 'sin copias' : 'disponible';
   }
 
-  prestarCopiaIndividual(libro: Libro, copia: Copia): void {
-    if (copia.estado !== 'Disponible') return;
-
-    this.libroService.prestarCopia(libro.id, copia.id);
-
-    Swal.fire({
-      title: 'Préstamo Registrado',
-      text: `La copia ${copia.id} de "${libro.titulo}" fue prestada.`,
-      icon: 'info',
-      confirmButtonColor: '#0d9488',
-      timer: 2000,
-      showConfirmButton: false
+  irAPrestamo(libro: Libro): void {
+    this.cerrarCopias();
+    this.router.navigate(['/prestamos'], {
+      queryParams: { libro: libro.titulo }
     });
-  }
-
-  devolverCopiaIndividual(libro: Libro, copia: Copia): void {
-    if (copia.estado !== 'Prestada') return;
-
-    this.libroService.devolverCopiaPorInventario(copia.id);
-
-    Swal.fire({
-      title: 'Devolución Exitosa',
-      text: `La copia ${copia.id} vuelve a estar disponible.`,
-      icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  }
-
-  prestarCopia(libro: Libro): void {
-    const copiaDisponible = libro.listaCopias.find(c => c.estado === 'Disponible');
-    if (!copiaDisponible) return;
-    this.prestarCopiaIndividual(libro, copiaDisponible);
-  }
-
-  devolverCopia(libro: Libro): void {
-    const copiaPrestada = libro.listaCopias.find(c => c.estado === 'Prestada');
-    if (!copiaPrestada) return;
-    this.devolverCopiaIndividual(libro, copiaPrestada);
   }
 
   get librosFiltrados(): Libro[] {

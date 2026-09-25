@@ -219,8 +219,14 @@
 }
 
 .btn-cobrar {
-  background-color: #f97316;
-  color: #ffffff;
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
   border: none;
   padding: 8px 16px;
   border-radius: 8px;

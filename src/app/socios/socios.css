@@ -249,8 +249,8 @@ tr:last-child td {
 
 /* Inactivo -> Azul */
 .badge-inactivo {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 /* Suspendido -> Naranja */
@@ -259,11 +259,6 @@ tr:last-child td {
   color: #c2410c;
 }
 
-/* Bloqueado -> Rojo */
-.badge-bloqueado {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
 
 /* Estilo base para la columna de préstamos */
 td[data-label="PRÉSTAMO"] {
