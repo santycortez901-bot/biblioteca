@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/app.css"],
+  "sourcesContent": ["html,\r\nbody {\r\n  margin: 0;\r\n  padding: 0;\r\n  width: 100%;\r\n  min-height: 100%;\r\n}\r\n\r\nbody {\r\n  background: #eef4f7;\r\n}\r\n\r\n.app-layout {\r\n  width: 100%;\r\n  min-height: 100vh;\r\n  background: #eef4f7;\r\n}\r\n\r\n.app-content {\r\n  margin-left: 200px;\r\n  width: calc(100% - 200px);\r\n\r\n  display: flex;\r\n  flex-direction: column;\r\n\r\n  \r\n  box-sizing: border-box;\r\n}\r\n\r\n.main-content {\r\n  width: 100%;\r\n  box-sizing: border-box;\r\n  background: #eef4f7;\r\n} \r\n\r\n\r\n"],
+  "mappings": ";AAAA;AACA;AACE,UAAQ;AACR,WAAS;AACT,SAAO;AACP,cAAY;AACd;AAEA;AACE,cAAY;AACd;AAEA,CAAC;AACC,SAAO;AACP,cAAY;AACZ,cAAY;AACd;AAEA,CAAC;AACC,eAAa;AACb,SAAO,KAAK,KAAK,EAAE;AAEnB,WAAS;AACT,kBAAgB;AAGhB,cAAY;AACd;AAEA,CAAC;AACC,SAAO;AACP,cAAY;AACZ,cAAY;AACd;",
+  "names": []
+}

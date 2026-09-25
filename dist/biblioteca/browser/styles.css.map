@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/styles.css"],
+  "sourcesContent": ["/* You can add global styles to this file, and also import other style files */\r\n/* Reset basico para eliminar bordes blancos del navegador */\r\nhtml, body {\r\n  margin: 0;\r\n  padding: 0;\r\n  width: 100%;\r\n  height: 100%;\r\n  overflow-x: hidden;\r\n}\r\n\r\n/* Forzar a que los componentes de Angular se comporten como bloques */\r\napp-nav, app-footer, router-outlet {\r\n  display: block;\r\n}\r\n"],
+  "mappings": ";AAEA;AAAM;AACJ,UAAQ;AACR,WAAS;AACT,SAAO;AACP,UAAQ;AACR,cAAY;AACd;AAGA;AAAS;AAAY;AACnB,WAAS;AACX;",
+  "names": []
+}

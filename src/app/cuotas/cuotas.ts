@@ -42,7 +42,11 @@ export class Cuotas implements OnInit {
 
     // Filtro por botones de estado
     if (this.filtroActivo !== 'todos') {
-      resultado = resultado.filter(socio => socio.cuota === this.filtroActivo);
+      resultado = resultado.filter(socio =>
+        this.filtroActivo === 'inactivo'
+          ? socio.estado === 'inactivo'
+          : socio.cuota === this.filtroActivo
+      );
     }
 
     // Filtro por buscador (nombre, DNI o carnet)

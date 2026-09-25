@@ -40,8 +40,8 @@
         </button>
         <button 
           class="btn-filter" 
-          [class.active]="filtroActivo === 'vencida'" 
-          (click)="filtrarPorEstado('vencida')">
+          [class.active]="filtroActivo === 'inactivo'" 
+          (click)="filtrarPorEstado('inactivo')">
           Inactivos 
         </button>
         <span class="count-label">{{ cuotasFiltradas.length }} socio(s)</span>
@@ -67,15 +67,18 @@
                 <div class="nombre">{{ cuota.nombre }}</div>
                 <div class="meta">{{ cuota.id }} · {{ cuota.dni }}</div>
                 
-                @switch (cuota.cuota) {
-                  @case ('pagada') {
+                @switch (cuota.estado) {
+                  @case ('activo') {
                     <span class="badge badge-activo">activo</span>
                   }
-                  @case ('pendiente') {
-                    <span class="badge badge-bloqueado">pendiente</span>
+                  @case ('suspendido') {
+                    <span class="badge badge-bloqueado">suspendido</span>
                   }
-                  @case ('vencida') {
-                    <span class="badge badge-baja">vencida</span>
+                  @case ('bloqueado') {
+                    <span class="badge badge-bloqueado">bloqueado</span>
+                  }
+                  @case ('inactivo') {
+                    <span class="badge badge-baja">inactivo</span>
                   }
                 }
               </td>
