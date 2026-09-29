@@ -42,6 +42,10 @@ import {
   Copia
 } from '../services/libro-service';
 
+import {
+  ActividadServicio
+} from '../services/actividade-service';
+
 
 type FiltroPrestamo =
   | 'todos'
@@ -155,6 +159,9 @@ export class Prestamos
     private libroService:
       LibroService,
 
+    private actividadServicio:
+      ActividadServicio,
+
     private changeDetector:
       ChangeDetectorRef,
 
@@ -230,7 +237,14 @@ export class Prestamos
       .tenerSocios()
       .filter(
         s =>
-          s.estado === 'activo'
+          s.estado === 'activo' &&
+          !this.prestamoService
+            .obtenerPrestamos()
+            .some(
+              prestamo =>
+                prestamo.socioId === s.id &&
+                prestamo.estado !== 'devuelto'
+            )
       );
 
   }
@@ -552,6 +566,12 @@ export class Prestamos
           'En curso'
         );
 
+      this.actividadServicio.registrarActividad(
+        'prestamo',
+        `Nuevo préstamo: ${libroObj.titulo} para ${socioObj.nombre} (copia ${nuevoPrestamo.inventario})`,
+        nuevoPrestamo.id
+      );
+
 
       this.actualizarPrestamos();
 
@@ -594,6 +614,15 @@ export class Prestamos
         prestamo.id
       );
 
+    const actualizado =
+      this.prestamos.find(p => p.id === prestamo.id) || prestamo;
+
+    this.actividadServicio.registrarActividad(
+      'prestamo',
+      `Préstamo renovado: ${actualizado.libro} para ${actualizado.socio}; vence ${actualizado.fechaVencimiento}`,
+      actualizado.id
+    );
+
 
     this.actualizarPrestamos();
 
@@ -601,15 +630,6 @@ export class Prestamos
     if (
       socioObj?.telefono
     ) {
-
-      const actualizado =
-        this.prestamos.find(
-          p =>
-            p.id ===
-            prestamo.id
-        ) ||
-        prestamo;
-
 
       const mensaje =
         `Hola ${socioObj.nombre}, ` +
@@ -706,6 +726,12 @@ export class Prestamos
             prestamo.id
           );
 
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Préstamo devuelto: ${prestamo.libro} por ${prestamo.socio}`,
+          prestamo.id
+        );
+
 
         if (socioObj) {
 
@@ -761,6 +787,12 @@ export class Prestamos
             prestamo.id
           );
 
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Préstamo suspendido: ${prestamo.libro} para ${prestamo.socio}`,
+          prestamo.id
+        );
+
 
         this.socioService
           .actualizarEstadoSocio(
@@ -810,6 +842,12 @@ export class Prestamos
           .quitarSuspension(
             prestamo.id
           );
+
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Suspensión retirada: préstamo de ${prestamo.libro} para ${prestamo.socio}`,
+          prestamo.id
+        );
 
 
         const socioObj =

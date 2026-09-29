@@ -51,28 +51,46 @@
       </div>
     </div>
 
-    <div class="filtros">
+    <div class="busqueda-express-control">
+      <div class="campo-busqueda">
+        <span>⌕</span>
 
-      <button class="filtro activo" type="button">
-        DNI / APELLIDO / Nº CARNET
-      </button>
-      <button class="filtro" type="button">
-        N° INVENTARIO / ID
-      </button>
-    </div>
+        <input
+          type="text"
+          [(ngModel)]="terminoBusquedaExpress"
+          (ngModelChange)="actualizarBusquedaExpress()"
+          (keyup.enter)="buscarExpress()"
+          placeholder="Ej: Ana Martínez, DNI o c-001"
+          autocomplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          [attr.aria-expanded]="sociosSugeridos.length > 0"
+          aria-controls="sugerencias-socios" />
 
-    <div class="campo-busqueda">
-      <span>⌕</span>
+        <button class="btn-buscar" type="button" (click)="buscarExpress()">
+          Buscar
+        </button>
+      </div>
 
-      <input
-        type="text"
-        [(ngModel)]="terminoBusquedaExpress"
-        (keyup.enter)="buscarExpress()"
-        placeholder="Ej: Ana Martínez, DNI o c-001" />
-
-      <button class="btn-buscar" type="button" (click)="buscarExpress()">
-        Buscar
-      </button>
+      @if (sociosSugeridos.length) {
+        <div class="sugerencias-express" id="sugerencias-socios" role="listbox" aria-label="Socios encontrados">
+          @for (socio of sociosSugeridos; track socio.id) {
+            <button
+              type="button"
+              class="sugerencia-express"
+              role="option"
+              (click)="seleccionarSocio(socio)">
+              <span class="sugerencia-identidad">
+                <strong>{{ socio.nombre }}</strong>
+                <small>DNI {{ socio.dni }} · Carnet {{ socio.numCarnet }}</small>
+              </span>
+              <span class="sugerencia-estado" [class.inactivo]="socio.estado !== 'activo'">
+                {{ socio.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+              </span>
+            </button>
+          }
+        </div>
+      }
     </div>
 
     @if (socioEncontrado; as socio) {
@@ -103,7 +121,7 @@
           {{ socio.estado === 'activo' && socio.cuota === 'pagada' ? 'Todo al día' : 'Atención requerida' }}
         </span>
       </div>
-    } @else if (terminoBusquedaExpress.trim()) {
+    } @else if (terminoBusquedaExpress.trim() && !sociosSugeridos.length) {
       <div class="sin-resultado-express">
         No se encontró ningún socio con esa búsqueda.
       </div>

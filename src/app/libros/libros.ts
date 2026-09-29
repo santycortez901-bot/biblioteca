@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { LibroService, Libro, Copia } from '../services/libro-service';
+import { ActividadServicio } from '../services/actividade-service';
 
 @Component({
   selector: 'app-libros',
@@ -15,6 +16,7 @@ import { LibroService, Libro, Copia } from '../services/libro-service';
 })
 export class Libros implements OnInit, OnDestroy {
   private libroService = inject(LibroService);
+  private actividadServicio = inject(ActividadServicio);
   private router = inject(Router);
   private sub: Subscription = new Subscription();
 
@@ -95,6 +97,11 @@ export class Libros implements OnInit, OnDestroy {
 
       libroExistente.copiasTotales += this.nuevasCopias;
       this.actualizarEstadoLibro(libroExistente);
+      this.actividadServicio.registrarActividad(
+        'libro',
+        `Copias agregadas al libro: ${libroExistente.titulo} (${this.nuevasCopias})`,
+        libroExistente.id
+      );
       this.closeModal();
 
       Swal.fire({
@@ -131,6 +138,11 @@ export class Libros implements OnInit, OnDestroy {
 
     this.actualizarEstadoLibro(nuevoLibro);
     this.libros.push(nuevoLibro);
+    this.actividadServicio.registrarActividad(
+      'libro',
+      `Nuevo libro registrado: ${nuevoLibro.titulo} (${nuevoLibro.autor}, ${nuevoLibro.copiasTotales} copias)`,
+      nuevoLibro.id
+    );
     this.closeModal();
 
     Swal.fire({

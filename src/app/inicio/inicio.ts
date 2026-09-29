@@ -42,6 +42,7 @@ export class Inicio implements OnInit, OnDestroy {
   sociosActivos = 0;
 
   terminoBusquedaExpress = '';
+  sociosSugeridos: Socio[] = [];
   socioEncontrado: Socio | null = null;
   prestamoEncontrado: Prestamo | null = null;
 
@@ -126,6 +127,37 @@ export class Inicio implements OnInit, OnDestroy {
   }
 
 
+  actualizarBusquedaExpress(): void {
+    const termino =
+      this.terminoBusquedaExpress
+        .trim()
+        .toLowerCase();
+
+    this.socioEncontrado = null;
+    this.prestamoEncontrado = null;
+
+    if (!termino) {
+      this.sociosSugeridos = [];
+      return;
+    }
+
+    this.sociosSugeridos =
+      this.socioServicio
+        .tenerSocios()
+        .filter(socio =>
+          socio.nombre.toLowerCase().includes(termino) ||
+          socio.dni.toLowerCase().includes(termino) ||
+          socio.numCarnet.toLowerCase().includes(termino)
+        )
+        .slice(0, 6);
+  }
+
+  seleccionarSocio(socio: Socio): void {
+    this.terminoBusquedaExpress = socio.nombre;
+    this.sociosSugeridos = [];
+    this.mostrarSocioEncontrado(socio);
+  }
+
   buscarExpress(): void {
 
     const termino =
@@ -136,6 +168,7 @@ export class Inicio implements OnInit, OnDestroy {
 
     if (!termino) {
 
+      this.sociosSugeridos = [];
       this.socioEncontrado = null;
       this.prestamoEncontrado = null;
       return;
@@ -143,7 +176,7 @@ export class Inicio implements OnInit, OnDestroy {
     }
 
 
-    this.socioEncontrado =
+    const socio =
       this.socioServicio
         .tenerSocios()
         .find(
@@ -160,19 +193,23 @@ export class Inicio implements OnInit, OnDestroy {
         ) ||
       null;
 
+    this.sociosSugeridos = [];
+    this.mostrarSocioEncontrado(socio);
+  }
 
+  private mostrarSocioEncontrado(socio: Socio | null): void {
+    this.socioEncontrado = socio;
     this.prestamoEncontrado =
-      this.socioEncontrado
+      socio
         ? this.prestamoService
             .obtenerPrestamos()
             .find(
               prestamo =>
                 prestamo.socioId ===
-                this.socioEncontrado?.id &&
+                socio.id &&
                 prestamo.estado !== 'devuelto'
             ) || null
         : null;
-
   }
 
   // ==========================================

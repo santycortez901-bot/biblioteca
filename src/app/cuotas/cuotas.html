@@ -61,39 +61,32 @@
         <tbody>
           <!-- Iteramos sobre cuotasFiltradas en vez de cuotas -->
           @for (cuota of cuotasFiltradas; track cuota.id) {
-            <tr [class.row-warning]="cuota.cuota === 'pendiente'" [class.row-danger]="cuota.cuota === 'vencida'">
+            <tr [class.row-warning]="cuota.cuota === 'pendiente' && cuota.estado !== 'inactivo'" [class.row-danger]="cuota.estado === 'inactivo'">
               <!-- Columna Socio -->
               <td class="socio-info">
                 <div class="nombre">{{ cuota.nombre }}</div>
                 <div class="meta">{{ cuota.id }} · {{ cuota.dni }}</div>
-                
-                @switch (cuota.estado) {
-                  @case ('activo') {
-                    <span class="badge badge-activo">activo</span>
-                  }
-                  @case ('suspendido') {
-                    <span class="badge badge-bloqueado">suspendido</span>
-                  }
-                  @case ('inactivo') {
-                    <span class="badge badge-baja">inactivo</span>
-                  }
-                }
               </td>
 
               <!-- Columna Deuda -->
-              <td class="deuda-col">
+              <td class="deuda-col" [class.inactivo]="cuota.estado === 'inactivo'">
                 <span class="deuda-monto">
-                  {{ cuota.cuota === 'pagada' ? '$0' : '$1.200' }}
+                  {{ cuota.estado === 'inactivo' ? '$0' : cuota.cuota === 'pagada' ? '$0' : '$1.200' }}
                 </span>
                 <span class="deuda-meses">
-                  {{ cuota.cuota === 'pagada' ? 'Al día' : '1 mes(es)' }}
+                  @if (cuota.estado === 'inactivo') {
+                    <span>Inactivo</span>
+                  } @else if (cuota.cuota === 'pagada') {
+                    <span>Al día</span>
+                  } @else if (cuota.cuota === 'pendiente') {
+                    <span>1 mes · P</span>
+                  }
                 </span>
               </td>
 
               <!-- Columna Acciones -->
               <td class="acciones-col">
-                @if (cuota.cuota !== 'pagada') {
-                  <!-- Se agregó el evento (click) para ejecutar el cobro en el servicio -->
+                @if (puedeCobrarCuota(cuota)) {
                   <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar $1.200</button>
                 }
                 

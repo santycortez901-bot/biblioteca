@@ -45,6 +45,17 @@ export class PrestamoService {
     }
   ): boolean {
 
+    const tienePrestamoActivo =
+      this.prestamos.some(
+        prestamo =>
+          prestamo.socioId === nuevoPrestamo.socioId &&
+          prestamo.estado !== 'devuelto'
+      );
+
+    if (tienePrestamoActivo) {
+      return false;
+    }
+
     const libroId =
       nuevoPrestamo.libroId ||
 

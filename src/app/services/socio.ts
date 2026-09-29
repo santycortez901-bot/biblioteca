@@ -19,95 +19,64 @@ export class SocioServicio {
 
 
   constructor() {
-
     this.cargarSociosDePrueba();
-
   }
 
-
-  // ==========================================
-  // SOCIOS DE PRUEBA
-  // ==========================================
-
   private cargarSociosDePrueba(): void {
-
-    const sociosDePrueba:
-      Omit<Socio, 'id' | 'numCarnet'>[] = [
-
+    const sociosDePrueba: Omit<Socio, 'id' | 'numCarnet'>[] = [
       {
-        nombre: 'Ana Martínez',
-        edad: 28,
-        dni: '30111222',
-        telefono: '+549111111111',
-        email: 'ana.martinez@gmail.com',
-        estado: 'activo',
-        cuota: 'pagada',
-        prestamos: 'Libre'
+        nombre: 'Lucía Fernández', edad: 26, dni: '32145678',
+        telefono: '+5491123456789', email: 'lucia.fernandez@gmail.com',
+        estado: 'activo', cuota: 'pagada', prestamos: 'Libre'
       },
-
       {
-        nombre: 'Bruno Fernández',
-        edad: 35,
-        dni: '30222333',
-        telefono: '+549222222222',
-        email: 'bruno.fernandez@gmail.com',
-        estado: 'activo',
-        cuota: 'pendiente',
-        prestamos: 'En curso'
+        nombre: 'Martín González', edad: 34, dni: '29876543',
+        telefono: '+5491134567890', email: 'martin.gonzalez@gmail.com',
+        estado: 'activo', cuota: 'pendiente', prestamos: 'Libre'
       },
-
       {
-        nombre: 'Carla Gómez',
-        edad: 22,
-        dni: '30333444',
-        telefono: '+549333333333',
-        email: 'carla.gomez@gmail.com',
-        estado: 'suspendido',
-        cuota: 'pendiente',
-        prestamos: 'En curso'
+        nombre: 'Sofía Ramírez', edad: 21, dni: '33456789',
+        telefono: '+5491145678901', email: 'sofia.ramirez@hotmail.com',
+        estado: 'activo', cuota: 'pagada', prestamos: 'En curso'
       },
-
       {
-        nombre: 'Diego Rodríguez',
-        edad: 41,
-        dni: '30444555',
-        telefono: '+549444444444',
-        email: 'diego.rodriguez@gmail.com',
-        estado: 'inactivo',
-        cuota: 'vencida',
-        prestamos: 'Libre'
+        nombre: 'Tomás Herrera', edad: 42, dni: '27654321',
+        telefono: '+5491156789012', email: 'tomas.herrera@gmail.com',
+        estado: 'suspendido', cuota: 'pendiente', prestamos: 'Libre'
       },
-
       {
-        nombre: 'Elena López',
-        edad: 17,
-        dni: '30555666',
-        telefono: '+549555555555',
-        email: 'elena.lopez@gmail.com',
-        estado: 'activo',
-        cuota: 'vencida',
-        prestamos: 'Libre'
+        nombre: 'Valentina Castro', edad: 29, dni: '31234567',
+        telefono: '+5491167890123', email: 'valentina.castro@gmail.com',
+        estado: 'activo', cuota: 'vencida', prestamos: 'Libre'
       },
-
       {
-        nombre: 'Florencia Silva',
-        edad: 19,
-        dni: '30666777',
-        telefono: '+549666666666',
-        email: 'florencia.silva@gmail.com',
-        estado: 'inactivo',
-        cuota: 'pagada',
-        prestamos: 'Libre'
+        nombre: 'Julián Morales', edad: 37, dni: '28987654',
+        telefono: '+5491178901234', email: 'julian.morales@hotmail.com',
+        estado: 'inactivo', cuota: 'vencida', prestamos: 'Libre'
+      },
+      {
+        nombre: 'Camila Navarro', edad: 19, dni: '34567890',
+        telefono: '+5491189012345', email: 'camila.navarro@gmail.com',
+        estado: 'activo', cuota: 'pagada', prestamos: 'Libre'
+      },
+      {
+        nombre: 'Federico Ortiz', edad: 31, dni: '30123456',
+        telefono: '+5491190123456', email: 'federico.ortiz@gmail.com',
+        estado: 'activo', cuota: 'pendiente', prestamos: 'En curso'
+      },
+      {
+        nombre: 'Marina Acosta', edad: 48, dni: '25876543',
+        telefono: '+5491101234567', email: 'marina.acosta@hotmail.com',
+        estado: 'inactivo', cuota: 'pagada', prestamos: 'Libre'
+      },
+      {
+        nombre: 'Nicolás Vera', edad: 16, dni: '35678901',
+        telefono: '+5491112345678', email: 'nicolas.vera@gmail.com',
+        estado: 'activo', cuota: 'pagada', prestamos: 'Libre'
       }
-
     ];
 
-
-    sociosDePrueba.forEach(
-      socio =>
-        this.agregarSocio(socio)
-    );
-
+    sociosDePrueba.forEach(socio => this.agregarSocio(socio));
   }
 
 
@@ -117,7 +86,7 @@ export class SocioServicio {
 
   tenerSocios(): Socio[] {
 
-    return this.socios;
+    return [...this.socios];
 
   }
 
@@ -147,9 +116,10 @@ export class SocioServicio {
     };
 
 
-    this.socios.push(
+    this.socios = [
+      ...this.socios,
       nuevoSocio
-    );
+    ];
 
 
     this.contadorSocio++;
@@ -175,11 +145,12 @@ export class SocioServicio {
 
     if (index !== -1) {
 
-      this.socios[index] = {
-
-        ...socioActualizado
-
-      };
+      this.socios = this.socios.map(
+        s =>
+          s.id === socioActualizado.id
+            ? { ...socioActualizado }
+            : s
+      );
 
     }
 
@@ -249,8 +220,12 @@ export class SocioServicio {
 
     if (socio) {
 
-      socio.estado =
-        nuevoEstado;
+      this.socios = this.socios.map(
+        s =>
+          s.id === Number(idSocio)
+            ? { ...s, estado: nuevoEstado }
+            : s
+      );
 
     }
 
@@ -277,8 +252,12 @@ export class SocioServicio {
 
     if (socio) {
 
-      socio.cuota =
-        nuevoEstado;
+      this.socios = this.socios.map(
+        s =>
+          s.id === Number(idSocio)
+            ? { ...s, cuota: nuevoEstado }
+            : s
+      );
 
     }
 

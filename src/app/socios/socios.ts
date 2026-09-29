@@ -682,7 +682,7 @@ export class Socios
         'Libre',
 
       cuota:
-        'pendiente',
+        'pagada',
 
     };
 
@@ -1090,26 +1090,11 @@ export class Socios
   ): void {
 
     this.actividadServicio
-      .agregarActividad({
-
-        tipo:
-          'socio',
-
+      .registrarActividad(
+        'socio',
         descripcion,
-
-        fecha:
-          new Date()
-            .toLocaleDateString(
-              'es-AR'
-            ),
-
-        user:
-          'admin',
-
-        idrelacionado:
-          idRelacionado,
-
-      });
+        idRelacionado
+      );
 
   }
 
