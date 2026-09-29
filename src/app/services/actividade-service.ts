@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Actividad } from '../models/models/actividad';
+import { Actividad, TipoActividad } from '../models/models/actividad';
 
 @Injectable({
   providedIn: 'root'
@@ -47,20 +47,6 @@ export class ActividadServicio {
       user: 'admin',
       idrelacionado: 'L001'
     },
-    {
-      tipo: 'eliminacion',
-      descripcion: 'Libro eliminado: Don Quijote de la Mancha',
-      fecha: '16/08/2026 10:15',
-      user: 'admin',
-      idrelacionado: 'L002'
-    },
-    {
-      tipo: 'edicion',
-      descripcion: 'Libro editado: El Principito',
-      fecha: '15/08/2026 16:40',
-      user: 'admin',
-      idrelacionado: 'L003'
-    }
   ];
 
   obtenerActividades(): Actividad[] {
@@ -69,5 +55,31 @@ export class ActividadServicio {
 
   agregarActividad(actividad: Actividad): void {
     this.actividades.unshift(actividad);
+  }
+
+  registrarActividad(
+    tipo: TipoActividad,
+    descripcion: string,
+    idRelacionado?: string
+  ): void {
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const hora = ahora.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    this.agregarActividad({
+      tipo,
+      descripcion,
+      fecha: `${fecha} ${hora}`,
+      user: 'admin',
+      idrelacionado: idRelacionado
+    });
   }
 }

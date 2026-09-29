@@ -1,6 +1,27 @@
 /* ==========================================
    RESET Y ESTILOS GLOBALES
    ========================================== */
+.btn-editar {
+  border: none;
+  background: #0d9488;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-editar:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn-editar:active {
+  transform: translateY(0);
+}
+
 .body {
   width: 100%;
   min-height: 100vh;
@@ -228,8 +249,8 @@ tr:last-child td {
 
 /* Inactivo -> Azul */
 .badge-inactivo {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 /* Suspendido -> Naranja */
@@ -238,11 +259,6 @@ tr:last-child td {
   color: #c2410c;
 }
 
-/* Bloqueado -> Rojo */
-.badge-bloqueado {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
 
 /* Estilo base para la columna de préstamos */
 td[data-label="PRÉSTAMO"] {

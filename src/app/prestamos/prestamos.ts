@@ -1,15 +1,57 @@
-import { Component, NgZone } from '@angular/core';
+import {
+  Component,
+  ChangeDetectorRef,
+  OnInit,
+  OnDestroy
+} from '@angular/core';
 
-import { CommonModule } from '@angular/common';
+import {
+  FormsModule
+} from '@angular/forms';
 
-import { FormsModule } from '@angular/forms';
+import {
+  Subscription
+} from 'rxjs';
+
+import {
+  ActivatedRoute
+} from '@angular/router';
 
 import Swal from 'sweetalert2';
-import { Prestamo, EstadoPrestamo } from '../models/models/prestamo';
-import { PrestamoService } from '../services/prestamo';
-import { Socio } from '../models/models/socio';
 
-import { SocioServicio } from '../services/socio';
+import {
+  Prestamo,
+  EstadoPrestamo
+} from '../models/models/prestamo';
+
+import {
+  PrestamoService
+} from '../services/prestamo';
+
+import {
+  Socio
+} from '../models/models/socio';
+
+import {
+  SocioServicio
+} from '../services/socio';
+
+import {
+  LibroService,
+  Libro,
+  Copia
+} from '../services/libro-service';
+
+import {
+  ActividadServicio
+} from '../services/actividade-service';
+
+
+type FiltroPrestamo =
+  | 'todos'
+  | 'activo'
+  | 'atrasado'
+  | 'suspendido';
 
 
 @Component({
@@ -19,7 +61,6 @@ import { SocioServicio } from '../services/socio';
   standalone: true,
 
   imports: [
-    CommonModule,
     FormsModule
   ],
 
@@ -28,64 +69,84 @@ import { SocioServicio } from '../services/socio';
   styleUrl: './prestamos.css'
 
 })
+export class Prestamos
+  implements OnInit, OnDestroy {
 
-
-export class Prestamos {
 
   prestamos: Prestamo[] = [];
-  librosDisponibles: Libro[] = [];
+
+
+  librosDisponibles:
+    Libro[] = [];
+
+
   busqueda: string = '';
 
 
-  // =========================
-  // FILTRO
-  // =========================
-
   filtro:
-    | 'todos'
-    | 'activo'
-    | 'atrasado'
-    | 'suspendido'
-    = 'todos';
+    FiltroPrestamo = 'todos';
 
 
-  // =========================
-  // MODAL NUEVO PRÉSTAMO
-  // =========================
+  readonly opcionesFiltro:
+    {
+      valor: FiltroPrestamo;
+      etiqueta: string;
+    }[] = [
+
+    {
+      valor: 'todos',
+      etiqueta: 'Todos'
+    },
+
+    {
+      valor: 'activo',
+      etiqueta: 'Activo'
+    },
+
+    {
+      valor: 'atrasado',
+      etiqueta: 'Vencidos'
+    },
+
+    {
+      valor: 'suspendido',
+      etiqueta: 'Suspendidos'
+    },
+
+  ];
+
 
   isModalOpen = false;
 
 
-  // =========================
-  // FORMULARIO
-  // =========================
-
   socioSeleccionadoId:
     number | null = null;
 
-  libro: string = '';
 
-  inventario: string = '';
-  copiasDisponiblesParaPrestamo: Copia[] = [];
-  fechaInicio: string = '';
-  fechaVencimiento: string = '';
+  libroSeleccionadoId:
+    string = '';
 
 
-  // =========================
-  // MODAL SUSPENSIÓN
-  // =========================
-
-  isSuspensionModalOpen = false;
-
-  prestamoASuspender:
-    Prestamo | null = null;
-
-  motivoSuspension: string = '';
+  inventario:
+    string = '';
 
 
-  // =========================
-  // CONSTRUCTOR
-  // =========================
+  copiasDisponiblesParaPrestamo:
+    Copia[] = [];
+
+
+  fechaInicio:
+    string = '';
+
+
+  fechaVencimiento:
+    string = '';
+
+
+  private sub:
+    Subscription =
+      new Subscription();
+
 
   constructor(
 
@@ -95,77 +156,130 @@ export class Prestamos {
     private socioService:
       SocioServicio,
 
-    private ngZone:
-      NgZone
+    private libroService:
+      LibroService,
 
-  ) {
+    private actividadServicio:
+      ActividadServicio,
+
+    private changeDetector:
+      ChangeDetectorRef,
+
+    private route:
+      ActivatedRoute
+
+  ) {}
+
+
+  // ==========================================
+  // INICIO
+  // ==========================================
 
   ngOnInit(): void {
+
     this.actualizarPrestamos();
-    this.sub = this.libroService.libros$.subscribe(libros => {
-      this.librosDisponibles = libros.filter(l => l.copias > 0);
-    });
+
+
+    this.sub =
+      this.libroService.libros$
+        .subscribe(
+          libros => {
+
+            this.librosDisponibles =
+              libros.filter(
+                l =>
+                  l.copias > 0
+              );
+
+          }
+        );
+
+
+    this.sub.add(
+      this.route.queryParams.subscribe(
+        params => {
+          this.busqueda =
+            params['libro'] || '';
+
+          if (
+            params['mostrarNuevoPrestamo'] ===
+            'true'
+          ) {
+
+            this.openModal();
+
+          }
+        }
+      )
+    );
+
   }
 
+
+  // ==========================================
+  // DESTRUIR
+  // ==========================================
+
   ngOnDestroy(): void {
+
     this.sub.unsubscribe();
+
   }
+
+
+  // ==========================================
+  // SOCIOS DISPONIBLES
+  // ==========================================
 
   get sociosDisponibles(): Socio[] {
 
     return this.socioService
-
       .tenerSocios()
-
       .filter(
-
         s =>
-          s.estado === 'activo'
-
+          s.estado === 'activo' &&
+          !this.prestamoService
+            .obtenerPrestamos()
+            .some(
+              prestamo =>
+                prestamo.socioId === s.id &&
+                prestamo.estado !== 'devuelto'
+            )
       );
 
   }
 
 
-  // =========================
+  // ==========================================
   // ACTUALIZAR PRÉSTAMOS
-  // =========================
+  // ==========================================
 
   actualizarPrestamos(): void {
 
     this.prestamos =
-
       this.prestamoService
-
         .obtenerPrestamos()
-
         .filter(
-
           p =>
             p.estado !== 'devuelto'
-
         );
 
   }
 
 
-  // =========================
+  // ==========================================
   // FILTRAR PRÉSTAMOS
-  // =========================
+  // ==========================================
 
   get prestamosFiltrados(): Prestamo[] {
 
     const texto =
-
       this.busqueda
-
         .toLowerCase()
-
         .trim();
 
 
     return this.prestamos.filter(
-
       p => {
 
         if (
@@ -180,33 +294,25 @@ export class Prestamos {
         const coincideBusqueda =
 
           p.id
-
             .toLowerCase()
-
             .includes(texto)
 
           ||
 
           p.socio
-
             .toLowerCase()
-
             .includes(texto)
 
           ||
 
           p.libro
-
             .toLowerCase()
-
             .includes(texto)
 
           ||
 
           p.inventario
-
             .toLowerCase()
-
             .includes(texto);
 
 
@@ -221,32 +327,22 @@ export class Prestamos {
 
 
         return (
-
           coincideBusqueda &&
-
           coincideFiltro
-
         );
 
       }
-
     );
 
   }
 
 
-  // =========================
+  // ==========================================
   // CAMBIAR FILTRO
-  // =========================
+  // ==========================================
 
   cambiarFiltro(
-
-    filtro:
-      | 'todos'
-      | 'activo'
-      | 'atrasado'
-      | 'suspendido'
-
+    filtro: FiltroPrestamo
   ): void {
 
     this.filtro =
@@ -255,822 +351,564 @@ export class Prestamos {
   }
 
 
-  // =========================
-  // OBTENER SOCIO
-  // =========================
+  // ==========================================
+  // CAMBIO DE LIBRO
+  // ==========================================
 
-  obtenerSocio(
+  onLibroChange(): void {
 
-    identificador:
-      number | string
+    this.inventario = '';
 
-  ): Socio | undefined {
 
-    return this.socioService
-
-      .tenerSocios()
-
-      .find(
-
-        s =>
-
-          s.id === identificador
-
-          ||
-
-          s.nombre ===
-          identificador
-
+    const libroObj =
+      this.librosDisponibles.find(
+        l =>
+          l.id ===
+          this.libroSeleccionadoId
       );
+
+
+    this.copiasDisponiblesParaPrestamo =
+      libroObj
+        ? libroObj.listaCopias.filter(
+            c =>
+              c.estado ===
+              'Disponible'
+          )
+        : [];
 
   }
 
 
-  // =========================
-  // FECHAS
-  // =========================
+  // ==========================================
+  // FECHA
+  // ==========================================
 
   private obtenerFechaFormateada(
-
-    diasAgregar:
-      number = 0
-
+    meses: number = 0
   ): string {
 
     const fecha =
       new Date();
 
 
-    fecha.setDate(
-
-      fecha.getDate() +
-      diasAgregar
-
+    fecha.setMonth(
+      fecha.getMonth() + meses
     );
 
 
-    const año =
-      fecha.getFullYear();
-
-
-    const mes =
-
-      String(
-
-        fecha.getMonth() + 1
-
-      ).padStart(
-
-        2,
-        '0'
-
-      );
-
-
-    const dia =
-
-      String(
-
-        fecha.getDate()
-
-      ).padStart(
-
-        2,
-        '0'
-
-      );
-
-
-    return `${año}-${mes}-${dia}`;
+    return fecha
+      .toISOString()
+      .split('T')[0];
 
   }
 
 
-  // =========================
-  // ABRIR MODAL NUEVO
-  // =========================
+  // ==========================================
+  // ABRIR MODAL
+  // ==========================================
 
   openModal(): void {
 
-    this.isModalOpen =
-      true;
+    this.isModalOpen = true;
 
-    this.establecerFechasAutomaticas();
-
-  }
-
-
-  // =========================
-  // FECHAS AUTOMÁTICAS
-  // =========================
-
-  establecerFechasAutomaticas(): void {
 
     this.fechaInicio =
-
-      this.obtenerFechaFormateada(
-        0
-      );
+      this.obtenerFechaFormateada(0);
 
 
     this.fechaVencimiento =
-
-      this.obtenerFechaFormateada(
-        30
-      );
+      this.obtenerFechaFormateada(1);
 
   }
 
-  // =========================
-  // LIMPIAR FORMULARIO
-  // =========================
 
-  limpiarFormulario(): void {
+  // ==========================================
+  // CERRAR MODAL
+  // ==========================================
+
+  closeModal(): void {
+
+    this.isModalOpen = false;
+
 
     this.socioSeleccionadoId =
       null;
 
-    this.libro = '';
 
-    this.inventario = '';
-
-    this.fechaInicio = '';
-
-    this.fechaVencimiento = '';
-
-  }
+    this.libroSeleccionadoId =
+      '';
 
 
-  // =========================
-  // CERRAR MODAL
-  // =========================
+    this.inventario =
+      '';
 
-  closeModal(): void {
 
-    this.isModalOpen =
-      false;
-
-    this.limpiarFormulario();
+    this.copiasDisponiblesParaPrestamo =
+      [];
 
   }
 
 
-  // =========================
+  // ==========================================
   // CREAR PRÉSTAMO
-  // =========================
+  // ==========================================
 
-  crearPrestamo(): void {
+  crearPrestamo(): boolean {
 
     if (
-
       !this.socioSeleccionadoId ||
-
-      !this.libro.trim() ||
-
-      !this.inventario.trim() ||
-
-      !this.fechaInicio ||
-
-      !this.fechaVencimiento
-
+      !this.libroSeleccionadoId ||
+      !this.inventario.trim()
     ) {
 
-      Swal.fire({
-
-        title:
-          'Campos incompletos',
-
-        text:
-          'Por favor, completá todos los campos requeridos.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
+      return false;
 
     }
 
 
     const socioObj =
-
       this.socioService
-
         .tenerSocios()
-
         .find(
-
           s =>
-
             s.id ===
-
             Number(
-
               this.socioSeleccionadoId
-
             )
-
         );
 
 
-    if (!socioObj) {
+    const libroObj =
+      this.librosDisponibles.find(
+        l =>
+          l.id ===
+          this.libroSeleccionadoId
+      );
 
-      return;
+
+    if (
+      !socioObj ||
+      !libroObj
+    ) {
+
+      return false;
 
     }
 
 
-    const listaActual =
-
-      this.prestamoService
-
-        .obtenerPrestamos();
-
-
-    const numero =
-
-      listaActual.length + 1;
-
-
-    const idGenerado =
-
-      `PR${String(numero).padStart(3, '0')}`;
-
-
-    const nuevoPrestamo:
-      Prestamo = {
+    const nuevoPrestamo: Prestamo & {
+      libroId?: string
+    } = {
 
       id:
-        idGenerado,
+        `PR${String(
+          this.prestamoService
+            .obtenerPrestamos()
+            .length + 1
+        ).padStart(3, '0')}`,
 
+
+      // ====================================
+      // IMPORTANTE
+      // GUARDAMOS EL ID DEL SOCIO
+      // ====================================
+
+      socioId:
+        socioObj.id,
+
+
+      // Nombre que se muestra
       socio:
         socioObj.nombre,
 
+
       libro:
-        this.libro.trim(),
+        libroObj.titulo,
+
+
+      libroId:
+        libroObj.id,
+
 
       inventario:
         this.inventario.trim(),
 
+
       fechaInicio:
         this.fechaInicio,
+
 
       fechaVencimiento:
         this.fechaVencimiento,
 
+
       estado:
-        'activo' as EstadoPrestamo,
+        'activo',
+
 
       renovaciones:
         0
 
     };
 
-    this.prestamoService
-
-      .agregarPrestamo(
-
-        nuevoPrestamo
-
-      );
-
-
-    this.socioService
-
-      .actualizarEstadoPrestamo(
-
-        socioObj.id,
-
-        'Encurso'
-
-      );
-
-
-    this.actualizarPrestamos();
-
-    this.closeModal();
-
-
-    Swal.fire({
-
-      title:
-        '¡Préstamo Creado!',
-
-      text:
-        'Se creó el préstamo con éxito.',
-
-      icon:
-        'success',
-
-      confirmButtonColor:
-        '#0d9488',
-
-      timer:
-        2000,
-
-      showConfirmButton:
-        false
-
-    });
-
-  }
-
-
-  // =========================
-  // RENOVAR PRÉSTAMO
-  // =========================
-
-  renovarPrestamo(
-
-    prestamo:
-      Prestamo
-
-  ): void {
 
     if (
-
-      prestamo.renovaciones >= 2
-
+      this.prestamoService
+        .agregarPrestamo(
+          nuevoPrestamo
+        )
     ) {
 
-      return;
+      this.socioService
+        .actualizarEstadoPrestamo(
+          socioObj.id,
+          'En curso'
+        );
+
+      this.actividadServicio.registrarActividad(
+        'prestamo',
+        `Nuevo préstamo: ${libroObj.titulo} para ${socioObj.nombre} (copia ${nuevoPrestamo.inventario})`,
+        nuevoPrestamo.id
+      );
+
+
+      this.actualizarPrestamos();
+
+      this.changeDetector.detectChanges();
+
+
+      this.closeModal();
+
+
+      return true;
 
     }
 
 
+    return false;
+
+  }
+
+
+  // ==========================================
+  // RENOVAR PRÉSTAMO
+  // ==========================================
+
+  renovarPrestamo(
+    prestamo: Prestamo
+  ): void {
+
     const socioObj =
-
       this.socioService
-
         .tenerSocios()
-
         .find(
-
           s =>
-
-            s.nombre ===
-            prestamo.socio
-
+            s.id ===
+            prestamo.socioId
         );
 
 
     this.prestamoService
-
       .renovarPrestamo(
-
         prestamo.id
-
       );
+
+    const actualizado =
+      this.prestamos.find(p => p.id === prestamo.id) || prestamo;
+
+    this.actividadServicio.registrarActividad(
+      'prestamo',
+      `Préstamo renovado: ${actualizado.libro} para ${actualizado.socio}; vence ${actualizado.fechaVencimiento}`,
+      actualizado.id
+    );
 
 
     this.actualizarPrestamos();
 
 
-    const prestamoActualizado =
-
-      this.prestamos.find(
-
-        p =>
-
-          p.id ===
-          prestamo.id
-
-      ) || prestamo;
-
-
     if (
-
-      socioObj &&
-
-      socioObj.telefono
-
+      socioObj?.telefono
     ) {
 
       const mensaje =
-
-        `Hola ${socioObj.nombre}, se ha renovado con éxito tu préstamo del libro "${prestamoActualizado.libro}". Tu nueva fecha de vencimiento es ${prestamoActualizado.fechaVencimiento}.`;
+        `Hola ${socioObj.nombre}, ` +
+        `se ha renovado tu préstamo ` +
+        `del libro "${actualizado.libro}". ` +
+        `Vence el ` +
+        `${actualizado.fechaVencimiento}.`;
 
 
       let tel =
-
         socioObj.telefono
-
           .replace(
-
             /[^0-9]/g,
-
             ''
-
           );
 
 
       if (
-
         tel.startsWith('54') &&
-
         !tel.startsWith('549')
-
       ) {
 
         tel =
-
           '549' +
           tel.slice(2);
 
       }
 
       else if (
-
         !tel.startsWith('54')
-
       ) {
 
         tel =
-
           '549' +
           tel;
 
       }
 
 
-      const url =
-
-        `https://wa.me/${tel}?text=${encodeURIComponent(mensaje)}`;
-
-
       window.open(
 
-        url,
+        `https://wa.me/${tel}` +
+        `?text=${encodeURIComponent(
+          mensaje
+        )}`,
 
         '_blank'
 
       );
 
     }
+
   }
 
 
-  // =========================
+  // ==========================================
   // DEVOLVER PRÉSTAMO
-  // =========================
+  // ==========================================
 
   devolverPrestamo(
-
-    prestamo:
-      Prestamo
-
+    prestamo: Prestamo
   ): void {
 
-    Swal.fire({
+    this.confirmar(
 
-      title:
-        '¿Estás seguro?',
+      '¿Estás seguro?',
 
-      text:
-        `¿Deseas marcar como devuelto el préstamo de "${prestamo.libro}"?`,
+      `¿Deseas devolver "${prestamo.libro}"?`,
 
-      icon:
-        'warning',
+      'Sí, devolver'
 
-      draggable:
-        true,
+    ).then(
+      confirmado => {
 
-      showCancelButton:
-        true,
+        if (!confirmado) {
 
-      confirmButtonColor:
-        '#0d9488',
-
-      cancelButtonColor:
-        '#ef4444',
-
-      confirmButtonText:
-        'Sí, devolver',
-
-      cancelButtonText:
-        'Cancelar'
-
-    }).then(result => {
-
-      if (
-        !result.isConfirmed
-      ) {
-
-        return;
-
-      }
-
-
-      this.ngZone.run(() => {
-
-
-        // =========================
-        // BUSCAR SOCIO
-        // =========================
-
-        const socioObj =
-
-          this.socioService
-
-            .tenerSocios()
-
-            .find(
-
-              s =>
-
-                s.nombre ===
-                prestamo.socio
-
-            );
-
-
-        // =========================
-        // DEVOLVER PRÉSTAMO
-        // =========================
-
-        this.prestamoService
-
-          .devolverPrestamo(
-
-            prestamo.id
-
-          );
-
-
-        // =========================
-        // ACTUALIZAR SOCIO
-        // =========================
-
-        if (socioObj) {
-
-          this.socioService
-
-            .actualizarEstadoPrestamo(
-
-              socioObj.id,
-
-              'Libre'
-
-            );
+          return;
 
         }
 
 
-        // =========================
-        // ACTUALIZAR LISTA
-        // =========================
-
-        this.actualizarPrestamos();
-
-
-        // =========================
-        // ALERTA
-        // =========================
-
-        Swal.fire({
-
-          title:
-            '¡Devuelto!',
-
-          text:
-            'El préstamo ha sido devuelto correctamente.',
-
-          icon:
-            'success',
-
-          draggable:
-            true,
-
-          confirmButtonColor:
-            '#0d9488',
-
-          timer:
-            2000,
-
-          showConfirmButton:
-            false
-
-        });
-
-      });
-
-    });
-  }
+        const socioObj =
+          this.socioService
+            .tenerSocios()
+            .find(
+              s =>
+                s.id ===
+                prestamo.socioId
+            );
 
 
-  // =========================
-  // ABRIR SUSPENSIÓN
-  // =========================
+        this.prestamoService
+          .devolverPrestamo(
+            prestamo.id
+          );
 
-  abrirModalSuspension(
-
-    prestamo:
-      Prestamo
-
-  ): void {
-
-    this.prestamoASuspender =
-      prestamo;
-
-    this.motivoSuspension =
-      '';
-
-    this.isSuspensionModalOpen =
-      true;
-
-  }
-
-
-  // =========================
-  // CERRAR SUSPENSIÓN
-  // =========================
-
-  cerrarModalSuspension(): void {
-
-    this.isSuspensionModalOpen =
-      false;
-
-    this.prestamoASuspender =
-      null;
-
-    this.motivoSuspension =
-      '';
-
-  }
-
-
-  // =========================
-  // CONFIRMAR SUSPENSIÓN
-  // =========================
-
-  confirmarSuspension(): void {
-
-    if (
-      !this.prestamoASuspender
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      !this.motivoSuspension.trim()
-    ) {
-
-      Swal.fire({
-
-        title:
-          'Motivo requerido',
-
-        text:
-          'Debés ingresar el motivo de la suspensión.',
-
-        icon:
-          'warning',
-
-        confirmButtonColor:
-          '#0d9488'
-
-      });
-
-      return;
-
-    }
-
-
-    this.ngZone.run(() => {
-
-
-      // =========================
-      // SUSPENDER PRÉSTAMO
-      // =========================
-
-      this.prestamoService
-
-        .suspenderPrestamo(
-
-          this.prestamoASuspender!.id,
-
-          this.motivoSuspension
-            .trim()
-
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Préstamo devuelto: ${prestamo.libro} por ${prestamo.socio}`,
+          prestamo.id
         );
 
 
-      // =========================
-      // BUSCAR SOCIO
-      // =========================
+        if (socioObj) {
 
-      const socioObj =
+          this.socioService
+            .actualizarEstadoPrestamo(
+              socioObj.id,
+              'Libre'
+            );
 
-        this.socioService
-
-          .tenerSocios()
-
-          .find(
-
-            s =>
-
-              s.nombre ===
-
-              this.prestamoASuspender!.socio
-
-          );
+        }
 
 
-      // =========================
-      // SUSPENDER SOCIO
-      // =========================
+        this.actualizarPrestamos();
 
-      if (socioObj) {
-
-        this.socioService
-
-          .actualizarEstadoSocio(
-
-            socioObj.id,
-
-            'suspendido'
-
-          );
+        this.changeDetector.detectChanges();
 
       }
-
-
-      // =========================
-      // ACTUALIZAR LISTA
-      // =========================
-
-      this.actualizarPrestamos();
-
-
-      // =========================
-      // CERRAR MODAL
-      // =========================
-
-      this.cerrarModalSuspension();
-
-
-      // =========================
-      // CONFIRMACIÓN
-      // =========================
-
-      Swal.fire({
-
-        title:
-          'Préstamo suspendido',
-
-        text:
-          'El préstamo y el socio fueron suspendidos correctamente.',
-
-        icon:
-          'success',
-
-        confirmButtonColor:
-          '#0d9488',
-
-        timer:
-          2000,
-
-        showConfirmButton:
-          false
-
-      });
-
-    });
+    );
 
   }
 
 
-  // =========================
-  // QUITAR SUSPENSIÓN
-  // =========================
+  // ==========================================
+  // SUSPENDER PRÉSTAMO
+  // ==========================================
 
-  quitarSuspension(
-
-    prestamo:
-      Prestamo
-
+  suspenderPrestamo(
+    prestamo: Prestamo
   ): void {
 
-    Swal.fire({
+    this.confirmar(
 
-      title:
-        '¿Quitar suspensión?',
+      '¿Suspender préstamo?',
 
-      text:
-        `¿Querés quitar la suspensión del préstamo de "${prestamo.libro}"?`,
+      `Se suspenderá el préstamo ` +
+      `de "${prestamo.libro}" ` +
+      `a nombre de ${prestamo.socio}.`,
 
-      icon:
-        'question',
+      'Sí, suspender'
 
-      showCancelButton:
-        true,
+    ).then(
+      confirmado => {
+
+        if (!confirmado) {
+
+          return;
+
+        }
+
+
+        this.prestamoService
+          .suspenderPrestamo(
+            prestamo.id
+          );
+
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Préstamo suspendido: ${prestamo.libro} para ${prestamo.socio}`,
+          prestamo.id
+        );
+
+
+        this.socioService
+          .actualizarEstadoSocio(
+            prestamo.socioId,
+            'suspendido'
+          );
+
+
+        this.actualizarPrestamos();
+
+        this.changeDetector.detectChanges();
+
+      }
+    );
+
+  }
+
+
+  // ==========================================
+  // QUITAR SUSPENSIÓN
+  // ==========================================
+
+  quitarSuspension(
+    prestamo: Prestamo
+  ): void {
+
+    this.confirmar(
+
+      '¿Quitar suspensión?',
+
+      `El préstamo de "${prestamo.libro}" ` +
+      `volverá a estar vigente.`,
+
+      'Sí, quitar'
+
+    ).then(
+      confirmado => {
+
+        if (!confirmado) {
+
+          return;
+
+        }
+
+
+        this.prestamoService
+          .quitarSuspension(
+            prestamo.id
+          );
+
+        this.actividadServicio.registrarActividad(
+          'prestamo',
+          `Suspensión retirada: préstamo de ${prestamo.libro} para ${prestamo.socio}`,
+          prestamo.id
+        );
+
+
+        const socioObj =
+          this.socioService
+            .tenerSocios()
+            .find(
+              s =>
+                s.id ===
+                prestamo.socioId
+            );
+
+
+        if (
+          socioObj?.estado ===
+          'suspendido'
+        ) {
+
+          this.socioService
+            .actualizarEstadoSocio(
+              prestamo.socioId,
+              'activo'
+            );
+
+        }
+
+
+        this.actualizarPrestamos();
+
+        this.changeDetector.detectChanges();
+
+      }
+    );
+
+  }
+
+
+  // ==========================================
+  // CONFIRMACIÓN
+  // ==========================================
+
+  private async confirmar(
+
+    titulo: string,
+
+    texto: string,
+
+    textoConfirmar: string
+
+  ): Promise<boolean> {
+
+    const {
+      isConfirmed
+    } = await Swal.fire({
+
+      title: titulo,
+
+      text: texto,
+
+      icon: 'warning',
+
+      showCancelButton: true,
 
       confirmButtonColor:
         '#0d9488',
@@ -1079,135 +917,15 @@ export class Prestamos {
         '#ef4444',
 
       confirmButtonText:
-        'Sí, quitar suspensión',
+        textoConfirmar,
 
       cancelButtonText:
         'Cancelar'
 
-    }).then(result => {
-
-      if (
-        !result.isConfirmed
-      ) {
-
-        return;
-
-      }
-
-
-      this.ngZone.run(() => {
-
-
-        // =========================
-        // BUSCAR PRÉSTAMO
-        // =========================
-
-        const prestamoActual =
-
-          this.prestamoService
-
-            .obtenerPrestamos()
-
-            .find(
-
-              p =>
-
-                p.id ===
-                prestamo.id
-
-            );
-
-
-        // =========================
-        // REACTIVAR PRÉSTAMO
-        // =========================
-
-        if (prestamoActual) {
-
-          prestamoActual.estado =
-            'activo';
-
-          prestamoActual.motivoSuspension =
-            undefined;
-
-        }
-
-
-        // =========================
-        // BUSCAR SOCIO
-        // =========================
-
-        const socioObj =
-
-          this.socioService
-
-            .tenerSocios()
-
-            .find(
-
-              s =>
-
-                s.nombre ===
-                prestamo.socio
-
-            );
-
-
-        // =========================
-        // REACTIVAR SOCIO
-        // =========================
-
-        if (socioObj) {
-
-          this.socioService
-
-            .actualizarEstadoSocio(
-
-              socioObj.id,
-
-              'activo'
-
-            );
-
-        }
-
-
-        // =========================
-        // ACTUALIZAR LISTA
-        // =========================
-
-        this.actualizarPrestamos();
-
-
-        // =========================
-        // ALERTA
-        // =========================
-
-        Swal.fire({
-
-          title:
-            '¡Suspensión quitada!',
-
-          text:
-            'El préstamo y el socio volvieron a estar activos.',
-
-          icon:
-            'success',
-
-          confirmButtonColor:
-            '#0d9488',
-
-          timer:
-            2000,
-
-          showConfirmButton:
-            false
-
-        });
-
-      });
-
     });
+
+
+    return isConfirmed;
 
   }
 
