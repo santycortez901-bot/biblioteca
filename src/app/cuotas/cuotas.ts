@@ -1,10 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common'; // 👈 Asegura que reconozca directivas básicas
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 
 import { Socio } from '../models/models/socio';
 import { CuotasService } from '../services/cuotas-service';
+import { ActividadServicio } from '../services/actividade-service';
 
 @Component({
   selector: 'app-cuotas',
@@ -20,20 +22,28 @@ export class Cuotas implements OnInit {
 
   constructor(
     private cuotaService: CuotasService,
-    private cdr: ChangeDetectorRef // 👈 Inyección para forzar el renderizado del botón
+    private actividadServicio: ActividadServicio,
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.filtroActivo =
+      this.route.snapshot.queryParamMap.get('filtro') || 'todos';
     this.cargarCuotas();
   }
 
   cargarCuotas(): void {
-    // Rompemos la referencia del array para forzar la actualización del HTML
-    this.cuotas = [...this.cuotaService.obtenerCuotas()];  
+    this.cuotas = [...this.cuotaService.obtenerCuotas()];
+    this.cdr.detectChanges();
   }
 
   filtrarPorEstado(estado: string): void {
     this.filtroActivo = estado;
+  }
+
+  puedeCobrarCuota(socio: Socio): boolean {
+    return socio.estado !== 'inactivo' && socio.cuota !== 'pagada';
   }
 
   // ⬇️ REPOSTERÍA DEL GETTER QUE SE HABÍA BORRADO ⬇️
@@ -42,7 +52,11 @@ export class Cuotas implements OnInit {
 
     // Filtro por botones de estado
     if (this.filtroActivo !== 'todos') {
-      resultado = resultado.filter(socio => socio.cuota === this.filtroActivo);
+      resultado = resultado.filter(socio =>
+        this.filtroActivo === 'inactivo'
+          ? socio.estado === 'inactivo'
+          : socio.estado !== 'inactivo' && socio.cuota === this.filtroActivo
+      );
     }
 
     // Filtro por buscador (nombre, DNI o carnet)
@@ -74,18 +88,16 @@ export class Cuotas implements OnInit {
 
         // 1. Modifica el estado en el servicio central de socios
         this.cuotaService.cobrarCuota(id);
+        if (socioCobrar) {
+          this.actividadServicio.registrarActividad(
+            'cuota',
+            `Cuota cobrada: ${socioCobrar.nombre}`,
+            String(socioCobrar.id)
+          );
+        }
 
-        // 2. Modificación reactiva manual local
-        this.cuotas = this.cuotas.map(socio => {
-          if (socio.id === id) {
-            return { ...socio, cuota: 'pagada' };
-          }
-          return socio;
-        });
-
-        // 3. Forzamos la actualización completa
+        // 2. Fuerza la actualización inmediata del array para que Angular re-renderice
         this.cargarCuotas();
-        this.cdr.detectChanges(); // 👈 Remueve el botón al milisegundo
 
         Swal.fire({
           title: '¡Cuota Pagada!',
@@ -101,6 +113,11 @@ export class Cuotas implements OnInit {
 
   notificarSocio(socio: Socio): void {
     this.cuotaService.enviarRecordatorioWhatsApp(socio);
+    this.actividadServicio.registrarActividad(
+      'cuota',
+      `Recordatorio de cuota preparado para WhatsApp: ${socio.nombre}`,
+      String(socio.id)
+    );
   }
 
  darDeBaja(id: number): void {
@@ -115,13 +132,48 @@ export class Cuotas implements OnInit {
     cancelButtonText: 'Cancelar'
   }).then((res) => {
     if (res.isConfirmed) {
+      const socio = this.cuotas.find(s => s.id === id);
+
       // 1. Llama al método del servicio (el servicio se encarga de buscar y de abrir WhatsApp)
       this.cuotaService.darDeBaja(id);
+      if (socio) {
+        this.actividadServicio.registrarActividad(
+          'cuota',
+          `Socio dado de baja desde cuotas: ${socio.nombre}`,
+          String(socio.id)
+        );
+      }
 
       // 2. Forzamos el refresco completo de la tabla local
       this.cargarCuotas();
-      this.cdr.detectChanges();
     }
   });
 }
+
+  darDeAlta(id: number): void {
+    const socio = this.cuotas.find(s => s.id === id);
+
+    Swal.fire({
+      title: '¿Dar de alta al socio?',
+      text: `El socio "${socio?.nombre}" volverá a estar activo.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0d9488',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, dar de alta',
+      cancelButtonText: 'Cancelar'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.cuotaService.darDeAlta(id);
+        if (socio) {
+          this.actividadServicio.registrarActividad(
+            'cuota',
+            `Socio dado de alta desde cuotas: ${socio.nombre}`,
+            String(socio.id)
+          );
+        }
+        this.cargarCuotas();
+      }
+    });
+  }
 }

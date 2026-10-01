@@ -1,5 +1,6 @@
 <div class="prestamos-container">
   <div class="main">
+
     <!-- HEADER -->
     <div class="page-header">
       <h1>Préstamos</h1>
@@ -12,10 +13,17 @@
         <span class="search-icon">⌕</span>
         <input type="text" placeholder="Buscar por socio, libro o ID de inventario..." [(ngModel)]="busqueda">
       </div>
+
       <div class="filters">
-        <button class="filter" [class.active]="filtro === 'todos'" (click)="cambiarFiltro('todos')">Todos</button>
-        <button class="filter" [class.active]="filtro === 'activo'" (click)="cambiarFiltro('activo')">Al día</button>
-        <button class="filter" [class.active]="filtro === 'atrasado'" (click)="cambiarFiltro('atrasado')">Vencidos</button>
+        @for (opcion of opcionesFiltro; track opcion.valor) {
+          <button
+            class="filter"
+            [class.active]="filtro === opcion.valor"
+            (click)="cambiarFiltro(opcion.valor)">
+            {{ opcion.etiqueta }}
+          </button>
+        }
+
         <span class="records">{{ prestamosFiltrados.length }} Registro(s)</span>
       </div>
     </div>
@@ -35,138 +43,172 @@
             <th>ACCIONES</th>
           </tr>
         </thead>
+
         <tbody>
           @for (prestamo of prestamosFiltrados; track prestamo.id) {
-          <tr>
-            <td>
-              <span class="prestamo-id">{{ prestamo.id }}</span>
-            </td>
-            <td>
-              <div class="socio">
-                <span class="socio-nombre">{{ prestamo.socio }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="libro">
-                <span class="libro-nombre">{{ prestamo.libro }}</span>
-                <span class="inventario">{{ prestamo.inventario }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="fecha">{{ prestamo.fechaInicio }}</span>
-            </td>
-            <td>
-              <span class="fecha vencimiento">{{ prestamo.fechaVencimiento }}</span>
-            </td>
-            <td>
-              <span class="estado" 
-                [class.estado-activo]="prestamo.estado === 'activo'"
-                [class.estado-vencido]="prestamo.estado === 'atrasado'"
-                [class.estado-devuelto]="prestamo.estado === 'devuelto'">
-                {{ prestamo.estado }}
-              </span>
-            </td>
-            <td>
-              <span class="renovaciones">{{ prestamo.renovaciones }}/2</span>
-            </td>
-            <td>
-              <div class="acciones">
-                @if (prestamo.renovaciones < 2 && prestamo.estado !== 'devuelto') {
-                <button class="btn-renovar" (click)="renovarPrestamo(prestamo)">
-                  <span>↻</span> Renovar Whatsapp
-                </button>
-                }
-                @if (prestamo.estado !== 'devuelto') {
-                <button class="btn-devolver" (click)="devolverPrestamo(prestamo)">
-                  <span>✓</span> Devolver
-                </button>
-                }
-              </div>
-            </td>
-          </tr>
-          }
+            <tr>
+              <td><span class="prestamo-id">{{ prestamo.id }}</span></td>
 
-          @if (prestamosFiltrados.length === 0) {
-          <tr>
-            <td colspan="8" class="sin-resultados">No se encontraron préstamos.</td>
-          </tr>
+              <td>
+                <div class="socio">
+                  <span class="socio-nombre">{{ prestamo.socio }}</span>
+                </div>
+              </td>
+
+              <td>
+                <div class="libro">
+                  <span class="libro-nombre">{{ prestamo.libro }}</span>
+                  <span class="inventario">{{ prestamo.inventario }}</span>
+                </div>
+              </td>
+
+              <td><span class="fecha">{{ prestamo.fechaInicio }}</span></td>
+
+              <td><span class="fecha vencimiento">{{ prestamo.fechaVencimiento }}</span></td>
+
+              <td>
+                <span
+                  class="estado"
+                  [class.estado-activo]="prestamo.estado === 'activo'"
+                  [class.estado-vencido]="prestamo.estado === 'atrasado'"
+                  [class.estado-devuelto]="prestamo.estado === 'devuelto'"
+                  [class.estado-suspendido]="prestamo.estado === 'suspendido'">
+                  {{ prestamo.estado }}
+                </span>
+              </td>
+
+              <td><span class="renovaciones">{{ prestamo.renovaciones }}/2</span></td>
+
+              <td>
+                <div class="acciones">
+                  @if (prestamo.estado === 'suspendido') {
+                    <button class="btn-quitar-suspension" (click)="quitarSuspension(prestamo)">
+                      Quitar suspensión
+                    </button>
+                  } @else if (prestamo.estado !== 'devuelto') {
+                    @if (prestamo.renovaciones < 2) {
+                      <button class="btn-renovar" (click)="renovarPrestamo(prestamo)">
+                        <span>↻</span> Renovar Whatsapp
+                      </button>
+                    }
+
+                    <button class="btn-suspender" (click)="suspenderPrestamo(prestamo)">
+                      <span>⚠</span> Suspender
+                    </button>
+
+                    <button class="btn-devolver" (click)="devolverPrestamo(prestamo)">
+                      <span>✓</span> Devolver
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="sin-resultados">No se encontraron préstamos.</td>
+            </tr>
           }
         </tbody>
       </table>
     </div>
   </div>
 
+
   <!-- MODAL: AGREGAR PRÉSTAMO -->
-  <div class="modal-overlay" *ngIf="isModalOpen">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>Registrar Nuevo Préstamo</h2>
-        <button (click)="closeModal()" class="close-btn">&times;</button>
+  @if (isModalOpen) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+
+        <div class="modal-header">
+          <h2>Registrar Nuevo Préstamo</h2>
+          <button type="button" (click)="closeModal()" class="close-btn">&times;</button>
+        </div>
+
+        <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && crearPrestamo()">
+
+          <!-- Socio -->
+          <div class="form-group">
+            <label>Socio</label>
+            <select
+              [(ngModel)]="socioSeleccionadoId"
+              name="socioSeleccionadoId"
+              #socioModel="ngModel"
+              required>
+              <option [ngValue]="null" disabled>Seleccioná un socio</option>
+              @for (socio of sociosDisponibles; track socio.id) {
+                <option [ngValue]="socio.id">{{ socio.nombre }} (DNI: {{ socio.dni }})</option>
+              }
+            </select>
+
+            @if (socioModel.invalid && socioModel.touched) {
+              <div class="alert-error">
+                <small>Debes seleccionar un socio.</small>
+              </div>
+            }
+          </div>
+
+          <!-- Libro -->
+          <div class="form-group">
+            <label>Título del Libro</label>
+            <select
+              [ngModel]="libroSeleccionadoId"
+              (ngModelChange)="libroSeleccionadoId = $event; onLibroChange()"
+              name="libroSeleccionadoId"
+              #libroModel="ngModel"
+              required>
+              <option value="" disabled>Seleccioná un libro</option>
+              @for (libro of librosDisponibles; track libro.id) {
+                <option [value]="libro.id">{{ libro.titulo }}</option>
+              }
+            </select>
+
+            @if (libroModel.invalid && libroModel.touched) {
+              <div class="alert-error">
+                <small>Debes seleccionar un libro.</small>
+              </div>
+            }
+          </div>
+
+          <!-- Código de inventario -->
+          <div class="form-group">
+            <label>Código de Inventario</label>
+            <select
+              [(ngModel)]="inventario"
+              name="inventario"
+              #inventarioModel="ngModel"
+              required>
+              <option value="" disabled>Seleccioná un código de inventario</option>
+              @for (copia of copiasDisponiblesParaPrestamo; track copia.id) {
+                <option [value]="copia.id">{{ copia.id }}</option>
+              }
+            </select>
+
+            @if (inventarioModel.invalid && inventarioModel.touched) {
+              <div class="alert-error">
+                <small>Debes seleccionar un código de inventario.</small>
+              </div>
+            }
+          </div>
+
+          <!-- Fechas -->
+          <div class="form-group">
+            <label>Fecha de Inicio</label>
+            <input type="date" [(ngModel)]="fechaInicio" name="fechaInicio" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Vencimiento</label>
+            <input type="date" [(ngModel)]="fechaVencimiento" name="fechaVencimiento" readonly />
+          </div>
+
+          <!-- ACCIONES MODAL -->
+          <div class="modal-actions">
+            <button type="submit" [disabled]="!prestamoForm.valid" class="submit-btn">Guardar</button>
+            <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
+          </div>
+
+        </form>
       </div>
-
-      <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && crearPrestamo()">
-
-        <!-- Selección de Socio -->
-        <div class="form-group">
-          <label>Socio</label>
-          <select [(ngModel)]="socioSeleccionadoId" name="socioSeleccionadoId" #socioModel="ngModel" required>
-            <option [ngValue]="null" disabled selected>Seleccioná un socio</option>
-            <option *ngFor="let socio of sociosDisponibles" [value]="socio.id">
-              {{ socio.nombre }} (DNI: {{ socio.dni }})
-            </option>
-          </select>
-          <div *ngIf="socioModel.invalid && socioModel.touched" class="alert-error">
-            <small>Debes seleccionar un socio.</small>
-          </div>
-        </div>
-
-        <!-- Selección de Libro -->
-        <div class="form-group">
-          <label>Título del Libro</label>
-          <select [(ngModel)]="libroSeleccionadoId" name="libroSeleccionadoId" #libroModel="ngModel" (change)="onLibroChange()" required>
-            <option value="" disabled selected>Seleccioná un libro disponible</option>
-            <option *ngFor="let libro of librosDisponibles" [value]="libro.id">
-              {{ libro.titulo }} - {{ libro.autor }} (Disponibles: {{ libro.copias }})
-            </option>
-          </select>
-          <div *ngIf="libroModel.invalid && libroModel.touched" class="alert-error">
-            <small>Debes seleccionar un libro.</small>
-          </div>
-        </div>
-
-        <!-- Selección de Código de Inventario -->
-        <div class="form-group">
-          <label>Código de Inventario</label>
-          <select [(ngModel)]="inventario" name="inventario" #inventarioModel="ngModel" required>
-            <option value="" disabled selected>Seleccioná una copia física</option>
-            <option *ngFor="let copia of copiasDisponiblesParaPrestamo" [value]="copia.id">
-              Copia ID: {{ copia.id }}
-            </option>
-          </select>
-          <div *ngIf="inventarioModel.invalid && inventarioModel.touched" class="alert-error">
-            <small>El código de inventario es obligatorio.</small>
-          </div>
-        </div>
-
-        <!-- Fecha de Inicio -->
-        <div class="form-group">
-          <label>Fecha de Inicio</label>
-          <input type="date" [(ngModel)]="fechaInicio" name="fechaInicio" readonly />
-        </div>
-
-        <!-- Fecha de Vencimiento -->
-        <div class="form-group">
-          <label>Fecha de Vencimiento</label>
-          <input type="date" [(ngModel)]="fechaVencimiento" name="fechaVencimiento" readonly />
-        </div>
-
-        <!-- Acciones -->
-        <div class="modal-actions">
-          <button type="submit" [disabled]="!prestamoForm.valid" class="submit-btn">Guardar</button>
-          <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
-        </div>
-
-      </form>
     </div>
-  </div>
+  }
 </div>

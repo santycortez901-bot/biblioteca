@@ -1,4 +1,4 @@
-export type TipoActividad = 'login' | 'prestamo' | 'cuota' | 'socio' | 'libro' | 'eliminacion' | 'edicion';
+export type TipoActividad = 'login' | 'prestamo' | 'cuota' | 'socio' | 'libro';
 export interface Actividad {
     tipo: TipoActividad;
   descripcion: string;
