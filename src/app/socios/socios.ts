@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import {
   CommonModule
 } from '@angular/common';
@@ -1095,4 +1093,3 @@ export class Socios
   }
 
 }
->>>>>>> 2ff71976a76699bacb594042e1392b34e7f7761a
