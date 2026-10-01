@@ -47,7 +47,7 @@ export class SocioServicio {
       {
         nombre: 'Valentina Castro', edad: 29, dni: '31234567',
         telefono: '+5491167890123', email: 'valentina.castro@gmail.com',
-        estado: 'activo', cuota: 'vencida', prestamos: 'Libre'
+        estado: 'activo', cuota: 'pendiente', prestamos: 'Libre'
       },
       {
         nombre: 'Julián Morales', edad: 37, dni: '28987654',

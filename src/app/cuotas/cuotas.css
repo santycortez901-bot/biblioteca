@@ -102,9 +102,65 @@
   transition: all 0.2s ease;
 }
 
+.btn-pago {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-debe {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-baja {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+
 .btn-filter.active {
   background-color: #23b2a0;
   color: #ffffff;
+}
+
+.btn-pago:hover,
+.btn-pago.active {
+  background-color: #dcfce7;
+  color: #087443;
+}
+
+.btn-debe:hover,
+.btn-debe.active {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.btn-baja:hover,
+.btn-baja.active {
+  background-color: #fee2e2;
+  color: #b42323;
 }
 
 .count-label {
@@ -141,20 +197,9 @@
   vertical-align: middle;
 }
 
-/* Estados de Fila */
-.row-warning {
-  background-color: #fef3c7;
-  box-shadow: inset 3px 0 0 #f59e0b;
-}
-
-.row-danger {
-  background-color: #fee2e2;
-  box-shadow: inset 3px 0 0 #dc2626;
-}
-
 /* Info del Socio */
 .socio-info {
-  width: 40%;
+  width: 34%;
 }
 
 .socio-info .nombre {
@@ -169,10 +214,39 @@
   margin: 2px 0 6px 0;
 }
 
-/* Badges de Estado del Socio */
+/* Estado de la cuota */
+.estado-col {
+  width: 18%;
+}
+
+.estado-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.estado-badge.al-dia {
+  color: #087443;
+  background-color: #dcfce7;
+}
+
+.estado-badge.pendiente,
+.estado-badge.vencida {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+
+.estado-badge.inactivo {
+  color: #b42323;
+  background-color: #fee2e2;
+}
+
 /* Deuda */
 .deuda-col {
-  width: 30%;
+  width: 18%;
 }
 
 .deuda-monto {
@@ -210,8 +284,8 @@
 }
 
 .btn-cobrar {
-  background-color: #0d9488;
-  color: white;
+  background-color: #dcfce7;
+  color: #087443;
   border: 0;
   padding: 8px 16px;
   border-radius: 8px;
@@ -229,7 +303,53 @@
 }
 
 .btn-cobrar:hover {
-  background-color: #ea580c;
+  background-color: #dcfce7;
+}
+
+.btn-alta {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 0.2s ease;
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: none;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.btn-alta:hover {
+  background-color: #e0f2fe;
+}
+
+.btn-bajar {
+  background-color: #fee2e2;
+  color: #b42323;
+  border: 0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 0.2s ease;
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: none;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.btn-bajar:hover {
+  background-color: #fee2e2;
 }
 
 .btn-wsp {
