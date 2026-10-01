@@ -3,6 +3,7 @@ import {Component,OnInit,NgZone,ChangeDetectorRef} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import Swal, {type SweetAlertIcon} from 'sweetalert2';
+import {TelefonoInternacional} from './telefono-internacional';
 import {Socio,EstadoSocio,EstadoCuota} from '../models/models/socio';
 import {SocioServicio} from '../services/socio';
 import {ActividadServicio} from '../services/actividade-service';
@@ -51,10 +52,10 @@ const PATRONES_SOCIO = {
     /^[0-9]{7,}$/,
 
   telefono:
-    /^\+[0-9]{12}$/,
+    /^\+[1-9]\d{7,14}$/,
 
   email:
-    /^[a-zA-Z0-9._%+-]+@$/,
+    /@/,
 } as const;
 
 
@@ -71,7 +72,7 @@ const crearFormVacio =
 
 
 @Component({selector: 'app-socios',standalone: true,
-  imports: [CommonModule,FormsModule],
+  imports: [CommonModule,FormsModule,TelefonoInternacional],
   templateUrl:'./socios.html',
   styleUrl:'./socios.css',
 })
@@ -281,7 +282,6 @@ export class Socios
 
     this.socioServicio.agregarSocio(nuevoSocio
       );
-    this.actualizarVistaTrasGuardado();
 
     this.registrarActividad(
       `Nuevo socio registrado: ${datos.nombre}`,
@@ -293,6 +293,7 @@ export class Socios
       `El socio "${datos.nombre}" ` +
       `se guardó exitosamente.`
     );
+    this.actualizarVistaTrasGuardado();
   }
 
   // =========================
@@ -358,8 +359,6 @@ export class Socios
         actualizado.nombre
       );
 
-    this.actualizarVistaTrasGuardado();
-
     // ==========================================
     // REGISTRAMOS ACTIVIDAD
     // ==========================================
@@ -374,14 +373,15 @@ export class Socios
       `Los datos de "${actualizado.nombre}" ` +
       `se guardaron.`
     );
+    this.actualizarVistaTrasGuardado();
   }
 
   private actualizarVistaTrasGuardado(): void {
-    setTimeout(() => this.ngZone.run(() => {
+    this.ngZone.run(() => {
       this.obtenerSocios();
       this.closeModal();
       this.changeDetector.detectChanges();
-    }));
+    });
   }
 
   // =========================
@@ -421,16 +421,14 @@ export class Socios
     if (!PATRONES_SOCIO.telefono.test(telefono)){
       return this.error(
         'Teléfono inválido',
-        'El teléfono debe iniciar con "+" ' +
-        'seguido de 12 dígitos.'
+        'Ingresá un número internacional válido.'
       );
     }
 
     if (!PATRONES_SOCIO.email.test(email)){
       return this.error(
         'Correo inválido',
-        'El correo debe ser de dominio ' +
-        '@'
+        'El correo debe incluir el carácter @.'
       );
 
     }

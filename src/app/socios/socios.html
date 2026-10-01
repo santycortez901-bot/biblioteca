@@ -76,7 +76,7 @@
 
           <button
             type="button"
-            class="filter-btn"
+            class="filter-btn estado-activo"
             [class.active]="filtroEstado === 'activo'"
             (click)="filtrarPorEstado('activo')">
 
@@ -87,7 +87,7 @@
 
           <button
             type="button"
-            class="filter-btn"
+            class="filter-btn estado-suspendido"
             [class.active]="filtroEstado === 'suspendido'"
             (click)="filtrarPorEstado('suspendido')">
 
@@ -101,7 +101,7 @@
 
           <button
             type="button"
-            class="filter-btn"
+            class="filter-btn estado-inactivo"
             [class.active]="filtroEstado === 'inactivo'"
             (click)="filtrarPorEstado('inactivo')">
 
@@ -127,7 +127,7 @@
 
           <button
             type="button"
-            class="filter-btn"
+            class="filter-btn dark"
             [class.active]="filtroEdad === '+18'"
             (click)="filtrarPorEdad('+18')">
 
@@ -138,7 +138,7 @@
 
           <button
             type="button"
-            class="filter-btn"
+            class="filter-btn dark"
             [class.active]="filtroEdad === '-18'"
             (click)="filtrarPorEdad('-18')">
 
@@ -554,14 +554,11 @@
             Teléfono
           </label>
 
-
-          <input
-            type="tel"
+          <app-telefono-internacional
+            id="telefono-socio"
             [(ngModel)]="form.telefono"
             name="telefono"
             #telefono="ngModel"
-            pattern="^\+[0-9]{12}$"
-            placeholder="Ej: +5491112345678"
             required />
 
 
@@ -584,12 +581,10 @@
 
             <small
               *ngIf="
-                telefono.errors?.['pattern']
+                !telefono.errors?.['required']
               ">
 
-              Formato incorrecto.
-              Debe ser '+' seguido de
-              12 números.
+                Ingresá un número internacional válido para el país seleccionado.
 
             </small>
 
@@ -608,12 +603,12 @@
 
 
           <input
-            type="email"
+            type="text"
             [(ngModel)]="form.email"
             name="email"
             #email="ngModel"
-            pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$"
-            placeholder="usuario@gmail.com o @hotmail.com"
+            pattern=".*@.*"
+            placeholder="usuario@dominio"
             required />
 
 
@@ -639,8 +634,7 @@
                 email.errors?.['pattern']
               ">
 
-              El correo debe finalizar
-              en @gmail.com o @hotmail.com.
+              El correo debe incluir el carácter @.
 
             </small>
 

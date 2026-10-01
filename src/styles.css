@@ -12,3 +12,26 @@ html, body {
 app-nav, app-footer, router-outlet {
   display: block;
 }
+
+.form-group app-telefono-internacional,
+.form-group app-telefono-internacional .iti {
+  display: block;
+  width: 100%;
+}
+
+.form-group app-telefono-internacional input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group app-telefono-internacional input:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
