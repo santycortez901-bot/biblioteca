@@ -40,7 +40,7 @@
     <tbody>
       @if (librosFiltrados.length > 0){
       @for(libro of librosFiltrados; track libro.id){
-      <tr>
+      <tr class="book-row">
         <td class="text-muted">{{ libro.id }}</td>
         <td class="title"><strong>{{ libro.titulo }}</strong></td>
         <td class="author">{{ libro.autor }}</td>

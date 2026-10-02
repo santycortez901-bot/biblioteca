@@ -145,6 +145,14 @@ td {
   vertical-align: middle;
 }
 
+tbody tr.book-row {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr.book-row:hover {
+  background-color: #f8fafc;
+}
+
 tr:last-child td {
   border-bottom: none;
 }

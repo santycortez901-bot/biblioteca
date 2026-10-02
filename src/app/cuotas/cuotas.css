@@ -197,6 +197,14 @@
   vertical-align: middle;
 }
 
+.cuotas-table tbody tr.cuota-row {
+  transition: background-color 0.15s ease;
+}
+
+.cuotas-table tbody tr.cuota-row:hover {
+  background-color: #f8fafc;
+}
+
 /* Info del Socio */
 .socio-info {
   width: 34%;
@@ -294,12 +302,21 @@
   font-weight: 600;
   line-height: 1.2;
   transition: background-color 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   vertical-align: middle;
   box-shadow: none;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
+}
+
+.btn-cobrar svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .btn-cobrar:hover {
@@ -317,7 +334,10 @@
   font-weight: 600;
   line-height: 1.2;
   transition: background-color 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   vertical-align: middle;
   box-shadow: none;
   outline: none;
@@ -340,12 +360,22 @@
   font-weight: 600;
   line-height: 1.2;
   transition: background-color 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   vertical-align: middle;
   box-shadow: none;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
+}
+
+.btn-alta svg,
+.btn-bajar svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .btn-bajar:hover {

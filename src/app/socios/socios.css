@@ -11,6 +11,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-editar svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
 }
 
 .btn-editar:hover {
@@ -167,6 +177,21 @@
   color: #ffffff;
 }
 
+.filter-btn.estado-activo.active {
+  background-color: #d5ffe4;
+  color: #15803d;
+}
+
+.filter-btn.estado-inactivo.active {
+  background-color: #fddbdb;
+  color: #991b1b;
+}
+
+.filter-btn.estado-suspendido.active {
+  background-color: #ffe7c8;
+  color: #c2410c;
+}
+
 .results-count {
   font-size: 13px;
   color: #94a3b8;
@@ -198,6 +223,14 @@ th {
   color: #94a3b8;
   letter-spacing: 0.8px;
   border-bottom: 1px solid #f1f5f9;
+}
+
+tbody tr.socio-row {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr.socio-row:hover {
+  background-color: #f8fafc;
 }
 
 td { 

@@ -124,25 +124,42 @@
           <button type="button" (click)="closeModal()" class="close-btn">&times;</button>
         </div>
 
-        <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && crearPrestamo()">
+        <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && socioSeleccionadoId && libroSeleccionadoId && crearPrestamo()">
 
           <!-- Socio -->
           <div class="form-group">
             <label>Socio</label>
-            <select
-              [(ngModel)]="socioSeleccionadoId"
-              name="socioSeleccionadoId"
-              #socioModel="ngModel"
-              required>
-              <option [ngValue]="null" disabled>Seleccioná un socio</option>
-              @for (socio of sociosDisponibles; track socio.id) {
-                <option [ngValue]="socio.id">{{ socio.nombre }} (DNI: {{ socio.dni }})</option>
-              }
-            </select>
+            <div class="prestamo-search-wrapper">
+              <input
+                type="search"
+                [(ngModel)]="busquedaSocio"
+                (ngModelChange)="actualizarBusquedaSocio()"
+                name="busquedaSocio"
+                #busquedaSocioModel="ngModel"
+                placeholder="Buscar por nombre, DNI o carnet..."
+                autocomplete="off"
+                required>
 
-            @if (socioModel.invalid && socioModel.touched) {
+              @if (!socioSeleccionadoId && busquedaSocio.trim()) {
+                <div class="prestamo-search-results">
+                  @for (socio of sociosFiltradosPorBusqueda; track socio.id) {
+                    <button
+                      type="button"
+                      class="prestamo-search-result"
+                      (click)="seleccionarSocio(socio)">
+                      <span>{{ socio.nombre }}</span>
+                      <small>{{ socio.numCarnet }} · DNI: {{ socio.dni }}</small>
+                    </button>
+                  } @empty {
+                    <p class="prestamo-search-empty">No se encontraron socios disponibles.</p>
+                  }
+                </div>
+              }
+            </div>
+
+            @if ((busquedaSocioModel.invalid && busquedaSocioModel.touched) || (prestamoForm.submitted && !socioSeleccionadoId)) {
               <div class="alert-error">
-                <small>Debes seleccionar un socio.</small>
+                <small>Buscá y seleccioná un socio de la lista.</small>
               </div>
             }
           </div>
@@ -150,21 +167,37 @@
           <!-- Libro -->
           <div class="form-group">
             <label>Título del Libro</label>
-            <select
-              [ngModel]="libroSeleccionadoId"
-              (ngModelChange)="libroSeleccionadoId = $event; onLibroChange()"
-              name="libroSeleccionadoId"
-              #libroModel="ngModel"
-              required>
-              <option value="" disabled>Seleccioná un libro</option>
-              @for (libro of librosDisponibles; track libro.id) {
-                <option [value]="libro.id">{{ libro.titulo }}</option>
-              }
-            </select>
+            <div class="prestamo-search-wrapper">
+              <input
+                type="search"
+                [(ngModel)]="busquedaLibro"
+                (ngModelChange)="actualizarBusquedaLibro()"
+                name="busquedaLibro"
+                #busquedaLibroModel="ngModel"
+                placeholder="Buscar por título, autor o código..."
+                autocomplete="off"
+                required>
 
-            @if (libroModel.invalid && libroModel.touched) {
+              @if (!libroSeleccionadoId && busquedaLibro.trim()) {
+                <div class="prestamo-search-results">
+                  @for (libro of librosFiltradosPorBusqueda; track libro.id) {
+                    <button
+                      type="button"
+                      class="prestamo-search-result"
+                      (click)="seleccionarLibro(libro)">
+                      <span>{{ libro.titulo }}</span>
+                      <small>{{ libro.autor }} · {{ libro.id }}</small>
+                    </button>
+                  } @empty {
+                    <p class="prestamo-search-empty">No se encontraron libros disponibles.</p>
+                  }
+                </div>
+              }
+            </div>
+
+            @if ((busquedaLibroModel.invalid && busquedaLibroModel.touched) || (prestamoForm.submitted && !libroSeleccionadoId)) {
               <div class="alert-error">
-                <small>Debes seleccionar un libro.</small>
+                <small>Buscá y seleccioná un libro de la lista.</small>
               </div>
             }
           </div>
@@ -203,7 +236,7 @@
 
           <!-- ACCIONES MODAL -->
           <div class="modal-actions">
-            <button type="submit" [disabled]="!prestamoForm.valid" class="submit-btn">Guardar</button>
+            <button type="submit" [disabled]="!prestamoForm.valid || !socioSeleccionadoId || !libroSeleccionadoId" class="submit-btn">Guardar</button>
             <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>
           </div>
 

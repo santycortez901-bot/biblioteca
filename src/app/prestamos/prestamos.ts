@@ -122,9 +122,13 @@ export class Prestamos
   socioSeleccionadoId:
     number | null = null;
 
+  busquedaSocio = '';
+
 
   libroSeleccionadoId:
     string = '';
+
+  busquedaLibro = '';
 
 
   inventario:
@@ -247,6 +251,51 @@ export class Prestamos
             )
       );
 
+  }
+
+  get sociosFiltradosPorBusqueda(): Socio[] {
+    const termino = this.busquedaSocio.trim().toLowerCase();
+    if (!termino) {
+      return [];
+    }
+
+    return this.sociosDisponibles.filter(socio =>
+      [socio.nombre, socio.dni, socio.numCarnet]
+        .some(valor => String(valor ?? '').toLowerCase().includes(termino))
+    );
+  }
+
+  actualizarBusquedaSocio(): void {
+    this.socioSeleccionadoId = null;
+  }
+
+  seleccionarSocio(socio: Socio): void {
+    this.socioSeleccionadoId = socio.id;
+    this.busquedaSocio = `${socio.nombre} (DNI: ${socio.dni})`;
+  }
+
+  get librosFiltradosPorBusqueda(): Libro[] {
+    const termino = this.busquedaLibro.trim().toLowerCase();
+    if (!termino) {
+      return [];
+    }
+
+    return this.librosDisponibles.filter(libro =>
+      [libro.titulo, libro.autor, libro.id]
+        .some(valor => String(valor ?? '').toLowerCase().includes(termino))
+    );
+  }
+
+  actualizarBusquedaLibro(): void {
+    this.libroSeleccionadoId = '';
+    this.inventario = '';
+    this.onLibroChange();
+  }
+
+  seleccionarLibro(libro: Libro): void {
+    this.libroSeleccionadoId = libro.id;
+    this.busquedaLibro = libro.titulo;
+    this.onLibroChange();
   }
 
 
@@ -411,6 +460,12 @@ export class Prestamos
   openModal(): void {
 
     this.isModalOpen = true;
+    this.socioSeleccionadoId = null;
+    this.busquedaSocio = '';
+    this.libroSeleccionadoId = '';
+    this.busquedaLibro = '';
+    this.inventario = '';
+    this.copiasDisponiblesParaPrestamo = [];
 
 
     this.fechaInicio =
@@ -435,9 +490,13 @@ export class Prestamos
     this.socioSeleccionadoId =
       null;
 
+    this.busquedaSocio = '';
+
 
     this.libroSeleccionadoId =
       '';
+
+    this.busquedaLibro = '';
 
 
     this.inventario =

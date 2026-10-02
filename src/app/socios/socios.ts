@@ -54,7 +54,7 @@ const PATRONES_SOCIO = {
     /^\+[0-9]{12}$/,
 
   email:
-    /^[a-zA-Z0-9._%+-]+@$/,
+    /@/,
 } as const;
 
 
@@ -429,8 +429,7 @@ export class Socios
     if (!PATRONES_SOCIO.email.test(email)){
       return this.error(
         'Correo inválido',
-        'El correo debe ser de dominio ' +
-        '@'
+        'El correo debe incluir el carácter @.'
       );
 
     }
