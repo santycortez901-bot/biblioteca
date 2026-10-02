@@ -237,5 +237,11 @@ export class Actividades implements OnInit {
 
   }
 
+  obtenerEtiquetaTipo(tipo: TipoActividad): string {
+    return tipo === 'eliminacion'
+      ? 'Eliminación'
+      : tipo;
+  }
+
 }
 

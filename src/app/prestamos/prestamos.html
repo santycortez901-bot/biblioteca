@@ -19,6 +19,9 @@
           <button
             class="filter"
             [class.active]="filtro === opcion.valor"
+            [class.filter-activo]="opcion.valor === 'activo'"
+            [class.filter-vencido]="opcion.valor === 'atrasado'"
+            [class.filter-suspendido]="opcion.valor === 'suspendido'"
             (click)="cambiarFiltro(opcion.valor)">
             {{ opcion.etiqueta }}
           </button>
@@ -100,6 +103,18 @@
                       <span>✓</span> Devolver
                     </button>
                   }
+
+                  <button
+                    type="button"
+                    class="btn-eliminar"
+                    title="Eliminar préstamo"
+                    aria-label="Eliminar préstamo"
+                    (click)="eliminarPrestamo(prestamo)">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path>
+                      <path d="M10 11v5M14 11v5"></path>
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>

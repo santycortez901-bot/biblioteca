@@ -1,6 +1,7 @@
 import {
   Component,
   ChangeDetectorRef,
+  NgZone,
   OnInit,
   OnDestroy
 } from '@angular/core';
@@ -165,6 +166,9 @@ export class Prestamos
 
     private actividadServicio:
       ActividadServicio,
+
+    private ngZone:
+      NgZone,
 
     private changeDetector:
       ChangeDetectorRef,
@@ -513,7 +517,7 @@ export class Prestamos
   // CREAR PRÉSTAMO
   // ==========================================
 
-  crearPrestamo(): boolean {
+  async crearPrestamo(): Promise<boolean> {
 
     if (
       !this.socioSeleccionadoId ||
@@ -553,6 +557,16 @@ export class Prestamos
 
       return false;
 
+    }
+
+    const confirmado = await this.confirmar(
+      '¿Estás seguro?',
+      `¿Deseas registrar el préstamo de "${libroObj.titulo}" para ${socioObj.nombre}?`,
+      'Agregar'
+    );
+
+    if (!confirmado) {
+      return false;
     }
 
 
@@ -632,13 +646,20 @@ export class Prestamos
       );
 
 
-      this.actualizarPrestamos();
+      this.ngZone.run(() => {
+        this.actualizarPrestamos();
+        this.closeModal();
+        this.changeDetector.detectChanges();
+      });
 
-      this.changeDetector.detectChanges();
-
-
-      this.closeModal();
-
+      await Swal.fire({
+        title: '¡Préstamo registrado!',
+        text: `El préstamo de "${libroObj.titulo}" para ${socioObj.nombre} se guardó exitosamente.`,
+        icon: 'success',
+        confirmButtonColor: '#0d9488',
+        timer: 2000,
+        showConfirmButton: false,
+      });
 
       return true;
 
@@ -649,6 +670,60 @@ export class Prestamos
 
   }
 
+
+  async eliminarPrestamo(prestamo: Prestamo): Promise<void> {
+    const confirmado = await this.confirmar(
+      '¿Eliminar préstamo?',
+      `Se eliminará el préstamo de "${prestamo.libro}" para ${prestamo.socio} y se registrará la eliminación en Actividad.`,
+      'Eliminar'
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    const eliminado = this.prestamoService.eliminarPrestamo(prestamo.id);
+    if (!eliminado) {
+      return;
+    }
+
+    this.actividadServicio.eliminarActividadRelacionada(
+      'prestamo',
+      eliminado.id
+    );
+    this.actividadServicio.registrarActividad(
+      'eliminacion',
+      `Préstamo eliminado: ${eliminado.libro} para ${eliminado.socio} (copia ${eliminado.inventario})`,
+      eliminado.id
+    );
+
+    const tieneOtroPrestamoActivo = this.prestamoService
+      .obtenerPrestamos()
+      .some(otro =>
+        otro.socioId === eliminado.socioId && otro.estado !== 'devuelto'
+      );
+
+    if (!tieneOtroPrestamoActivo) {
+      this.socioService.actualizarEstadoPrestamo(
+        eliminado.socioId,
+        'Libre'
+      );
+    }
+
+    this.ngZone.run(() => {
+      this.actualizarPrestamos();
+      this.changeDetector.detectChanges();
+    });
+
+    await Swal.fire({
+      title: 'Préstamo eliminado',
+      text: 'El préstamo fue eliminado y quedó registrado en Actividad.',
+      icon: 'success',
+      confirmButtonColor: '#0d9488',
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  }
 
   // ==========================================
   // RENOVAR PRÉSTAMO

@@ -158,6 +158,11 @@ h1 {
   color: #0d9488;
 }
 
+.badge-eliminacion {
+  background-color: #fee2e2;
+  color: #b42323;
+}
+
 .badge-cuota {
   background-color: #ffedd5;
   color: #ea580c;

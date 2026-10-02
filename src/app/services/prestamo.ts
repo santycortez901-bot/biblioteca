@@ -130,6 +130,23 @@ export class PrestamoService {
   }
 
 
+  eliminarPrestamo(id: string): Prestamo | null {
+    const index = this.prestamos.findIndex(
+      prestamo => prestamo.id === id
+    );
+
+    if (index === -1) {
+      return null;
+    }
+
+    const [prestamo] = this.prestamos.splice(index, 1);
+    if (prestamo.estado !== 'devuelto') {
+      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
+    }
+
+    return prestamo;
+  }
+
   // ==========================================
   // RENOVAR PRÉSTAMO
   // ==========================================

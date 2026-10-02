@@ -57,6 +57,18 @@ export class ActividadServicio {
     this.actividades.unshift(actividad);
   }
 
+  eliminarActividadRelacionada(
+    tipo: TipoActividad,
+    idRelacionado: string
+  ): void {
+    for (let index = this.actividades.length - 1; index >= 0; index--) {
+      const actividad = this.actividades[index];
+      if (actividad.tipo === tipo && actividad.idrelacionado === idRelacionado) {
+        this.actividades.splice(index, 1);
+      }
+    }
+  }
+
   registrarActividad(
     tipo: TipoActividad,
     descripcion: string,

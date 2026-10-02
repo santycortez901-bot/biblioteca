@@ -99,7 +99,7 @@
 .biblioteca-info span {
   display: block;
 
-  color: #ff7910;
+  color: #23b2a0;
 
   font-size: 9px;
   font-weight: 600;
@@ -164,7 +164,7 @@
 }
 
 .menu-item.active {
-  background: #2caeb5;
+  background: #2bb5aa;
   color: #ffffff;
 }
 

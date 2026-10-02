@@ -71,6 +71,14 @@
           Préstamos
         </button>
 
+        <button
+          class="filter-btn"
+          [class.active]="esFiltroActivo('eliminacion')"
+          (click)="filtrarPorTipo('eliminacion')"
+        >
+          Eliminaciones
+        </button>
+
 
         <!-- CUOTAS -->
 
@@ -173,7 +181,7 @@
               [ngClass]="'badge-' + actividad.tipo"
             >
 
-              {{ actividad.tipo }}
+              {{ obtenerEtiquetaTipo(actividad.tipo) }}
 
             </span>
 
