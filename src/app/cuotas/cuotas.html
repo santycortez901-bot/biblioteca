@@ -27,19 +27,19 @@
           Todos
         </button>
         <button 
-          class="btn-filter" 
+          class="btn-pago" 
           [class.active]="filtroActivo === 'pagada'" 
           (click)="filtrarPorEstado('pagada')">
           Al día
         </button>
         <button 
-          class="btn-filter" 
+          class="btn-debe" 
           [class.active]="filtroActivo === 'pendiente'" 
           (click)="filtrarPorEstado('pendiente')">
           Pendientes
         </button>
         <button 
-          class="btn-filter" 
+          class="btn-baja" 
           [class.active]="filtroActivo === 'inactivo'" 
           (click)="filtrarPorEstado('inactivo')">
           Inactivos 
@@ -54,6 +54,7 @@
         <thead>
           <tr>
             <th>SOCIO</th>
+            <th>ESTADO</th>
             <th>DEUDA</th>
             <th>ACCIONES</th>
           </tr>
@@ -61,11 +62,22 @@
         <tbody>
           <!-- Iteramos sobre cuotasFiltradas en vez de cuotas -->
           @for (cuota of cuotasFiltradas; track cuota.id) {
-            <tr [class.row-warning]="cuota.cuota === 'pendiente' && cuota.estado !== 'inactivo'" [class.row-danger]="cuota.estado === 'inactivo'">
+            <tr>
               <!-- Columna Socio -->
               <td class="socio-info">
                 <div class="nombre">{{ cuota.nombre }}</div>
                 <div class="meta">{{ cuota.id }} · {{ cuota.dni }}</div>
+              </td>
+
+              <!-- Columna Estado -->
+              <td class="estado-col">
+                @if (cuota.estado === 'inactivo') {
+                  <span class="estado-badge inactivo">Inactivo</span>
+                } @else if (cuota.cuota === 'pagada') {
+                  <span class="estado-badge al-dia">Al día</span>
+                } @else if (cuota.cuota === 'pendiente') {
+                  <span class="estado-badge pendiente">Pendiente</span>
+                }
               </td>
 
               <!-- Columna Deuda -->
@@ -74,11 +86,7 @@
                   {{ cuota.estado === 'inactivo' ? '$0' : cuota.cuota === 'pagada' ? '$0' : '$1.200' }}
                 </span>
                 <span class="deuda-meses">
-                  @if (cuota.estado === 'inactivo') {
-                    <span>Inactivo</span>
-                  } @else if (cuota.cuota === 'pagada') {
-                    <span>Al día</span>
-                  } @else if (cuota.cuota === 'pendiente') {
+                  @if (cuota.estado !== 'inactivo' && cuota.cuota === 'pendiente') {
                     <span>1 mes · P</span>
                   }
                 </span>
@@ -87,13 +95,13 @@
               <!-- Columna Acciones -->
               <td class="acciones-col">
                 @if (puedeCobrarCuota(cuota)) {
-                  <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar $1.200</button>
+                  <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar</button>
                 }
                 
                 @if (cuota.estado === 'inactivo') {
-                  <button (click)="darDeAlta(cuota.id)" class="btn-cobrar">Dar de Alta</button>
+                  <button (click)="darDeAlta(cuota.id)" class="btn-alta">Dar de Alta</button>
                 } @else {
-                  <button (click)="darDeBaja(cuota.id)" class="btn-cobrar">Dar de Baja</button>
+                  <button (click)="darDeBaja(cuota.id)" class="btn-bajar">Dar de Baja</button>
                 }
                 
                 <!-- botón para enviar el mensaje personalizado mediante el servicio -->
@@ -108,7 +116,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="3" style="text-align: center; padding: 20px;">No se encontraron cuotas para este filtro.</td>
+              <td colspan="4" style="text-align: center; padding: 20px;">No se encontraron cuotas para este filtro.</td>
             </tr>
           }
         </tbody>
