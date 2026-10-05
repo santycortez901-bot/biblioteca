@@ -70,6 +70,89 @@
   align-items: center;
   justify-content: center;
   font-size: 25px;
+  position: relative;
+}
+
+.icono-socios svg,
+.accion-icono svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.icono-stickman {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: block;
+  background: transparent;
+  border-radius: 0;
+}
+
+.stickman-head {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #111111;
+  border-radius: 50%;
+  top: 2px;
+  left: 16px;
+}
+
+.stickman-body {
+  position: absolute;
+  width: 16px;
+  height: 20px;
+  background: #111111;
+  top: 18px;
+  left: 16px;
+  border-radius: 4px 4px 0 0;
+}
+
+.stickman-arm,
+.stickman-leg {
+  position: absolute;
+  background: #111111;
+}
+
+.stickman-arm.left {
+  width: 12px;
+  height: 4px;
+  top: 24px;
+  left: 4px;
+  border-radius: 999px;
+  transform: rotate(18deg);
+}
+
+.stickman-arm.right {
+  width: 12px;
+  height: 4px;
+  top: 24px;
+  left: 32px;
+  border-radius: 999px;
+  transform: rotate(-18deg);
+}
+
+.stickman-leg.left {
+  width: 4px;
+  height: 16px;
+  top: 34px;
+  left: 19px;
+  border-radius: 999px;
+  transform: rotate(8deg);
+}
+
+.stickman-leg.right {
+  width: 4px;
+  height: 16px;
+  top: 34px;
+  left: 25px;
+  border-radius: 999px;
+  transform: rotate(-8deg);
+}
+
+.accion-icono {
+  position: relative;
 }
 
 .estadistica strong {
@@ -458,6 +541,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
+  text-transform: capitalize;
 }
 
 

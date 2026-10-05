@@ -271,7 +271,7 @@ tr:last-child td {
   border-radius: 30px;
   font-size: 12px;
   font-weight: 700;
-  text-transform: lowercase;
+  text-transform: capitalize;
 }
 
 /* Activo -> Verde */

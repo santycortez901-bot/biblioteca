@@ -124,7 +124,7 @@
 .menu-title {
   margin: 0 11px 11px;
 
-  font-size: 9px;
+  font-size: 11px;
 
   color: #718b97;
 
@@ -166,6 +166,30 @@
 .menu-item.active {
   background: #2bb5aa;
   color: #ffffff;
+}
+
+.menu-inicio.active {
+  background: #2bb5aa;
+}
+
+.menu-socios.active {
+  background: #1d3b5a;
+}
+
+.menu-prestamos.active {
+  background: #4ec7c3;
+}
+
+.menu-cuotas.active {
+  background: #f49b2a;
+}
+
+.menu-libros.active {
+  background: #8c5a3c;
+}
+
+.menu-actividades.active {
+  background: #5d4b9a;
 }
 
 .menu-item svg {
