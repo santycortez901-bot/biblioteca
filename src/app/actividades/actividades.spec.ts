@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { Actividades } from './actividades';
+import { ActividadServicio } from '../services/actividade-service';
 
 describe('Actividades', () => {
   let component: Actividades;
@@ -9,6 +11,9 @@ describe('Actividades', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Actividades],
+      providers: [
+        { provide: ActividadServicio, useValue: { cargarActividades: () => of([]) } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Actividades);

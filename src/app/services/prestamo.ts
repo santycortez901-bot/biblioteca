@@ -1,313 +1,132 @@
-import {
-  Injectable,
-  inject
-} from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, map, switchMap, tap, throwError } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
+import { EstadoPrestamo, Prestamo } from '../models/models/prestamo';
 
-import {
-  Prestamo
-} from '../models/models/prestamo';
-
-import {
-  LibroService
-} from './libro-service';
-
+interface PrestamoApi {
+  id: string;
+  socio_id: number;
+  libro_id: string;
+  inventario: string;
+  fecha_inicio: string;
+  fecha_vencimiento: string;
+  estado: EstadoPrestamo;
+  renovaciones: number;
+  motivo_suspension: string | null;
+  socio_nombre: string;
+  libro_titulo: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class PrestamoService {
-
-  private libroService =
-    inject(LibroService);
-
-
-  private prestamos: Prestamo[] = [];
-
-
-  // ==========================================
-  // OBTENER PRÉSTAMOS
-  // ==========================================
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${API_BASE_URL}/prestamos`;
+  private readonly prestamosSubject = new BehaviorSubject<Prestamo[]>([]);
+  readonly prestamos$: Observable<Prestamo[]> = this.prestamosSubject.asObservable();
 
   obtenerPrestamos(): Prestamo[] {
-
-    return this.prestamos;
-
+    return [...this.prestamosSubject.getValue()];
   }
 
-
-  // ==========================================
-  // AGREGAR PRÉSTAMO
-  // ==========================================
-
-  agregarPrestamo(
-    nuevoPrestamo: Prestamo & {
-      libroId?: string
-    }
-  ): boolean {
-
-    const tienePrestamoActivo =
-      this.prestamos.some(
-        prestamo =>
-          prestamo.socioId === nuevoPrestamo.socioId &&
-          prestamo.estado !== 'devuelto'
-      );
-
-    if (tienePrestamoActivo) {
-      return false;
-    }
-
-    const libroId =
-      nuevoPrestamo.libroId ||
-
-      this.libroService.libros.find(
-        l =>
-          l.titulo
-            .toLowerCase() ===
-          nuevoPrestamo.libro
-            .toLowerCase()
-      )?.id ||
-
-      '';
-
-
-    // Modifica automáticamente
-    // la copia física a 'Prestada'
-
-    const exito =
-      this.libroService.prestarCopia(
-        libroId,
-        nuevoPrestamo.inventario
-      );
-
-
-    if (exito) {
-
-      this.prestamos.push(
-        nuevoPrestamo
-      );
-
-      return true;
-
-    }
-
-
-    return false;
-
-  }
-
-
-  // ==========================================
-  // DEVOLVER PRÉSTAMO
-  // ==========================================
-
-  devolverPrestamo(
-    id: string
-  ): void {
-
-    const prestamo =
-      this.prestamos.find(
-        p =>
-          p.id === id
-      );
-
-
-    if (prestamo) {
-
-      prestamo.estado =
-        'devuelto';
-
-
-      // Devuelve automáticamente
-      // la copia física a 'Disponible'
-
-      this.libroService
-        .devolverCopiaPorInventario(
-          prestamo.inventario
-        );
-
-    }
-
-  }
-
-
-  eliminarPrestamo(id: string): Prestamo | null {
-    const index = this.prestamos.findIndex(
-      prestamo => prestamo.id === id
+  cargarPrestamos(): Observable<Prestamo[]> {
+    return this.http.get<PrestamoApi[]>(this.apiUrl).pipe(
+      map(prestamos => prestamos.map(prestamo => ({
+        id: String(prestamo.id),
+        socioId: Number(prestamo.socio_id),
+        socio: prestamo.socio_nombre,
+        libro: prestamo.libro_titulo ?? '',
+        libroId: String(prestamo.libro_id ?? ''),
+        inventario: prestamo.inventario,
+        fechaInicio: prestamo.fecha_inicio.slice(0, 10),
+        fechaVencimiento: prestamo.fecha_vencimiento.slice(0, 10),
+        estado: prestamo.estado,
+        renovaciones: Number(prestamo.renovaciones ?? 0),
+        motivoSuspension: prestamo.motivo_suspension ?? undefined
+      }))),
+      tap(prestamos => this.prestamosSubject.next(prestamos))
     );
-
-    if (index === -1) {
-      return null;
-    }
-
-    const [prestamo] = this.prestamos.splice(index, 1);
-    if (prestamo.estado !== 'devuelto') {
-      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
-    }
-
-    return prestamo;
   }
 
-  // ==========================================
-  // RENOVAR PRÉSTAMO
-  // ==========================================
-
-  renovarPrestamo(
-    id: string
-  ): void {
-
-    const prestamo =
-      this.prestamos.find(
-        p =>
-          p.id === id
-      );
-
-
-    if (prestamo) {
-
-      prestamo.renovaciones += 1;
-
-
-      const fechaActual =
-        new Date(
-          prestamo.fechaVencimiento
-        );
-
-
-      fechaActual.setMonth(
-        fechaActual.getMonth() + 1
-      );
-
-
-      prestamo.fechaVencimiento =
-        fechaActual
-          .toISOString()
-          .split('T')[0];
-
-    }
-
-  }
-
-
-  // ==========================================
-  // ACTUALIZAR DATOS DEL SOCIO
-  // ==========================================
-
-  actualizarDatosSocio(
-    socioId: number,
-
-    nombreAnterior: string,
-
-    nuevoNombre: string
-
-  ): void {
-
-    this.prestamos.forEach(
-      prestamo => {
-
-        // Primero intentamos encontrar
-        // el préstamo mediante el ID.
-
-        if (
-          prestamo.socioId ===
-          socioId
-        ) {
-
-          prestamo.socio =
-            nuevoNombre;
-
-          return;
-
-        }
-
-
-        // Compatibilidad con préstamos
-        // creados antes de agregar socioId.
-
-        if (
-          prestamo.socio
-            .trim()
-            .toLowerCase() ===
-
-          nombreAnterior
-            .trim()
-            .toLowerCase()
-        ) {
-
-          prestamo.socioId =
-            socioId;
-
-          prestamo.socio =
-            nuevoNombre;
-
-        }
-
-      }
+  agregarPrestamo(nuevo: Prestamo & { libroId?: string }): Observable<void> {
+    return this.http.post(this.apiUrl, {
+      id: nuevo.id,
+      socio_id: nuevo.socioId,
+      libro_id: nuevo.libroId,
+      inventario: nuevo.inventario,
+      fecha_inicio: nuevo.fechaInicio,
+      fecha_vencimiento: nuevo.fechaVencimiento
+    }).pipe(
+      switchMap(() => this.cargarPrestamos()),
+      map(() => undefined)
     );
-
   }
 
-
-  // ==========================================
-  // SUSPENDER PRÉSTAMO
-  // ==========================================
-
-  suspenderPrestamo(
-    id: string
-  ): void {
-
-    const p =
-      this.prestamos.find(
-        p =>
-          p.id === id
-      );
-
-
-    if (
-      p &&
-      p.estado !== 'devuelto'
-    ) {
-
-      p.estado =
-        'suspendido';
-
+  eliminarPrestamo(id: string): Observable<Prestamo> {
+    const prestamo = this.obtenerPrestamos().find(item => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error('No se encontró el préstamo para eliminar.'));
     }
 
+    return this.http.delete(`${this.apiUrl}/${encodeURIComponent(id)}`).pipe(
+      switchMap(() => this.cargarPrestamos()),
+      map(() => prestamo)
+    );
   }
 
+  devolverPrestamo(id: string): Observable<void> {
+    return this.actualizar(id, { accion: 'devolver' });
+  }
 
-  // ==========================================
-  // QUITAR SUSPENSIÓN
-  // ==========================================
-
-  quitarSuspension(
-    id: string
-  ): void {
-
-    const p =
-      this.prestamos.find(
-        p =>
-          p.id === id
-      );
-
-
-    if (
-      p &&
-      p.estado === 'suspendido'
-    ) {
-
-      const hoy =
-        new Date()
-          .toISOString()
-          .split('T')[0];
-
-
-      p.estado =
-        p.fechaVencimiento < hoy
-          ? 'atrasado'
-          : 'activo';
-
+  renovarPrestamo(id: string): Observable<void> {
+    const prestamo = this.obtenerPrestamos().find(item => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error('No se encontró el préstamo para renovar.'));
     }
 
+    const fecha = new Date(`${prestamo.fechaVencimiento}T00:00:00`);
+    fecha.setMonth(fecha.getMonth() + 1);
+    return this.actualizar(id, {
+      estado: prestamo.estado,
+      fecha_vencimiento: fecha.toISOString().slice(0, 10),
+      renovaciones: prestamo.renovaciones + 1,
+      motivo_suspension: prestamo.motivoSuspension ?? null
+    });
   }
 
+  suspenderPrestamo(id: string): Observable<void> {
+    const prestamo = this.obtenerPrestamos().find(item => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error('No se encontró el préstamo para suspender.'));
+    }
+    return this.actualizar(id, {
+      estado: 'suspendido',
+      fecha_vencimiento: prestamo.fechaVencimiento,
+      renovaciones: prestamo.renovaciones,
+      motivo_suspension: prestamo.motivoSuspension ?? null
+    });
+  }
+
+  quitarSuspension(id: string): Observable<void> {
+    const prestamo = this.obtenerPrestamos().find(item => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error('No se encontró el préstamo.'));
+    }
+    const hoy = new Date().toISOString().slice(0, 10);
+    return this.actualizar(id, {
+      estado: prestamo.fechaVencimiento < hoy ? 'atrasado' : 'activo',
+      fecha_vencimiento: prestamo.fechaVencimiento,
+      renovaciones: prestamo.renovaciones,
+      motivo_suspension: null
+    });
+  }
+
+  private actualizar(id: string, datos: Record<string, string | number | null>): Observable<void> {
+    return this.http.put(`${this.apiUrl}/${encodeURIComponent(id)}`, datos).pipe(
+      switchMap(() => this.cargarPrestamos()),
+      map(() => undefined)
+    );
+  }
 }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
-import { LibroService, Libro, Copia } from '../services/libro-service';
+import { LibroService, Libro } from '../services/libro-service';
 import { ActividadServicio } from '../services/actividade-service';
 
 @Component({
@@ -34,6 +34,9 @@ export class Libros implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.libroService.libros$.subscribe(data => {
       this.libros = data;
+    });
+    this.libroService.cargarLibros().subscribe({
+      error: (error: unknown) => this.mostrarErrorApi(error)
     });
   }
 
@@ -77,87 +80,46 @@ export class Libros implements OnInit, OnDestroy {
       return;
     }
 
-    const tituloNuevo = this.nuevoTitulo.trim().toLowerCase();
-    const autorNuevo = this.nuevoAutor.trim().toLowerCase();
-
-    const libroExistente = this.libros.find(
-      l => l.titulo.trim().toLowerCase() === tituloNuevo && l.autor.trim().toLowerCase() === autorNuevo
+    const titulo = this.nuevoTitulo.trim();
+    const autor = this.nuevoAutor.trim();
+    const existente = this.libros.find(libro =>
+      libro.titulo.trim().toLowerCase() === titulo.toLowerCase() &&
+      libro.autor.trim().toLowerCase() === autor.toLowerCase()
     );
 
-    if (libroExistente) {
-      const cantidadActual = libroExistente.listaCopias.length;
-
-      for (let i = 1; i <= this.nuevasCopias; i++) {
-        const numeroCopia = (cantidadActual + i).toString().padStart(2, '0');
-        libroExistente.listaCopias.push({
-          id: `${libroExistente.id}-${numeroCopia}`,
-          estado: 'Disponible'
+    this.libroService.guardarLibro(titulo, autor, this.nuevasCopias).subscribe({
+      next: () => {
+        this.actividadServicio.registrarActividad(
+          'libro',
+          existente
+            ? `Copias agregadas al libro: ${existente.titulo} (${this.nuevasCopias})`
+            : `Nuevo libro registrado: ${titulo} (${autor}, ${this.nuevasCopias} copias)`,
+          existente?.id
+        );
+        this.closeModal();
+        void Swal.fire({
+          title: existente ? '¡Copias Agregadas!' : '¡Libro Agregado!',
+          text: existente
+            ? `Se agregaron ${this.nuevasCopias} nuevas copias a "${existente.titulo}".`
+            : `El libro "${titulo}" se guardó exitosamente.`,
+          icon: 'success',
+          confirmButtonColor: '#0d9488',
+          timer: 2000,
+          showConfirmButton: false
         });
-      }
-
-      libroExistente.copiasTotales += this.nuevasCopias;
-      this.actualizarEstadoLibro(libroExistente);
-      this.actividadServicio.registrarActividad(
-        'libro',
-        `Copias agregadas al libro: ${libroExistente.titulo} (${this.nuevasCopias})`,
-        libroExistente.id
-      );
-      this.closeModal();
-
-      Swal.fire({
-        title: '¡Copias Agregadas!',
-        text: `Se agregaron ${this.nuevasCopias} nuevas copias a "${libroExistente.titulo}".`,
-        icon: 'success',
-        confirmButtonColor: '#0d9488',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      return;
-    }
-
-    const nuevoId = 'INV' + (this.libros.length + 1).toString().padStart(3, '0');
-    const listaCopias: Copia[] = [];
-
-    for (let i = 1; i <= this.nuevasCopias; i++) {
-      const numeroCopia = i.toString().padStart(2, '0');
-      listaCopias.push({
-        id: `${nuevoId}-${numeroCopia}`,
-        estado: 'Disponible'
-      });
-    }
-
-    const nuevoLibro: Libro = {
-      id: nuevoId,
-      titulo: this.nuevoTitulo.trim(),
-      autor: this.nuevoAutor.trim(),
-      copias: this.nuevasCopias,
-      copiasTotales: this.nuevasCopias,
-      estado: 'disponible',
-      listaCopias
-    };
-
-    this.actualizarEstadoLibro(nuevoLibro);
-    this.libros.push(nuevoLibro);
-    this.actividadServicio.registrarActividad(
-      'libro',
-      `Nuevo libro registrado: ${nuevoLibro.titulo} (${nuevoLibro.autor}, ${nuevoLibro.copiasTotales} copias)`,
-      nuevoLibro.id
-    );
-    this.closeModal();
-
-    Swal.fire({
-      title: '¡Libro Agregado!',
-      text: `El libro "${nuevoLibro.titulo}" se ha guardado exitosamente.`,
-      icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 2000,
-      showConfirmButton: false
+      },
+      error: (error: unknown) => this.mostrarErrorApi(error)
     });
   }
 
-  private actualizarEstadoLibro(libro: Libro): void {
-    libro.copias = libro.listaCopias.filter(c => c.estado === 'Disponible').length;
-    libro.estado = libro.copias === 0 ? 'sin copias' : 'disponible';
+  private mostrarErrorApi(error: unknown): void {
+    const mensaje = error instanceof Error ? error.message : 'No se pudo completar la operación.';
+    void Swal.fire({
+      title: 'Error de conexión con la API',
+      text: mensaje,
+      icon: 'error',
+      confirmButtonColor: '#0d9488'
+    });
   }
 
   irAPrestamo(libro: Libro): void {

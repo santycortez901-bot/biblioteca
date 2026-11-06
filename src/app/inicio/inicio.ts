@@ -5,13 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { OnInit, OnDestroy } from '@angular/core';
+import Swal from 'sweetalert2';
 
-import { Actividad, TipoActividad } from '../models/models/actividad';
+import { Actividad } from '../models/models/actividad';
 import { Socio } from '../models/models/socio';
 import { Prestamo } from '../models/models/prestamo';
 import { ActividadServicio } from '../services/actividade-service';
 import { SocioServicio } from '../services/socio';
 import { PrestamoService } from '../services/prestamo';
+import { AuthService } from '../services/auth-service';
 
 @Component({
   selector: 'app-inicio',
@@ -55,7 +57,8 @@ export class Inicio implements OnInit, OnDestroy {
     private router: Router,
     private actividadServicio: ActividadServicio,
     private socioServicio: SocioServicio,
-    private prestamoService: PrestamoService
+    private prestamoService: PrestamoService,
+    private authService: AuthService
   ) {}
 
 
@@ -74,9 +77,21 @@ export class Inicio implements OnInit, OnDestroy {
     }, 60000);
 
 
-    // Obtener actividades
-    this.obtenerActividades();
-    this.actualizarEstadisticas();
+    this.socioServicio.cargarSocios().subscribe({
+      next: () => this.actualizarEstadisticas(),
+      error: error => this.mostrarErrorApi(error)
+    });
+
+    if (this.authService.estaLogueado()) {
+      this.prestamoService.cargarPrestamos().subscribe({
+        next: () => this.actualizarEstadisticas(),
+        error: error => this.mostrarErrorApi(error)
+      });
+      this.actividadServicio.cargarActividades().subscribe({
+        next: actividades => this.actividadesRecientes = actividades.slice(0, 4),
+        error: error => this.mostrarErrorApi(error)
+      });
+    }
   }
 
 
@@ -217,14 +232,9 @@ export class Inicio implements OnInit, OnDestroy {
   // ==========================================
 
   obtenerActividades(): void {
-
-    const actividades =
-      this.actividadServicio.obtenerActividades();
-
-    // Mostrar solamente las 4 más recientes
-    this.actividadesRecientes =
-      actividades.slice(0, 4);
-
+    this.actividadesRecientes = this.actividadServicio
+      .obtenerActividades()
+      .slice(0, 4);
   }
 
 
@@ -255,6 +265,18 @@ export class Inicio implements OnInit, OnDestroy {
 
     clearInterval(this.intervalo);
 
+  }
+
+  private mostrarErrorApi(error: unknown): void {
+    const mensaje = error instanceof Error
+      ? error.message
+      : 'No se pudieron cargar los datos desde la API.';
+    void Swal.fire({
+      title: 'Error de conexión con la API',
+      text: mensaje,
+      icon: 'error',
+      confirmButtonColor: '#0d9488'
+    });
   }
 
 

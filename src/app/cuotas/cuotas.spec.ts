@@ -1,6 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 import { Cuotas } from './cuotas';
+import { CuotasService } from '../services/cuotas-service';
+import { ActividadServicio } from '../services/actividade-service';
 
 describe('Cuotas', () => {
   let component: Cuotas;
@@ -9,6 +14,19 @@ describe('Cuotas', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Cuotas],
+      providers: [
+        provideRouter([]),
+        {
+          provide: CuotasService,
+          useValue: {
+            cargarCuotas: () => of([]),
+            cobrarCuota: vi.fn(() => of(undefined)),
+            darDeBaja: vi.fn(() => of(undefined)),
+            darDeAlta: vi.fn(() => of(undefined))
+          }
+        },
+        { provide: ActividadServicio, useValue: { registrarActividad: vi.fn() } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Cuotas);
@@ -36,10 +54,12 @@ describe('Cuotas', () => {
       },
     ];
 
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
-    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button'));
-    const cobrarButton = buttons.find((button: HTMLButtonElement) =>
+    const buttons: HTMLButtonElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>
+    );
+    const cobrarButton = buttons.find(button =>
       button.textContent?.includes('Cobrar')
     );
 

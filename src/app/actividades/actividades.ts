@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 import {
   Actividad,
@@ -67,15 +68,23 @@ export class Actividades implements OnInit {
   // ==========================================
 
   ngOnInit(): void {
-
-    // Obtener las actividades guardadas en el servicio
-    this.actividades =
-      this.actividadServicio.obtenerActividades();
-
-    // Mostrar todas al principio
-    this.actividadesFiltradas =
-      [...this.actividades];
-
+    this.actividadServicio.cargarActividades().subscribe({
+      next: actividades => {
+        this.actividades = actividades;
+        this.aplicarFiltros();
+      },
+      error: (error: unknown) => {
+        const mensaje = error instanceof Error
+          ? error.message
+          : 'No se pudieron cargar las actividades.';
+        void Swal.fire({
+          title: 'Error de conexión con la API',
+          text: mensaje,
+          icon: 'error',
+          confirmButtonColor: '#0d9488'
+        });
+      }
+    });
   }
 
 
@@ -244,4 +253,3 @@ export class Actividades implements OnInit {
   }
 
 }
-

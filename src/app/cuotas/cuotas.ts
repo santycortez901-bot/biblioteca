@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common'; // 👈 Asegura que reconozca directivas básicas
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -23,7 +23,6 @@ export class Cuotas implements OnInit {
   constructor(
     private cuotaService: CuotasService,
     private actividadServicio: ActividadServicio,
-    private cdr: ChangeDetectorRef,
     private route: ActivatedRoute
   ) {}
 
@@ -34,8 +33,12 @@ export class Cuotas implements OnInit {
   }
 
   cargarCuotas(): void {
-    this.cuotas = [...this.cuotaService.obtenerCuotas()];
-    this.cdr.detectChanges();
+    this.cuotaService.cargarCuotas().subscribe({
+      next: socios => {
+        this.cuotas = socios;
+      },
+      error: error => this.mostrarErrorApi(error)
+    });
   }
 
   filtrarPorEstado(estado: string): void {
@@ -85,27 +88,26 @@ export class Cuotas implements OnInit {
     }).then((res) => {
       if (res.isConfirmed) {
         const socioCobrar = this.cuotas.find(socio => socio.id === id);
-
-        // 1. Modifica el estado en el servicio central de socios
-        this.cuotaService.cobrarCuota(id);
-        if (socioCobrar) {
-          this.actividadServicio.registrarActividad(
-            'cuota',
-            `Cuota cobrada: ${socioCobrar.nombre}`,
-            String(socioCobrar.id)
-          );
-        }
-
-        // 2. Fuerza la actualización inmediata del array para que Angular re-renderice
-        this.cargarCuotas();
-
-        Swal.fire({
-          title: '¡Cuota Pagada!',
-          text: `La cuota del socio "${socioCobrar?.nombre}" se ha cobrado exitosamente.`,
-          icon: 'success',
-          confirmButtonColor: '#0d9488',
-          timer: 2000,
-          showConfirmButton: false
+        this.cuotaService.cobrarCuota(id).subscribe({
+          next: () => {
+            if (socioCobrar) {
+              this.actividadServicio.registrarActividad(
+                'cuota',
+                `Cuota cobrada: ${socioCobrar.nombre}`,
+                String(socioCobrar.id)
+              );
+            }
+            this.cargarCuotas();
+            void Swal.fire({
+              title: '¡Cuota Pagada!',
+              text: `La cuota del socio "${socioCobrar?.nombre}" se ha cobrado exitosamente.`,
+              icon: 'success',
+              confirmButtonColor: '#0d9488',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          },
+          error: error => this.mostrarErrorApi(error)
         });
       }
     });
@@ -134,18 +136,20 @@ export class Cuotas implements OnInit {
     if (res.isConfirmed) {
       const socio = this.cuotas.find(s => s.id === id);
 
-      // 1. Llama al método del servicio (el servicio se encarga de buscar y de abrir WhatsApp)
-      this.cuotaService.darDeBaja(id);
-      if (socio) {
-        this.actividadServicio.registrarActividad(
-          'cuota',
-          `Socio dado de baja desde cuotas: ${socio.nombre}`,
-          String(socio.id)
-        );
-      }
-
-      // 2. Forzamos el refresco completo de la tabla local
-      this.cargarCuotas();
+      this.cuotaService.darDeBaja(id).subscribe({
+        next: () => {
+          if (socio) {
+            this.cuotaService.notificarCambioEstado(socio, 'inactivo');
+            this.actividadServicio.registrarActividad(
+              'cuota',
+              `Socio dado de baja desde cuotas: ${socio.nombre}`,
+              String(socio.id)
+            );
+          }
+          this.cargarCuotas();
+        },
+        error: error => this.mostrarErrorApi(error)
+      });
     }
   });
 }
@@ -164,16 +168,31 @@ export class Cuotas implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((res) => {
       if (res.isConfirmed) {
-        this.cuotaService.darDeAlta(id);
-        if (socio) {
-          this.actividadServicio.registrarActividad(
-            'cuota',
-            `Socio dado de alta desde cuotas: ${socio.nombre}`,
-            String(socio.id)
-          );
-        }
-        this.cargarCuotas();
+        this.cuotaService.darDeAlta(id).subscribe({
+          next: () => {
+            if (socio) {
+              this.cuotaService.notificarCambioEstado(socio, 'activo');
+              this.actividadServicio.registrarActividad(
+                'cuota',
+                `Socio dado de alta desde cuotas: ${socio.nombre}`,
+                String(socio.id)
+              );
+            }
+            this.cargarCuotas();
+          },
+          error: error => this.mostrarErrorApi(error)
+        });
       }
+    });
+  }
+
+  private mostrarErrorApi(error: unknown): void {
+    const mensaje = error instanceof Error ? error.message : 'No se pudo completar la operación en la API.';
+    void Swal.fire({
+      title: 'Error de conexión con la API',
+      text: mensaje,
+      icon: 'error',
+      confirmButtonColor: '#0d9488'
     });
   }
 }

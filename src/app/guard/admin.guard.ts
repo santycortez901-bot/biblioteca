@@ -13,4 +13,4 @@ export const adminGuard: CanActivateFn = () => {
   return router.createUrlTree([
     auth.estaLogueado() ? '/inicio' : '/inicioSesion'
   ]);
-};
+}

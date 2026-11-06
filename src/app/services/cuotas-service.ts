@@ -1,150 +1,45 @@
 import { Injectable } from '@angular/core';
-
-import {
-  Cuota
-} from '../models/models/cuota';
-
-import {
-  SocioServicio
-} from './socio';
-
-import {
-  Socio
-} from '../models/models/socio';
-
+import { Observable } from 'rxjs';
+import { Socio } from '../models/models/socio';
+import { SocioServicio } from './socio';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class CuotasService {
-
-  // ==========================================
-  // CONSTRUCTOR
-  // ==========================================
-
-  constructor(
-    private socioServicio: SocioServicio
-  ) {}
-
-
-  // ==========================================
-  // OBTENER CUOTAS
-  // ==========================================
+  constructor(private socioServicio: SocioServicio) {}
 
   obtenerCuotas(): Socio[] {
-
-    return this.socioServicio
-      .tenerSocios();
-
+    return this.socioServicio.tenerSocios();
   }
 
-
-  // ==========================================
-  // COBRAR CUOTA
-  // ==========================================
-
-  cobrarCuota(
-    idSocio: number | string
-  ): void {
-
-    this.socioServicio
-      .actualizarEstadoCuota(
-        idSocio,
-        'pagada'
-      );
-
+  cargarCuotas(): Observable<Socio[]> {
+    return this.socioServicio.cargarSocios();
   }
 
-
-  // ==========================================
-  // WHATSAPP
-  // ==========================================
-
-  enviarRecordatorioWhatsApp(
-    socio: Socio
-  ): void {
-
-    const mensaje =
-      `Hola ${socio.nombre}, ` +
-      `te recordamos que tu cuota ` +
-      `se encuentra en estado: ` +
-      `${socio.cuota.toUpperCase()}.`;
-
-
-    const url =
-      `https://wa.me/${socio.telefono}` +
-      `?text=${encodeURIComponent(mensaje)}`;
-
-
-    window.open(
-      url,
-      '_blank'
-    );
-
+  cobrarCuota(idSocio: number | string): Observable<void> {
+    return this.socioServicio.actualizarEstadoCuota(idSocio, 'pagada');
   }
 
-
-  // ==========================================
-  // DAR DE BAJA
-  // ==========================================
-
-  darDeBaja(
-    id: number
-  ): void {
-
-    const socio =
-      this.socioServicio
-        .tenerSocios()
-        .find(
-          s =>
-            s.id === id
-        );
-
-
-    if (socio) {
-
-      socio.estado =
-        'inactivo';
-
-
-      const mensaje =
-        `Hola ${socio.nombre}, ` +
-        `le avisamos que su estado ` +
-        `ha sido cambiado a "inactivo". ` +
-        `Si desea reactivar su membresía, ` +
-        `por favor póngase en contacto ` +
-        `con nosotros.`;
-
-
-      const url =
-        `https://wa.me/${socio.telefono}` +
-        `?text=${encodeURIComponent(mensaje)}`;
-
-
-      window.open(
-        url,
-        '_blank'
-      );
-
-    }
-
+  enviarRecordatorioWhatsApp(socio: Socio): void {
+    const mensaje = `Hola ${socio.nombre}, te recordamos que tu cuota se encuentra en estado: ${socio.cuota.toUpperCase()}.`;
+    const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
   }
 
-
-  // ==========================================
-  // DAR DE ALTA
-  // ==========================================
-
-  darDeAlta(
-    id: number
-  ): void {
-
-    this.socioServicio
-      .actualizarEstadoSocio(
-        id,
-        'activo'
-      );
-
+  notificarCambioEstado(socio: Socio, estado: 'activo' | 'inactivo'): void {
+    const mensaje = estado === 'inactivo'
+      ? `Hola ${socio.nombre}, le avisamos que su estado ha cambiado a "inactivo".`
+      : `Hola ${socio.nombre}, le avisamos que su membresía volvió a estar activa.`;
+    const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
   }
 
+  darDeBaja(id: number): Observable<void> {
+    return this.socioServicio.actualizarEstadoSocio(id, 'inactivo');
+  }
+
+  darDeAlta(id: number): Observable<void> {
+    return this.socioServicio.actualizarEstadoSocio(id, 'activo');
+  }
 }

@@ -1,12 +1,12 @@
 import {CommonModule} from '@angular/common';
-import {Component,OnInit,NgZone,ChangeDetectorRef} from '@angular/core';
+import {Component,OnInit} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import Swal, {type SweetAlertIcon} from 'sweetalert2';
-import {Socio,EstadoSocio,EstadoCuota} from '../models/models/socio';
+import {firstValueFrom} from 'rxjs';
+import {Socio,EstadoSocio} from '../models/models/socio';
 import {SocioServicio} from '../services/socio';
 import {ActividadServicio} from '../services/actividade-service';
-import {PrestamoService} from '../services/prestamo';
 
 // =========================
 // TIPOS Y CONSTANTES
@@ -96,11 +96,8 @@ export class Socios
   // =========================
   constructor(
     private route:ActivatedRoute,
-    private ngZone:NgZone,
-    private changeDetector:ChangeDetectorRef,
     private socioServicio:SocioServicio,
-    private actividadServicio:ActividadServicio,
-    private prestamoService:PrestamoService
+    private actividadServicio:ActividadServicio
   ) {}
   // =========================
   // CICLO DE VIDA
@@ -126,7 +123,10 @@ export class Socios
   // =========================
 
   obtenerSocios(): void {
-    this.socios =this.socioServicio.tenerSocios();
+    this.socioServicio.cargarSocios().subscribe({
+      next: socios => this.socios = socios,
+      error: error => this.mostrarErrorApi(error)
+    });
   }
 
   // =========================
@@ -279,20 +279,21 @@ export class Socios
       cuota:'pagada',
     };
 
-    this.socioServicio.agregarSocio(nuevoSocio
+    try {
+      await firstValueFrom(this.socioServicio.agregarSocio(nuevoSocio));
+      this.socios = this.socioServicio.tenerSocios();
+      this.closeModal();
+      this.registrarActividad(
+        `Nuevo socio registrado: ${datos.nombre}`,
+        datos.dni
       );
-    this.actualizarVistaTrasGuardado();
-
-    this.registrarActividad(
-      `Nuevo socio registrado: ${datos.nombre}`,
-      datos.dni
-    );
-
-    await this.mostrarExito(
-      '¡Socio registrado!',
-      `El socio "${datos.nombre}" ` +
-      `se guardó exitosamente.`
-    );
+      await this.mostrarExito(
+        '¡Socio registrado!',
+        `El socio "${datos.nombre}" se guardó exitosamente.`
+      );
+    } catch (error: unknown) {
+      await this.mostrarErrorApi(error);
+    }
   }
 
   // =========================
@@ -328,9 +329,6 @@ export class Socios
     // GUARDAMOS EL NOMBRE ANTERIOR
     // ==========================================
 
-    const nombreAnterior =
-      original.nombre;
-
     // ==========================================
     // CREAMOS EL SOCIO ACTUALIZADO
     // ==========================================
@@ -344,44 +342,21 @@ export class Socios
     // ACTUALIZAMOS SOCIO
     // ==========================================
 
-    this.socioServicio.actualizarSocio(actualizado
-      );
-
-    // ==========================================
-    // ACTUALIZAMOS PRÉSTAMOS
-    // ==========================================
-
-    this.prestamoService
-      .actualizarDatosSocio(
-        actualizado.id,
-        nombreAnterior,
-        actualizado.nombre
-      );
-
-    this.actualizarVistaTrasGuardado();
-
-    // ==========================================
-    // REGISTRAMOS ACTIVIDAD
-    // ==========================================
-
-    this.registrarActividad(
-      `Socio actualizado: ${actualizado.nombre}`,
-      actualizado.dni
-    );
-
-    await this.mostrarExito(
-      '¡Socio actualizado!',
-      `Los datos de "${actualizado.nombre}" ` +
-      `se guardaron.`
-    );
-  }
-
-  private actualizarVistaTrasGuardado(): void {
-    setTimeout(() => this.ngZone.run(() => {
-      this.obtenerSocios();
+    try {
+      await firstValueFrom(this.socioServicio.actualizarSocio(actualizado));
+      this.socios = this.socioServicio.tenerSocios();
       this.closeModal();
-      this.changeDetector.detectChanges();
-    }));
+      this.registrarActividad(
+        `Socio actualizado: ${actualizado.nombre}`,
+        actualizado.dni
+      );
+      await this.mostrarExito(
+        '¡Socio actualizado!',
+        `Los datos de "${actualizado.nombre}" se guardaron.`
+      );
+    } catch (error: unknown) {
+      await this.mostrarErrorApi(error);
+    }
   }
 
   // =========================
@@ -525,6 +500,18 @@ export class Socios
       confirmButtonColor:COLOR_PRIMARIO,
       timer:2000,
       showConfirmButton:false,
+    }).then(() => undefined);
+  }
+
+  private mostrarErrorApi(error: unknown): Promise<void> {
+    const mensaje = error instanceof Error
+      ? error.message
+      : 'No se pudo completar la operación en la API.';
+    return Swal.fire({
+      title: 'Error de conexión con la API',
+      text: mensaje,
+      icon: 'error',
+      confirmButtonColor: COLOR_PRIMARIO
     }).then(() => undefined);
   }
 }

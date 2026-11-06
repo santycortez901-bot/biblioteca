@@ -21,6 +21,18 @@ var __spreadValues = (a, b) => {
   return a;
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __objRest = (source, exclude) => {
+  var target = {};
+  for (var prop in source)
+    if (__hasOwnProp.call(source, prop) && exclude.indexOf(prop) < 0)
+      target[prop] = source[prop];
+  if (source != null && __getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(source)) {
+      if (exclude.indexOf(prop) < 0 && __propIsEnum.call(source, prop))
+        target[prop] = source[prop];
+    }
+  return target;
+};
 var __commonJS = (cb, mod) => function __require() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -1730,7 +1742,7 @@ var require_sweetalert2_all = __commonJS({
       const showLoading = (buttonToReplace) => {
         let popup = getPopup();
         if (!popup) {
-          new Swal6();
+          new Swal9();
         }
         popup = getPopup();
         if (!popup) {
@@ -3307,9 +3319,9 @@ var require_sweetalert2_all = __commonJS({
       });
       SweetAlert.DismissReason = DismissReason;
       SweetAlert.version = "11.26.25";
-      const Swal6 = SweetAlert;
-      Swal6.default = Swal6;
-      return Swal6;
+      const Swal9 = SweetAlert;
+      Swal9.default = Swal9;
+      return Swal9;
     }));
     if (typeof exports !== "undefined" && exports.Sweetalert2) {
       exports.swal = exports.sweetAlert = exports.Swal = exports.SweetAlert = exports.Sweetalert2;
@@ -4876,6 +4888,28 @@ var EmptyError = createErrorClass((_super) => function EmptyErrorImpl() {
   this.message = "no elements in sequence";
 });
 
+// node_modules/rxjs/dist/esm/internal/firstValueFrom.js
+function firstValueFrom(source, config2) {
+  const hasConfig = typeof config2 === "object";
+  return new Promise((resolve, reject) => {
+    const subscriber = new SafeSubscriber({
+      next: (value) => {
+        resolve(value);
+        subscriber.unsubscribe();
+      },
+      error: reject,
+      complete: () => {
+        if (hasConfig) {
+          resolve(config2.defaultValue);
+        } else {
+          reject(new EmptyError());
+        }
+      }
+    });
+    source.subscribe(subscriber);
+  });
+}
+
 // node_modules/rxjs/dist/esm/internal/operators/map.js
 function map(project, thisArg) {
   return operate((source, subscriber) => {
@@ -5628,6 +5662,12 @@ function concatStringsWithSpace(before, after) {
   if (!before) return after || "";
   if (!after) return before;
   return `${before} ${after}`;
+}
+function truncateMiddle(str, maxLength = 100) {
+  if (!str || maxLength < 1 || str.length <= maxLength) return str;
+  if (maxLength == 1) return str.substring(0, 1) + "...";
+  const halfLimit = Math.round(maxLength / 2);
+  return str.substring(0, halfLimit) + "..." + str.substring(str.length - halfLimit);
 }
 var __forward_ref__ = getClosureSafeProperty({
   __forward_ref__: getClosureSafeProperty
@@ -24969,6 +25009,279 @@ function upgradeLinkedSignalGetter(getter, debugName) {
   upgradedGetter.asReadonly = signalAsReadonlyFn.bind(getter);
   return upgradedGetter;
 }
+var BaseWritableResource = class {
+  value;
+  isLoading;
+  constructor(value, debugName) {
+    this.value = value;
+    this.value.set = this.set.bind(this);
+    this.value.update = this.update.bind(this);
+    this.value.asReadonly = signalAsReadonlyFn;
+    this.isLoading = computed(() => this.status() === "loading" || this.status() === "reloading", ngDevMode ? createDebugNameObject(debugName, "isLoading") : void 0);
+  }
+  isError = computed(() => this.status() === "error");
+  update(updateFn) {
+    this.set(updateFn(untracked2(this.value)));
+  }
+  isValueDefined = computed(() => {
+    if (this.isError()) {
+      return false;
+    }
+    return this.value() !== void 0;
+  });
+  _snapshot;
+  get snapshot() {
+    return this._snapshot ??= computed(() => {
+      const status = this.status();
+      if (status === "error") {
+        return {
+          status: "error",
+          error: this.error()
+        };
+      } else {
+        return {
+          status,
+          value: this.value()
+        };
+      }
+    });
+  }
+  hasValue() {
+    return this.isValueDefined();
+  }
+  asReadonly() {
+    return this;
+  }
+};
+var ResourceImpl = class extends BaseWritableResource {
+  loaderFn;
+  equal;
+  debugName;
+  pendingTasks;
+  state;
+  extRequest;
+  effectRef;
+  pendingController;
+  resolvePendingTask = void 0;
+  destroyed = false;
+  unregisterOnDestroy;
+  status;
+  error;
+  constructor(request, loaderFn, defaultValue, equal, debugName, injector, getInitialStream) {
+    super(computed(() => {
+      const streamValue = this.state().stream?.();
+      if (!streamValue) {
+        return defaultValue;
+      }
+      if (this.state().status === "loading" && this.error()) {
+        return defaultValue;
+      }
+      if (!isResolved(streamValue)) {
+        throw new ResourceValueError(this.error());
+      }
+      return streamValue.value;
+    }, __spreadValues({
+      equal
+    }, ngDevMode ? createDebugNameObject(debugName, "value") : void 0)), debugName);
+    this.loaderFn = loaderFn;
+    this.equal = equal;
+    this.debugName = debugName;
+    this.extRequest = linkedSignal(__spreadValues({
+      source: request,
+      computation: (request2) => ({
+        request: request2,
+        reload: 0
+      })
+    }, ngDevMode ? createDebugNameObject(debugName, "extRequest") : void 0));
+    this.state = linkedSignal(__spreadValues({
+      source: this.extRequest,
+      computation: (extRequest, previous) => {
+        if (!previous) {
+          const initialStream = getInitialStream?.(extRequest.request);
+          getInitialStream = void 0;
+          const status = extRequest.request === void 0 ? "idle" : initialStream ? "resolved" : "loading";
+          return {
+            extRequest,
+            status,
+            previousStatus: "idle",
+            stream: initialStream
+          };
+        } else {
+          const status = extRequest.request === void 0 ? "idle" : "loading";
+          return {
+            extRequest,
+            status,
+            previousStatus: projectStatusOfState(previous.value),
+            stream: previous.value.extRequest.request === extRequest.request ? previous.value.stream : void 0
+          };
+        }
+      }
+    }, ngDevMode ? createDebugNameObject(debugName, "state") : void 0));
+    this.effectRef = effect(this.loadEffect.bind(this), __spreadValues({
+      injector,
+      manualCleanup: true
+    }, ngDevMode ? createDebugNameObject(debugName, "loadEffect") : void 0));
+    this.pendingTasks = injector.get(PendingTasks);
+    this.unregisterOnDestroy = injector.get(DestroyRef).onDestroy(() => this.destroy());
+    this.status = computed(() => projectStatusOfState(this.state()), ngDevMode ? createDebugNameObject(debugName, "status") : void 0);
+    this.error = computed(() => {
+      const stream = this.state().stream?.();
+      return stream && !isResolved(stream) ? stream.error : void 0;
+    }, ngDevMode ? createDebugNameObject(debugName, "error") : void 0);
+  }
+  set(value) {
+    if (this.destroyed) {
+      return;
+    }
+    const error = untracked2(this.error);
+    const state = untracked2(this.state);
+    if (!error) {
+      const current = untracked2(this.value);
+      if (state.status === "local" && (this.equal ? this.equal(current, value) : current === value)) {
+        return;
+      }
+    }
+    this.state.set({
+      extRequest: state.extRequest,
+      status: "local",
+      previousStatus: "local",
+      stream: signal({
+        value
+      }, ngDevMode ? createDebugNameObject(this.debugName, "stream") : void 0)
+    });
+    this.abortInProgressLoad();
+  }
+  reload() {
+    const {
+      status
+    } = untracked2(this.state);
+    if (status === "idle" || status === "loading") {
+      return false;
+    }
+    this.extRequest.update(({
+      request,
+      reload
+    }) => ({
+      request,
+      reload: reload + 1
+    }));
+    return true;
+  }
+  destroy() {
+    this.destroyed = true;
+    this.unregisterOnDestroy();
+    this.effectRef.destroy();
+    this.abortInProgressLoad();
+    this.state.set({
+      extRequest: {
+        request: void 0,
+        reload: 0
+      },
+      status: "idle",
+      previousStatus: "idle",
+      stream: void 0
+    });
+  }
+  async loadEffect() {
+    const extRequest = this.extRequest();
+    const {
+      status: currentStatus,
+      previousStatus
+    } = untracked2(this.state);
+    if (extRequest.request === void 0) {
+      return;
+    } else if (currentStatus !== "loading") {
+      return;
+    }
+    this.abortInProgressLoad();
+    let resolvePendingTask = this.resolvePendingTask = this.pendingTasks.add();
+    const {
+      signal: abortSignal
+    } = this.pendingController = new AbortController();
+    try {
+      const stream = await untracked2(() => {
+        return this.loaderFn({
+          params: extRequest.request,
+          abortSignal,
+          previous: {
+            status: previousStatus
+          }
+        });
+      });
+      if (abortSignal.aborted || untracked2(this.extRequest) !== extRequest) {
+        return;
+      }
+      this.state.set({
+        extRequest,
+        status: "resolved",
+        previousStatus: "resolved",
+        stream
+      });
+    } catch (err) {
+      if (abortSignal.aborted || untracked2(this.extRequest) !== extRequest) {
+        return;
+      }
+      this.state.set({
+        extRequest,
+        status: "resolved",
+        previousStatus: "error",
+        stream: signal({
+          error: encapsulateResourceError(err)
+        }, ngDevMode ? createDebugNameObject(this.debugName, "stream") : void 0)
+      });
+    } finally {
+      resolvePendingTask?.();
+      resolvePendingTask = void 0;
+    }
+  }
+  abortInProgressLoad() {
+    untracked2(() => this.pendingController?.abort());
+    this.pendingController = void 0;
+    this.resolvePendingTask?.();
+    this.resolvePendingTask = void 0;
+  }
+};
+function projectStatusOfState(state) {
+  switch (state.status) {
+    case "loading":
+      return state.extRequest.reload === 0 ? "loading" : "reloading";
+    case "resolved":
+      return isResolved(state.stream()) ? "resolved" : "error";
+    default:
+      return state.status;
+  }
+}
+function isResolved(state) {
+  return state.error === void 0;
+}
+function createDebugNameObject(resourceDebugName, internalSignalDebugName) {
+  return {
+    debugName: `Resource${resourceDebugName ? "#" + resourceDebugName : ""}.${internalSignalDebugName}`
+  };
+}
+function encapsulateResourceError(error) {
+  if (isErrorLike(error)) {
+    return error;
+  }
+  return new ResourceWrappedError(error);
+}
+function isErrorLike(error) {
+  return error instanceof Error || typeof error === "object" && typeof error.name === "string" && typeof error.message === "string";
+}
+var ResourceValueError = class extends Error {
+  constructor(error) {
+    super(ngDevMode ? `Resource is currently in an error state (see Error.cause for details): ${error.message}` : error.message, {
+      cause: error
+    });
+  }
+};
+var ResourceWrappedError = class extends Error {
+  constructor(error) {
+    super(ngDevMode ? `Resource returned an error that's not an Error instance: ${String(error)}. Check this error's .cause for the actual error.` : String(error), {
+      cause: error
+    });
+  }
+};
 
 // node_modules/@angular/core/fesm2022/core.mjs
 /**
@@ -32178,6 +32491,2412 @@ var BrowserModule = class _BrowserModule {
   }], () => [], null);
 })();
 
+// node_modules/@angular/common/fesm2022/_module-chunk.mjs
+/**
+ * @license Angular v21.2.19
+ * (c) 2010-2026 Google LLC. https://angular.dev/
+ * License: MIT
+ */
+var HttpHeaders = class _HttpHeaders {
+  headers;
+  normalizedNames = /* @__PURE__ */ new Map();
+  lazyInit;
+  lazyUpdate = null;
+  constructor(headers) {
+    if (!headers) {
+      this.headers = /* @__PURE__ */ new Map();
+    } else if (typeof headers === "string") {
+      this.lazyInit = () => {
+        this.headers = /* @__PURE__ */ new Map();
+        headers.split("\n").forEach((line) => {
+          const index = line.indexOf(":");
+          if (index > 0) {
+            const name = line.slice(0, index);
+            const value = line.slice(index + 1).trim();
+            this.addHeaderEntry(name, value);
+          }
+        });
+      };
+    } else if (typeof Headers !== "undefined" && headers instanceof Headers) {
+      this.headers = /* @__PURE__ */ new Map();
+      headers.forEach((value, name) => {
+        this.addHeaderEntry(name, value);
+      });
+    } else {
+      this.lazyInit = () => {
+        if (typeof ngDevMode === "undefined" || ngDevMode) {
+          assertValidHeaders(headers);
+        }
+        this.headers = /* @__PURE__ */ new Map();
+        Object.entries(headers).forEach(([name, values]) => {
+          this.setHeaderEntries(name, values);
+        });
+      };
+    }
+  }
+  has(name) {
+    this.init();
+    return this.headers.has(name.toLowerCase());
+  }
+  get(name) {
+    this.init();
+    const values = this.headers.get(name.toLowerCase());
+    return values && values.length > 0 ? values[0] : null;
+  }
+  keys() {
+    this.init();
+    return Array.from(this.normalizedNames.values());
+  }
+  getAll(name) {
+    this.init();
+    return this.headers.get(name.toLowerCase()) || null;
+  }
+  append(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "a"
+    });
+  }
+  set(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "s"
+    });
+  }
+  delete(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "d"
+    });
+  }
+  maybeSetNormalizedName(name, lcName) {
+    if (!this.normalizedNames.has(lcName)) {
+      this.normalizedNames.set(lcName, name);
+    }
+  }
+  init() {
+    if (!!this.lazyInit) {
+      if (this.lazyInit instanceof _HttpHeaders) {
+        this.copyFrom(this.lazyInit);
+      } else {
+        this.lazyInit();
+      }
+      this.lazyInit = null;
+      if (!!this.lazyUpdate) {
+        this.lazyUpdate.forEach((update) => this.applyUpdate(update));
+        this.lazyUpdate = null;
+      }
+    }
+  }
+  copyFrom(other) {
+    other.init();
+    Array.from(other.headers.keys()).forEach((key) => {
+      this.headers.set(key, other.headers.get(key));
+      this.normalizedNames.set(key, other.normalizedNames.get(key));
+    });
+  }
+  clone(update) {
+    const clone = new _HttpHeaders();
+    clone.lazyInit = !!this.lazyInit && this.lazyInit instanceof _HttpHeaders ? this.lazyInit : this;
+    clone.lazyUpdate = (this.lazyUpdate || []).concat([update]);
+    return clone;
+  }
+  applyUpdate(update) {
+    const key = update.name.toLowerCase();
+    switch (update.op) {
+      case "a":
+      case "s":
+        let value = update.value;
+        if (typeof value === "string") {
+          value = [value];
+        }
+        if (value.length === 0) {
+          return;
+        }
+        this.maybeSetNormalizedName(update.name, key);
+        const base = (update.op === "a" ? this.headers.get(key) : void 0) || [];
+        base.push(...value);
+        this.headers.set(key, base);
+        break;
+      case "d":
+        const toDelete = update.value;
+        if (!toDelete) {
+          this.headers.delete(key);
+          this.normalizedNames.delete(key);
+        } else {
+          let existing = this.headers.get(key);
+          if (!existing) {
+            return;
+          }
+          existing = existing.filter((value2) => toDelete.indexOf(value2) === -1);
+          if (existing.length === 0) {
+            this.headers.delete(key);
+            this.normalizedNames.delete(key);
+          } else {
+            this.headers.set(key, existing);
+          }
+        }
+        break;
+    }
+  }
+  addHeaderEntry(name, value) {
+    const key = name.toLowerCase();
+    this.maybeSetNormalizedName(name, key);
+    if (this.headers.has(key)) {
+      this.headers.get(key).push(value);
+    } else {
+      this.headers.set(key, [value]);
+    }
+  }
+  setHeaderEntries(name, values) {
+    const headerValues = (Array.isArray(values) ? values : [values]).map((value) => value.toString());
+    const key = name.toLowerCase();
+    this.headers.set(key, headerValues);
+    this.maybeSetNormalizedName(name, key);
+  }
+  forEach(fn) {
+    this.init();
+    Array.from(this.normalizedNames.keys()).forEach((key) => fn(this.normalizedNames.get(key), this.headers.get(key)));
+  }
+};
+function assertValidHeaders(headers) {
+  for (const [key, value] of Object.entries(headers)) {
+    if (!(typeof value === "string" || typeof value === "number") && !Array.isArray(value)) {
+      throw new Error(`Unexpected value of the \`${key}\` header provided. Expecting either a string, a number or an array, but got: \`${value}\`.`);
+    }
+  }
+}
+var HttpContext = class {
+  map = /* @__PURE__ */ new Map();
+  set(token, value) {
+    this.map.set(token, value);
+    return this;
+  }
+  get(token) {
+    if (!this.map.has(token)) {
+      this.map.set(token, token.defaultValue());
+    }
+    return this.map.get(token);
+  }
+  delete(token) {
+    this.map.delete(token);
+    return this;
+  }
+  has(token) {
+    return this.map.has(token);
+  }
+  keys() {
+    return this.map.keys();
+  }
+};
+var HttpUrlEncodingCodec = class {
+  encodeKey(key) {
+    return standardEncoding(key);
+  }
+  encodeValue(value) {
+    return standardEncoding(value);
+  }
+  decodeKey(key) {
+    return decodeURIComponent(key);
+  }
+  decodeValue(value) {
+    return decodeURIComponent(value);
+  }
+};
+function paramParser(rawParams, codec) {
+  const map2 = /* @__PURE__ */ new Map();
+  if (rawParams.length > 0) {
+    const params = rawParams.replace(/^\?/, "").split("&");
+    params.forEach((param) => {
+      const eqIdx = param.indexOf("=");
+      const [key, val] = eqIdx == -1 ? [codec.decodeKey(param), ""] : [codec.decodeKey(param.slice(0, eqIdx)), codec.decodeValue(param.slice(eqIdx + 1))];
+      const list = map2.get(key) || [];
+      list.push(val);
+      map2.set(key, list);
+    });
+  }
+  return map2;
+}
+var STANDARD_ENCODING_REGEX = /%(\d[a-f0-9])/gi;
+var STANDARD_ENCODING_REPLACEMENTS = {
+  "40": "@",
+  "3A": ":",
+  "24": "$",
+  "2C": ",",
+  "3B": ";",
+  "3D": "=",
+  "3F": "?",
+  "2F": "/"
+};
+function standardEncoding(v) {
+  return encodeURIComponent(v).replace(STANDARD_ENCODING_REGEX, (s, t) => STANDARD_ENCODING_REPLACEMENTS[t] ?? s);
+}
+function valueToString(value) {
+  return `${value}`;
+}
+var HttpParams = class _HttpParams {
+  map;
+  encoder;
+  updates = null;
+  cloneFrom = null;
+  constructor(options = {}) {
+    this.encoder = options.encoder || new HttpUrlEncodingCodec();
+    if (options.fromString) {
+      if (options.fromObject) {
+        throw new RuntimeError(2805, ngDevMode && "Cannot specify both fromString and fromObject.");
+      }
+      this.map = paramParser(options.fromString, this.encoder);
+    } else if (!!options.fromObject) {
+      this.map = /* @__PURE__ */ new Map();
+      Object.keys(options.fromObject).forEach((key) => {
+        const value = options.fromObject[key];
+        const values = Array.isArray(value) ? value.map(valueToString) : [valueToString(value)];
+        this.map.set(key, values);
+      });
+    } else {
+      this.map = null;
+    }
+  }
+  has(param) {
+    this.init();
+    return this.map.has(param);
+  }
+  get(param) {
+    this.init();
+    const res = this.map.get(param);
+    return !!res ? res[0] : null;
+  }
+  getAll(param) {
+    this.init();
+    return this.map.get(param) || null;
+  }
+  keys() {
+    this.init();
+    return Array.from(this.map.keys());
+  }
+  append(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "a"
+    });
+  }
+  appendAll(params) {
+    const updates = [];
+    Object.keys(params).forEach((param) => {
+      const value = params[param];
+      if (Array.isArray(value)) {
+        value.forEach((_value) => {
+          updates.push({
+            param,
+            value: _value,
+            op: "a"
+          });
+        });
+      } else {
+        updates.push({
+          param,
+          value,
+          op: "a"
+        });
+      }
+    });
+    return this.clone(updates);
+  }
+  set(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "s"
+    });
+  }
+  delete(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "d"
+    });
+  }
+  toString() {
+    this.init();
+    return this.keys().map((key) => {
+      const eKey = this.encoder.encodeKey(key);
+      return this.map.get(key).map((value) => eKey + "=" + this.encoder.encodeValue(value)).join("&");
+    }).filter((param) => param !== "").join("&");
+  }
+  clone(update) {
+    const clone = new _HttpParams({
+      encoder: this.encoder
+    });
+    clone.cloneFrom = this.cloneFrom || this;
+    clone.updates = (this.updates || []).concat(update);
+    return clone;
+  }
+  init() {
+    if (this.map === null) {
+      this.map = /* @__PURE__ */ new Map();
+    }
+    if (this.cloneFrom !== null) {
+      this.cloneFrom.init();
+      this.cloneFrom.keys().forEach((key) => this.map.set(key, this.cloneFrom.map.get(key)));
+      this.updates.forEach((update) => {
+        switch (update.op) {
+          case "a":
+          case "s":
+            const base = (update.op === "a" ? this.map.get(update.param) : void 0) || [];
+            base.push(valueToString(update.value));
+            this.map.set(update.param, base);
+            break;
+          case "d":
+            if (update.value !== void 0) {
+              let base2 = this.map.get(update.param) || [];
+              const idx = base2.indexOf(valueToString(update.value));
+              if (idx !== -1) {
+                base2.splice(idx, 1);
+              }
+              if (base2.length > 0) {
+                this.map.set(update.param, base2);
+              } else {
+                this.map.delete(update.param);
+              }
+            } else {
+              this.map.delete(update.param);
+              break;
+            }
+        }
+      });
+      this.cloneFrom = this.updates = null;
+    }
+  }
+};
+function mightHaveBody(method) {
+  switch (method) {
+    case "DELETE":
+    case "GET":
+    case "HEAD":
+    case "OPTIONS":
+    case "JSONP":
+      return false;
+    default:
+      return true;
+  }
+}
+function isArrayBuffer(value) {
+  return typeof ArrayBuffer !== "undefined" && value instanceof ArrayBuffer;
+}
+function isBlob(value) {
+  return typeof Blob !== "undefined" && value instanceof Blob;
+}
+function isFormData(value) {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
+function isUrlSearchParams(value) {
+  return typeof URLSearchParams !== "undefined" && value instanceof URLSearchParams;
+}
+var CONTENT_TYPE_HEADER = "Content-Type";
+var ACCEPT_HEADER = "Accept";
+var TEXT_CONTENT_TYPE = "text/plain";
+var JSON_CONTENT_TYPE = "application/json";
+var ACCEPT_HEADER_VALUE = `${JSON_CONTENT_TYPE}, ${TEXT_CONTENT_TYPE}, */*`;
+var HttpRequest = class _HttpRequest {
+  url;
+  body = null;
+  headers;
+  context;
+  reportProgress = false;
+  withCredentials = false;
+  credentials;
+  keepalive = false;
+  cache;
+  priority;
+  mode;
+  redirect;
+  referrer;
+  integrity;
+  referrerPolicy;
+  responseType = "json";
+  method;
+  params;
+  urlWithParams;
+  transferCache;
+  timeout;
+  constructor(method, url, third, fourth) {
+    this.url = url;
+    this.method = method.toUpperCase();
+    let options;
+    if (mightHaveBody(this.method) || !!fourth) {
+      this.body = third !== void 0 ? third : null;
+      options = fourth;
+    } else {
+      options = third;
+    }
+    if (options) {
+      this.reportProgress = !!options.reportProgress;
+      this.withCredentials = !!options.withCredentials;
+      this.keepalive = !!options.keepalive;
+      if (!!options.responseType) {
+        this.responseType = options.responseType;
+      }
+      if (options.headers) {
+        this.headers = options.headers;
+      }
+      if (options.context) {
+        this.context = options.context;
+      }
+      if (options.params) {
+        this.params = options.params;
+      }
+      if (options.priority) {
+        this.priority = options.priority;
+      }
+      if (options.cache) {
+        this.cache = options.cache;
+      }
+      if (options.credentials) {
+        this.credentials = options.credentials;
+      }
+      if (typeof options.timeout === "number") {
+        if (options.timeout < 1 || !Number.isInteger(options.timeout)) {
+          throw new RuntimeError(2822, ngDevMode ? "`timeout` must be a positive integer value" : "");
+        }
+        this.timeout = options.timeout;
+      }
+      if (options.mode) {
+        this.mode = options.mode;
+      }
+      if (options.redirect) {
+        this.redirect = options.redirect;
+      }
+      if (options.integrity) {
+        this.integrity = options.integrity;
+      }
+      if (options.referrer !== void 0) {
+        this.referrer = options.referrer;
+      }
+      if (options.referrerPolicy) {
+        this.referrerPolicy = options.referrerPolicy;
+      }
+      this.transferCache = options.transferCache;
+    }
+    this.headers ??= new HttpHeaders();
+    this.context ??= new HttpContext();
+    if (!this.params) {
+      this.params = new HttpParams();
+      this.urlWithParams = url;
+    } else {
+      const params = this.params.toString();
+      if (params.length === 0) {
+        this.urlWithParams = url;
+      } else {
+        const qIdx = url.indexOf("?");
+        const sep = qIdx === -1 ? "?" : qIdx < url.length - 1 ? "&" : "";
+        this.urlWithParams = url + sep + params;
+      }
+    }
+  }
+  serializeBody() {
+    if (this.body === null) {
+      return null;
+    }
+    if (typeof this.body === "string" || isArrayBuffer(this.body) || isBlob(this.body) || isFormData(this.body) || isUrlSearchParams(this.body)) {
+      return this.body;
+    }
+    if (this.body instanceof HttpParams) {
+      return this.body.toString();
+    }
+    if (typeof this.body === "object" || typeof this.body === "boolean" || Array.isArray(this.body)) {
+      return JSON.stringify(this.body);
+    }
+    return this.body.toString();
+  }
+  detectContentTypeHeader() {
+    if (this.body === null) {
+      return null;
+    }
+    if (isFormData(this.body)) {
+      return null;
+    }
+    if (isBlob(this.body)) {
+      return this.body.type || null;
+    }
+    if (isArrayBuffer(this.body)) {
+      return null;
+    }
+    if (typeof this.body === "string") {
+      return TEXT_CONTENT_TYPE;
+    }
+    if (this.body instanceof HttpParams) {
+      return "application/x-www-form-urlencoded;charset=UTF-8";
+    }
+    if (typeof this.body === "object" || typeof this.body === "number" || typeof this.body === "boolean") {
+      return JSON_CONTENT_TYPE;
+    }
+    return null;
+  }
+  clone(update = {}) {
+    const method = update.method || this.method;
+    const url = update.url || this.url;
+    const responseType = update.responseType || this.responseType;
+    const keepalive = update.keepalive ?? this.keepalive;
+    const priority = update.priority || this.priority;
+    const cache = update.cache || this.cache;
+    const mode = update.mode || this.mode;
+    const redirect = update.redirect || this.redirect;
+    const credentials = update.credentials || this.credentials;
+    const referrer = update.referrer ?? this.referrer;
+    const integrity = update.integrity || this.integrity;
+    const referrerPolicy = update.referrerPolicy || this.referrerPolicy;
+    const transferCache = update.transferCache ?? this.transferCache;
+    const timeout = update.timeout ?? this.timeout;
+    const body = update.body !== void 0 ? update.body : this.body;
+    const withCredentials = update.withCredentials ?? this.withCredentials;
+    const reportProgress = update.reportProgress ?? this.reportProgress;
+    let headers = update.headers || this.headers;
+    let params = update.params || this.params;
+    const context2 = update.context ?? this.context;
+    if (update.setHeaders !== void 0) {
+      headers = Object.keys(update.setHeaders).reduce((headers2, name) => headers2.set(name, update.setHeaders[name]), headers);
+    }
+    if (update.setParams) {
+      params = Object.keys(update.setParams).reduce((params2, param) => params2.set(param, update.setParams[param]), params);
+    }
+    return new _HttpRequest(method, url, body, {
+      params,
+      headers,
+      context: context2,
+      reportProgress,
+      responseType,
+      withCredentials,
+      transferCache,
+      keepalive,
+      cache,
+      priority,
+      timeout,
+      mode,
+      redirect,
+      credentials,
+      referrer,
+      integrity,
+      referrerPolicy
+    });
+  }
+};
+var HttpEventType;
+(function(HttpEventType2) {
+  HttpEventType2[HttpEventType2["Sent"] = 0] = "Sent";
+  HttpEventType2[HttpEventType2["UploadProgress"] = 1] = "UploadProgress";
+  HttpEventType2[HttpEventType2["ResponseHeader"] = 2] = "ResponseHeader";
+  HttpEventType2[HttpEventType2["DownloadProgress"] = 3] = "DownloadProgress";
+  HttpEventType2[HttpEventType2["Response"] = 4] = "Response";
+  HttpEventType2[HttpEventType2["User"] = 5] = "User";
+})(HttpEventType || (HttpEventType = {}));
+var HttpResponseBase = class {
+  headers;
+  status;
+  statusText;
+  url;
+  ok;
+  type;
+  redirected;
+  responseType;
+  constructor(init, defaultStatus = 200, defaultStatusText = "OK") {
+    this.headers = init.headers || new HttpHeaders();
+    this.status = init.status !== void 0 ? init.status : defaultStatus;
+    this.statusText = init.statusText || defaultStatusText;
+    this.url = init.url || null;
+    this.redirected = init.redirected;
+    this.responseType = init.responseType;
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+};
+var HttpHeaderResponse = class _HttpHeaderResponse extends HttpResponseBase {
+  constructor(init = {}) {
+    super(init);
+  }
+  type = HttpEventType.ResponseHeader;
+  clone(update = {}) {
+    return new _HttpHeaderResponse({
+      headers: update.headers || this.headers,
+      status: update.status !== void 0 ? update.status : this.status,
+      statusText: update.statusText || this.statusText,
+      url: update.url || this.url || void 0
+    });
+  }
+};
+var HttpResponse = class _HttpResponse extends HttpResponseBase {
+  body;
+  constructor(init = {}) {
+    super(init);
+    this.body = init.body !== void 0 ? init.body : null;
+  }
+  type = HttpEventType.Response;
+  clone(update = {}) {
+    return new _HttpResponse({
+      body: update.body !== void 0 ? update.body : this.body,
+      headers: update.headers || this.headers,
+      status: update.status !== void 0 ? update.status : this.status,
+      statusText: update.statusText || this.statusText,
+      url: update.url || this.url || void 0,
+      redirected: update.redirected ?? this.redirected,
+      responseType: update.responseType ?? this.responseType
+    });
+  }
+};
+var HttpErrorResponse = class extends HttpResponseBase {
+  name = "HttpErrorResponse";
+  message;
+  error;
+  ok = false;
+  constructor(init) {
+    super(init, 0, "Unknown Error");
+    if (this.status >= 200 && this.status < 300) {
+      this.message = `Http failure during parsing for ${init.url || "(unknown url)"}`;
+    } else {
+      this.message = `Http failure response for ${init.url || "(unknown url)"}: ${init.status} ${init.statusText}`;
+    }
+    this.error = init.error || null;
+  }
+};
+var HTTP_STATUS_CODE_OK = 200;
+var HTTP_STATUS_CODE_NO_CONTENT = 204;
+var HttpStatusCode;
+(function(HttpStatusCode2) {
+  HttpStatusCode2[HttpStatusCode2["Continue"] = 100] = "Continue";
+  HttpStatusCode2[HttpStatusCode2["SwitchingProtocols"] = 101] = "SwitchingProtocols";
+  HttpStatusCode2[HttpStatusCode2["Processing"] = 102] = "Processing";
+  HttpStatusCode2[HttpStatusCode2["EarlyHints"] = 103] = "EarlyHints";
+  HttpStatusCode2[HttpStatusCode2["Ok"] = 200] = "Ok";
+  HttpStatusCode2[HttpStatusCode2["Created"] = 201] = "Created";
+  HttpStatusCode2[HttpStatusCode2["Accepted"] = 202] = "Accepted";
+  HttpStatusCode2[HttpStatusCode2["NonAuthoritativeInformation"] = 203] = "NonAuthoritativeInformation";
+  HttpStatusCode2[HttpStatusCode2["NoContent"] = 204] = "NoContent";
+  HttpStatusCode2[HttpStatusCode2["ResetContent"] = 205] = "ResetContent";
+  HttpStatusCode2[HttpStatusCode2["PartialContent"] = 206] = "PartialContent";
+  HttpStatusCode2[HttpStatusCode2["MultiStatus"] = 207] = "MultiStatus";
+  HttpStatusCode2[HttpStatusCode2["AlreadyReported"] = 208] = "AlreadyReported";
+  HttpStatusCode2[HttpStatusCode2["ImUsed"] = 226] = "ImUsed";
+  HttpStatusCode2[HttpStatusCode2["MultipleChoices"] = 300] = "MultipleChoices";
+  HttpStatusCode2[HttpStatusCode2["MovedPermanently"] = 301] = "MovedPermanently";
+  HttpStatusCode2[HttpStatusCode2["Found"] = 302] = "Found";
+  HttpStatusCode2[HttpStatusCode2["SeeOther"] = 303] = "SeeOther";
+  HttpStatusCode2[HttpStatusCode2["NotModified"] = 304] = "NotModified";
+  HttpStatusCode2[HttpStatusCode2["UseProxy"] = 305] = "UseProxy";
+  HttpStatusCode2[HttpStatusCode2["Unused"] = 306] = "Unused";
+  HttpStatusCode2[HttpStatusCode2["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+  HttpStatusCode2[HttpStatusCode2["PermanentRedirect"] = 308] = "PermanentRedirect";
+  HttpStatusCode2[HttpStatusCode2["BadRequest"] = 400] = "BadRequest";
+  HttpStatusCode2[HttpStatusCode2["Unauthorized"] = 401] = "Unauthorized";
+  HttpStatusCode2[HttpStatusCode2["PaymentRequired"] = 402] = "PaymentRequired";
+  HttpStatusCode2[HttpStatusCode2["Forbidden"] = 403] = "Forbidden";
+  HttpStatusCode2[HttpStatusCode2["NotFound"] = 404] = "NotFound";
+  HttpStatusCode2[HttpStatusCode2["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+  HttpStatusCode2[HttpStatusCode2["NotAcceptable"] = 406] = "NotAcceptable";
+  HttpStatusCode2[HttpStatusCode2["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+  HttpStatusCode2[HttpStatusCode2["RequestTimeout"] = 408] = "RequestTimeout";
+  HttpStatusCode2[HttpStatusCode2["Conflict"] = 409] = "Conflict";
+  HttpStatusCode2[HttpStatusCode2["Gone"] = 410] = "Gone";
+  HttpStatusCode2[HttpStatusCode2["LengthRequired"] = 411] = "LengthRequired";
+  HttpStatusCode2[HttpStatusCode2["PreconditionFailed"] = 412] = "PreconditionFailed";
+  HttpStatusCode2[HttpStatusCode2["PayloadTooLarge"] = 413] = "PayloadTooLarge";
+  HttpStatusCode2[HttpStatusCode2["UriTooLong"] = 414] = "UriTooLong";
+  HttpStatusCode2[HttpStatusCode2["UnsupportedMediaType"] = 415] = "UnsupportedMediaType";
+  HttpStatusCode2[HttpStatusCode2["RangeNotSatisfiable"] = 416] = "RangeNotSatisfiable";
+  HttpStatusCode2[HttpStatusCode2["ExpectationFailed"] = 417] = "ExpectationFailed";
+  HttpStatusCode2[HttpStatusCode2["ImATeapot"] = 418] = "ImATeapot";
+  HttpStatusCode2[HttpStatusCode2["MisdirectedRequest"] = 421] = "MisdirectedRequest";
+  HttpStatusCode2[HttpStatusCode2["UnprocessableEntity"] = 422] = "UnprocessableEntity";
+  HttpStatusCode2[HttpStatusCode2["Locked"] = 423] = "Locked";
+  HttpStatusCode2[HttpStatusCode2["FailedDependency"] = 424] = "FailedDependency";
+  HttpStatusCode2[HttpStatusCode2["TooEarly"] = 425] = "TooEarly";
+  HttpStatusCode2[HttpStatusCode2["UpgradeRequired"] = 426] = "UpgradeRequired";
+  HttpStatusCode2[HttpStatusCode2["PreconditionRequired"] = 428] = "PreconditionRequired";
+  HttpStatusCode2[HttpStatusCode2["TooManyRequests"] = 429] = "TooManyRequests";
+  HttpStatusCode2[HttpStatusCode2["RequestHeaderFieldsTooLarge"] = 431] = "RequestHeaderFieldsTooLarge";
+  HttpStatusCode2[HttpStatusCode2["UnavailableForLegalReasons"] = 451] = "UnavailableForLegalReasons";
+  HttpStatusCode2[HttpStatusCode2["InternalServerError"] = 500] = "InternalServerError";
+  HttpStatusCode2[HttpStatusCode2["NotImplemented"] = 501] = "NotImplemented";
+  HttpStatusCode2[HttpStatusCode2["BadGateway"] = 502] = "BadGateway";
+  HttpStatusCode2[HttpStatusCode2["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+  HttpStatusCode2[HttpStatusCode2["GatewayTimeout"] = 504] = "GatewayTimeout";
+  HttpStatusCode2[HttpStatusCode2["HttpVersionNotSupported"] = 505] = "HttpVersionNotSupported";
+  HttpStatusCode2[HttpStatusCode2["VariantAlsoNegotiates"] = 506] = "VariantAlsoNegotiates";
+  HttpStatusCode2[HttpStatusCode2["InsufficientStorage"] = 507] = "InsufficientStorage";
+  HttpStatusCode2[HttpStatusCode2["LoopDetected"] = 508] = "LoopDetected";
+  HttpStatusCode2[HttpStatusCode2["NotExtended"] = 510] = "NotExtended";
+  HttpStatusCode2[HttpStatusCode2["NetworkAuthenticationRequired"] = 511] = "NetworkAuthenticationRequired";
+})(HttpStatusCode || (HttpStatusCode = {}));
+var XSSI_PREFIX$1 = /^\)\]\}',?\n/;
+var FETCH_BACKEND = new InjectionToken(typeof ngDevMode === "undefined" || ngDevMode ? "FETCH_BACKEND" : "");
+var FetchBackend = class _FetchBackend {
+  fetchImpl = inject2(FetchFactory, {
+    optional: true
+  })?.fetch ?? ((...args) => globalThis.fetch(...args));
+  ngZone = inject2(NgZone);
+  destroyRef = inject2(DestroyRef);
+  handle(request) {
+    return new Observable((observer) => {
+      const aborter = new AbortController();
+      this.doRequest(request, aborter.signal, observer).then(noop3, (error) => observer.error(new HttpErrorResponse({
+        error
+      })));
+      let timeoutId;
+      if (request.timeout) {
+        timeoutId = this.ngZone.runOutsideAngular(() => setTimeout(() => {
+          if (!aborter.signal.aborted) {
+            aborter.abort(new DOMException("signal timed out", "TimeoutError"));
+          }
+        }, request.timeout));
+      }
+      return () => {
+        if (timeoutId !== void 0) {
+          clearTimeout(timeoutId);
+        }
+        aborter.abort();
+      };
+    });
+  }
+  async doRequest(request, signal2, observer) {
+    const init = this.createRequestInit(request);
+    let response;
+    try {
+      const fetchPromise = this.ngZone.runOutsideAngular(() => this.fetchImpl(request.urlWithParams, __spreadValues({
+        signal: signal2
+      }, init)));
+      silenceSuperfluousUnhandledPromiseRejection(fetchPromise);
+      observer.next({
+        type: HttpEventType.Sent
+      });
+      response = await fetchPromise;
+    } catch (error) {
+      observer.error(new HttpErrorResponse({
+        error,
+        status: error.status ?? 0,
+        statusText: error.statusText,
+        url: request.urlWithParams,
+        headers: error.headers
+      }));
+      return;
+    }
+    const headers = new HttpHeaders(response.headers);
+    const statusText = response.statusText;
+    const url = response.url || request.urlWithParams;
+    let status = response.status;
+    let body = null;
+    if (request.reportProgress) {
+      observer.next(new HttpHeaderResponse({
+        headers,
+        status,
+        statusText,
+        url
+      }));
+    }
+    if (response.body) {
+      const contentLength = response.headers.get("content-length");
+      const chunks = [];
+      const reader = response.body.getReader();
+      let receivedLength = 0;
+      let decoder;
+      let partialText;
+      const reqZone = typeof Zone !== "undefined" && Zone.current;
+      let canceled = false;
+      await this.ngZone.runOutsideAngular(async () => {
+        while (true) {
+          if (this.destroyRef.destroyed) {
+            await reader.cancel();
+            canceled = true;
+            break;
+          }
+          const {
+            done,
+            value
+          } = await reader.read();
+          if (done) {
+            break;
+          }
+          chunks.push(value);
+          receivedLength += value.length;
+          if (request.reportProgress) {
+            partialText = request.responseType === "text" ? (partialText ?? "") + (decoder ??= new TextDecoder()).decode(value, {
+              stream: true
+            }) : void 0;
+            const reportProgress = () => observer.next({
+              type: HttpEventType.DownloadProgress,
+              total: contentLength ? +contentLength : void 0,
+              loaded: receivedLength,
+              partialText
+            });
+            reqZone ? reqZone.run(reportProgress) : reportProgress();
+          }
+        }
+      });
+      if (canceled) {
+        observer.complete();
+        return;
+      }
+      const chunksAll = this.concatChunks(chunks, receivedLength);
+      try {
+        const contentType = response.headers.get(CONTENT_TYPE_HEADER) ?? "";
+        body = this.parseBody(request, chunksAll, contentType, status);
+      } catch (error) {
+        observer.error(new HttpErrorResponse({
+          error,
+          headers: new HttpHeaders(response.headers),
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url || request.urlWithParams
+        }));
+        return;
+      }
+    }
+    if (status === 0) {
+      status = body ? HTTP_STATUS_CODE_OK : 0;
+    }
+    const ok = status >= 200 && status < 300;
+    const redirected = response.redirected;
+    const responseType = response.type;
+    if (ok) {
+      observer.next(new HttpResponse({
+        body,
+        headers,
+        status,
+        statusText,
+        url,
+        redirected,
+        responseType
+      }));
+      observer.complete();
+    } else {
+      observer.error(new HttpErrorResponse({
+        error: body,
+        headers,
+        status,
+        statusText,
+        url,
+        redirected,
+        responseType
+      }));
+    }
+  }
+  parseBody(request, binContent, contentType, status) {
+    switch (request.responseType) {
+      case "json":
+        const text = new TextDecoder().decode(binContent).replace(XSSI_PREFIX$1, "");
+        if (text === "") {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          if (status < 200 || status >= 300) {
+            return text;
+          }
+          throw e;
+        }
+      case "text":
+        return new TextDecoder().decode(binContent);
+      case "blob":
+        return new Blob([binContent], {
+          type: contentType
+        });
+      case "arraybuffer":
+        return binContent.buffer;
+    }
+  }
+  createRequestInit(req) {
+    const headers = {};
+    let credentials;
+    credentials = req.credentials;
+    if (req.withCredentials) {
+      (typeof ngDevMode === "undefined" || ngDevMode) && warningOptionsMessage(req);
+      credentials = "include";
+    }
+    req.headers.forEach((name, values) => headers[name] = values.join(","));
+    if (!req.headers.has(ACCEPT_HEADER)) {
+      headers[ACCEPT_HEADER] = ACCEPT_HEADER_VALUE;
+    }
+    if (!req.headers.has(CONTENT_TYPE_HEADER)) {
+      const detectedType = req.detectContentTypeHeader();
+      if (detectedType !== null) {
+        headers[CONTENT_TYPE_HEADER] = detectedType;
+      }
+    }
+    return {
+      body: req.serializeBody(),
+      method: req.method,
+      headers,
+      credentials,
+      keepalive: req.keepalive,
+      cache: req.cache,
+      priority: req.priority,
+      mode: req.mode,
+      redirect: req.redirect,
+      referrer: req.referrer,
+      integrity: req.integrity,
+      referrerPolicy: req.referrerPolicy
+    };
+  }
+  concatChunks(chunks, totalLength) {
+    const chunksAll = new Uint8Array(totalLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      chunksAll.set(chunk, position);
+      position += chunk.length;
+    }
+    return chunksAll;
+  }
+  static \u0275fac = function FetchBackend_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _FetchBackend)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _FetchBackend,
+    factory: _FetchBackend.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(FetchBackend, [{
+    type: Injectable
+  }], null, null);
+})();
+var FetchFactory = class {
+};
+function noop3() {
+}
+function warningOptionsMessage(req) {
+  if (req.credentials && req.withCredentials) {
+    console.warn(formatRuntimeError(2819, `Angular detected that a \`HttpClient\` request has both \`withCredentials: true\` and \`credentials: '${req.credentials}'\` options. The \`withCredentials\` option is overriding the explicit \`credentials\` setting to 'include'. Consider removing \`withCredentials\` and using \`credentials: '${req.credentials}'\` directly for clarity.`));
+  }
+}
+function silenceSuperfluousUnhandledPromiseRejection(promise) {
+  promise.then(noop3, noop3);
+}
+var XSSI_PREFIX = /^\)\]\}',?\n/;
+function validateXhrCompatibility(req) {
+  const unsupportedOptions = [{
+    property: "keepalive",
+    errorCode: 2813
+  }, {
+    property: "cache",
+    errorCode: 2814
+  }, {
+    property: "priority",
+    errorCode: 2815
+  }, {
+    property: "mode",
+    errorCode: 2816
+  }, {
+    property: "redirect",
+    errorCode: 2817
+  }, {
+    property: "credentials",
+    errorCode: 2818
+  }, {
+    property: "integrity",
+    errorCode: 2820
+  }, {
+    property: "referrer",
+    errorCode: 2821
+  }, {
+    property: "referrerPolicy",
+    errorCode: 2823
+  }];
+  for (const {
+    property,
+    errorCode
+  } of unsupportedOptions) {
+    if (req[property]) {
+      console.warn(formatRuntimeError(errorCode, `Angular detected that a \`HttpClient\` request with the \`${property}\` option was sent using XHR, which does not support it. To use the \`${property}\` option, enable Fetch API support by passing \`withFetch()\` as an argument to \`provideHttpClient()\`.`));
+    }
+  }
+}
+var HttpXhrBackend = class _HttpXhrBackend {
+  xhrFactory;
+  tracingService = inject2(TracingService, {
+    optional: true
+  });
+  constructor(xhrFactory) {
+    this.xhrFactory = xhrFactory;
+  }
+  maybePropagateTrace(fn) {
+    return this.tracingService?.propagate ? this.tracingService.propagate(fn) : fn;
+  }
+  handle(req) {
+    if (req.method === "JSONP") {
+      throw new RuntimeError(-2800, (typeof ngDevMode === "undefined" || ngDevMode) && `Cannot make a JSONP request without JSONP support. To fix the problem, either add the \`withJsonpSupport()\` call (if \`provideHttpClient()\` is used) or import the \`HttpClientJsonpModule\` in the root NgModule.`);
+    }
+    ngDevMode && validateXhrCompatibility(req);
+    const xhrFactory = this.xhrFactory;
+    const source = false ? from(xhrFactory.\u0275loadImpl()) : of(null);
+    return source.pipe(switchMap(() => {
+      return new Observable((observer) => {
+        const xhr = xhrFactory.build();
+        xhr.open(req.method, req.urlWithParams);
+        if (req.withCredentials) {
+          xhr.withCredentials = true;
+        }
+        req.headers.forEach((name, values) => xhr.setRequestHeader(name, values.join(",")));
+        if (!req.headers.has(ACCEPT_HEADER)) {
+          xhr.setRequestHeader(ACCEPT_HEADER, ACCEPT_HEADER_VALUE);
+        }
+        if (!req.headers.has(CONTENT_TYPE_HEADER)) {
+          const detectedType = req.detectContentTypeHeader();
+          if (detectedType !== null) {
+            xhr.setRequestHeader(CONTENT_TYPE_HEADER, detectedType);
+          }
+        }
+        if (req.timeout) {
+          xhr.timeout = req.timeout;
+        }
+        if (req.responseType) {
+          const responseType = req.responseType.toLowerCase();
+          xhr.responseType = responseType !== "json" ? responseType : "text";
+        }
+        const reqBody = req.serializeBody();
+        let headerResponse = null;
+        const partialFromXhr = () => {
+          if (headerResponse !== null) {
+            return headerResponse;
+          }
+          const statusText = xhr.statusText || "OK";
+          const headers = new HttpHeaders(xhr.getAllResponseHeaders());
+          const url = xhr.responseURL || req.url;
+          headerResponse = new HttpHeaderResponse({
+            headers,
+            status: xhr.status,
+            statusText,
+            url
+          });
+          return headerResponse;
+        };
+        const onLoad = this.maybePropagateTrace(() => {
+          let {
+            headers,
+            status,
+            statusText,
+            url
+          } = partialFromXhr();
+          let body = null;
+          if (status !== HTTP_STATUS_CODE_NO_CONTENT) {
+            body = typeof xhr.response === "undefined" ? xhr.responseText : xhr.response;
+          }
+          if (status === 0) {
+            status = !!body ? HTTP_STATUS_CODE_OK : 0;
+          }
+          let ok = status >= 200 && status < 300;
+          if (req.responseType === "json" && typeof body === "string") {
+            const originalBody = body;
+            body = body.replace(XSSI_PREFIX, "");
+            try {
+              body = body !== "" ? JSON.parse(body) : null;
+            } catch (error) {
+              body = originalBody;
+              if (ok) {
+                ok = false;
+                body = {
+                  error,
+                  text: body
+                };
+              }
+            }
+          }
+          if (ok) {
+            observer.next(new HttpResponse({
+              body,
+              headers,
+              status,
+              statusText,
+              url: url || void 0
+            }));
+            observer.complete();
+          } else {
+            observer.error(new HttpErrorResponse({
+              error: body,
+              headers,
+              status,
+              statusText,
+              url: url || void 0
+            }));
+          }
+        });
+        const onError = this.maybePropagateTrace((error) => {
+          const {
+            url
+          } = partialFromXhr();
+          const res = new HttpErrorResponse({
+            error,
+            status: xhr.status || 0,
+            statusText: xhr.statusText || "Unknown Error",
+            url: url || void 0
+          });
+          observer.error(res);
+        });
+        let onTimeout = onError;
+        if (req.timeout) {
+          onTimeout = this.maybePropagateTrace((_) => {
+            const {
+              url
+            } = partialFromXhr();
+            const res = new HttpErrorResponse({
+              error: new DOMException("Request timed out", "TimeoutError"),
+              status: xhr.status || 0,
+              statusText: xhr.statusText || "Request timeout",
+              url: url || void 0
+            });
+            observer.error(res);
+          });
+        }
+        let sentHeaders = false;
+        const onDownProgress = this.maybePropagateTrace((event) => {
+          if (!sentHeaders) {
+            observer.next(partialFromXhr());
+            sentHeaders = true;
+          }
+          let progressEvent = {
+            type: HttpEventType.DownloadProgress,
+            loaded: event.loaded
+          };
+          if (event.lengthComputable) {
+            progressEvent.total = event.total;
+          }
+          if (req.responseType === "text" && !!xhr.responseText) {
+            progressEvent.partialText = xhr.responseText;
+          }
+          observer.next(progressEvent);
+        });
+        const onUpProgress = this.maybePropagateTrace((event) => {
+          let progress = {
+            type: HttpEventType.UploadProgress,
+            loaded: event.loaded
+          };
+          if (event.lengthComputable) {
+            progress.total = event.total;
+          }
+          observer.next(progress);
+        });
+        xhr.addEventListener("load", onLoad);
+        xhr.addEventListener("error", onError);
+        xhr.addEventListener("timeout", onTimeout);
+        xhr.addEventListener("abort", onError);
+        if (req.reportProgress) {
+          xhr.addEventListener("progress", onDownProgress);
+          if (reqBody !== null && xhr.upload) {
+            xhr.upload.addEventListener("progress", onUpProgress);
+          }
+        }
+        xhr.send(reqBody);
+        observer.next({
+          type: HttpEventType.Sent
+        });
+        return () => {
+          xhr.removeEventListener("error", onError);
+          xhr.removeEventListener("abort", onError);
+          xhr.removeEventListener("load", onLoad);
+          xhr.removeEventListener("timeout", onTimeout);
+          if (req.reportProgress) {
+            xhr.removeEventListener("progress", onDownProgress);
+            if (reqBody !== null && xhr.upload) {
+              xhr.upload.removeEventListener("progress", onUpProgress);
+            }
+          }
+          if (xhr.readyState !== xhr.DONE) {
+            xhr.abort();
+          }
+        };
+      });
+    }));
+  }
+  static \u0275fac = function HttpXhrBackend_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpXhrBackend)(\u0275\u0275inject(XhrFactory));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpXhrBackend,
+    factory: _HttpXhrBackend.\u0275fac,
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXhrBackend, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{
+    type: XhrFactory
+  }], null);
+})();
+var XSRF_ENABLED = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "XSRF_ENABLED" : "", {
+  factory: () => true
+});
+var XSRF_DEFAULT_COOKIE_NAME = "XSRF-TOKEN";
+var XSRF_COOKIE_NAME = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "XSRF_COOKIE_NAME" : "", {
+  factory: () => XSRF_DEFAULT_COOKIE_NAME
+});
+var XSRF_DEFAULT_HEADER_NAME = "X-XSRF-TOKEN";
+var XSRF_HEADER_NAME = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "XSRF_HEADER_NAME" : "", {
+  factory: () => XSRF_DEFAULT_HEADER_NAME
+});
+var HttpXsrfCookieExtractor = class _HttpXsrfCookieExtractor {
+  cookieName = inject2(XSRF_COOKIE_NAME);
+  doc = inject2(DOCUMENT);
+  lastCookieString = "";
+  lastToken = null;
+  parseCount = 0;
+  getToken() {
+    if (false) {
+      return null;
+    }
+    const cookieString = this.doc.cookie || "";
+    if (cookieString !== this.lastCookieString) {
+      this.parseCount++;
+      this.lastToken = parseCookieValue(cookieString, this.cookieName);
+      this.lastCookieString = cookieString;
+    }
+    return this.lastToken;
+  }
+  static \u0275fac = function HttpXsrfCookieExtractor_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpXsrfCookieExtractor)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpXsrfCookieExtractor,
+    factory: _HttpXsrfCookieExtractor.\u0275fac,
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXsrfCookieExtractor, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+var HttpXsrfTokenExtractor = class _HttpXsrfTokenExtractor {
+  static \u0275fac = function HttpXsrfTokenExtractor_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpXsrfTokenExtractor)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpXsrfTokenExtractor,
+    factory: function HttpXsrfTokenExtractor_Factory(__ngFactoryType__) {
+      let __ngConditionalFactory__ = null;
+      if (__ngFactoryType__) {
+        __ngConditionalFactory__ = new (__ngFactoryType__ || _HttpXsrfTokenExtractor)();
+      } else {
+        __ngConditionalFactory__ = \u0275\u0275inject(HttpXsrfCookieExtractor);
+      }
+      return __ngConditionalFactory__;
+    },
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXsrfTokenExtractor, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root",
+      useExisting: HttpXsrfCookieExtractor
+    }]
+  }], null, null);
+})();
+function xsrfInterceptorFn(req, next) {
+  if (!inject2(XSRF_ENABLED) || req.method === "GET" || req.method === "HEAD") {
+    return next(req);
+  }
+  try {
+    const locationHref = inject2(PlatformLocation).href;
+    const {
+      origin: locationOrigin
+    } = new URL(locationHref);
+    const {
+      origin: requestOrigin
+    } = new URL(req.url, locationOrigin);
+    if (locationOrigin !== requestOrigin) {
+      return next(req);
+    }
+  } catch {
+    return next(req);
+  }
+  const token = inject2(HttpXsrfTokenExtractor).getToken();
+  const headerName = inject2(XSRF_HEADER_NAME);
+  if (token != null && !req.headers.has(headerName)) {
+    req = req.clone({
+      headers: req.headers.set(headerName, token)
+    });
+  }
+  return next(req);
+}
+var HttpXsrfInterceptor = class _HttpXsrfInterceptor {
+  injector = inject2(EnvironmentInjector);
+  intercept(initialRequest, next) {
+    return runInInjectionContext(this.injector, () => xsrfInterceptorFn(initialRequest, (downstreamRequest) => next.handle(downstreamRequest)));
+  }
+  static \u0275fac = function HttpXsrfInterceptor_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpXsrfInterceptor)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpXsrfInterceptor,
+    factory: _HttpXsrfInterceptor.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXsrfInterceptor, [{
+    type: Injectable
+  }], null, null);
+})();
+function interceptorChainEndFn(req, finalHandlerFn) {
+  return finalHandlerFn(req);
+}
+function adaptLegacyInterceptorToChain(chainTailFn, interceptor) {
+  return (initialRequest, finalHandlerFn) => interceptor.intercept(initialRequest, {
+    handle: (downstreamRequest) => chainTailFn(downstreamRequest, finalHandlerFn)
+  });
+}
+function chainedInterceptorFn(chainTailFn, interceptorFn, injector) {
+  return (initialRequest, finalHandlerFn) => runInInjectionContext(injector, () => interceptorFn(initialRequest, (downstreamRequest) => chainTailFn(downstreamRequest, finalHandlerFn)));
+}
+var HTTP_INTERCEPTORS = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "HTTP_INTERCEPTORS" : "");
+var HTTP_INTERCEPTOR_FNS = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "HTTP_INTERCEPTOR_FNS" : "", {
+  factory: () => [xsrfInterceptorFn]
+});
+var HTTP_ROOT_INTERCEPTOR_FNS = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "HTTP_ROOT_INTERCEPTOR_FNS" : "");
+var REQUESTS_CONTRIBUTE_TO_STABILITY = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "REQUESTS_CONTRIBUTE_TO_STABILITY" : "", {
+  factory: () => true
+});
+function legacyInterceptorFnFactory() {
+  let chain = null;
+  return (req, handler) => {
+    if (chain === null) {
+      const interceptors = inject2(HTTP_INTERCEPTORS, {
+        optional: true
+      }) ?? [];
+      chain = interceptors.reduceRight(adaptLegacyInterceptorToChain, interceptorChainEndFn);
+    }
+    const pendingTasks = inject2(PendingTasks);
+    const contributeToStability = inject2(REQUESTS_CONTRIBUTE_TO_STABILITY);
+    if (contributeToStability) {
+      const removeTask = pendingTasks.add();
+      return chain(req, handler).pipe(finalize(removeTask));
+    } else {
+      return chain(req, handler);
+    }
+  };
+}
+var HttpBackend = class _HttpBackend {
+  static \u0275fac = function HttpBackend_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpBackend)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpBackend,
+    factory: function HttpBackend_Factory(__ngFactoryType__) {
+      let __ngConditionalFactory__ = null;
+      if (__ngFactoryType__) {
+        __ngConditionalFactory__ = new (__ngFactoryType__ || _HttpBackend)();
+      } else {
+        __ngConditionalFactory__ = \u0275\u0275inject(HttpXhrBackend);
+      }
+      return __ngConditionalFactory__;
+    },
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpBackend, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root",
+      useExisting: HttpXhrBackend
+    }]
+  }], null, null);
+})();
+var fetchBackendWarningDisplayed = false;
+var HttpInterceptorHandler = class _HttpInterceptorHandler {
+  backend;
+  injector;
+  chain = null;
+  pendingTasks = inject2(PendingTasks);
+  contributeToStability = inject2(REQUESTS_CONTRIBUTE_TO_STABILITY);
+  constructor(backend, injector) {
+    this.backend = backend;
+    this.injector = injector;
+    if ((typeof ngDevMode === "undefined" || ngDevMode) && !fetchBackendWarningDisplayed) {
+      const isTestingBackend = this.backend.isTestingBackend;
+      if (false) {
+        fetchBackendWarningDisplayed = true;
+        injector.get(Console).warn(formatRuntimeError(2801, "Angular detected that `HttpClient` is not configured to use `fetch` APIs. It's strongly recommended to enable `fetch` for applications that use Server-Side Rendering for better performance and compatibility. To enable `fetch`, add the `withFetch()` to the `provideHttpClient()` call at the root of the application."));
+      }
+    }
+  }
+  handle(initialRequest) {
+    if (this.chain === null) {
+      const dedupedInterceptorFns = Array.from(/* @__PURE__ */ new Set([...this.injector.get(HTTP_INTERCEPTOR_FNS), ...this.injector.get(HTTP_ROOT_INTERCEPTOR_FNS, [])]));
+      this.chain = dedupedInterceptorFns.reduceRight((nextSequencedFn, interceptorFn) => chainedInterceptorFn(nextSequencedFn, interceptorFn, this.injector), interceptorChainEndFn);
+    }
+    if (this.contributeToStability) {
+      const removeTask = this.pendingTasks.add();
+      return this.chain(initialRequest, (downstreamRequest) => this.backend.handle(downstreamRequest)).pipe(finalize(removeTask));
+    } else {
+      return this.chain(initialRequest, (downstreamRequest) => this.backend.handle(downstreamRequest));
+    }
+  }
+  static \u0275fac = function HttpInterceptorHandler_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpInterceptorHandler)(\u0275\u0275inject(HttpBackend), \u0275\u0275inject(EnvironmentInjector));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpInterceptorHandler,
+    factory: _HttpInterceptorHandler.\u0275fac,
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpInterceptorHandler, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{
+    type: HttpBackend
+  }, {
+    type: EnvironmentInjector
+  }], null);
+})();
+var HttpHandler = class _HttpHandler {
+  static \u0275fac = function HttpHandler_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpHandler)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpHandler,
+    factory: function HttpHandler_Factory(__ngFactoryType__) {
+      let __ngConditionalFactory__ = null;
+      if (__ngFactoryType__) {
+        __ngConditionalFactory__ = new (__ngFactoryType__ || _HttpHandler)();
+      } else {
+        __ngConditionalFactory__ = \u0275\u0275inject(HttpInterceptorHandler);
+      }
+      return __ngConditionalFactory__;
+    },
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpHandler, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root",
+      useExisting: HttpInterceptorHandler
+    }]
+  }], null, null);
+})();
+function addBody(options, body) {
+  return {
+    body,
+    headers: options.headers,
+    context: options.context,
+    observe: options.observe,
+    params: options.params,
+    reportProgress: options.reportProgress,
+    responseType: options.responseType,
+    withCredentials: options.withCredentials,
+    credentials: options.credentials,
+    transferCache: options.transferCache,
+    timeout: options.timeout,
+    keepalive: options.keepalive,
+    priority: options.priority,
+    cache: options.cache,
+    mode: options.mode,
+    redirect: options.redirect,
+    integrity: options.integrity,
+    referrer: options.referrer,
+    referrerPolicy: options.referrerPolicy
+  };
+}
+var HttpClient = class _HttpClient {
+  handler;
+  constructor(handler) {
+    this.handler = handler;
+  }
+  request(first2, url, options = {}) {
+    let req;
+    if (first2 instanceof HttpRequest) {
+      req = first2;
+    } else {
+      let headers = void 0;
+      if (options.headers instanceof HttpHeaders) {
+        headers = options.headers;
+      } else {
+        headers = new HttpHeaders(options.headers);
+      }
+      let params = void 0;
+      if (!!options.params) {
+        if (options.params instanceof HttpParams) {
+          params = options.params;
+        } else {
+          params = new HttpParams({
+            fromObject: options.params
+          });
+        }
+      }
+      req = new HttpRequest(first2, url, options.body !== void 0 ? options.body : null, {
+        headers,
+        context: options.context,
+        params,
+        reportProgress: options.reportProgress,
+        responseType: options.responseType || "json",
+        withCredentials: options.withCredentials,
+        transferCache: options.transferCache,
+        keepalive: options.keepalive,
+        priority: options.priority,
+        cache: options.cache,
+        mode: options.mode,
+        redirect: options.redirect,
+        credentials: options.credentials,
+        referrer: options.referrer,
+        referrerPolicy: options.referrerPolicy,
+        integrity: options.integrity,
+        timeout: options.timeout
+      });
+    }
+    const events$ = of(req).pipe(concatMap((req2) => this.handler.handle(req2)));
+    if (first2 instanceof HttpRequest || options.observe === "events") {
+      return events$;
+    }
+    const res$ = events$.pipe(filter((event) => event instanceof HttpResponse));
+    switch (options.observe || "body") {
+      case "body":
+        switch (req.responseType) {
+          case "arraybuffer":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && !(res.body instanceof ArrayBuffer)) {
+                throw new RuntimeError(2806, ngDevMode && "Response is not an ArrayBuffer.");
+              }
+              return res.body;
+            }));
+          case "blob":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && !(res.body instanceof Blob)) {
+                throw new RuntimeError(2807, ngDevMode && "Response is not a Blob.");
+              }
+              return res.body;
+            }));
+          case "text":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && typeof res.body !== "string") {
+                throw new RuntimeError(2808, ngDevMode && "Response is not a string.");
+              }
+              return res.body;
+            }));
+          case "json":
+          default:
+            return res$.pipe(map((res) => res.body));
+        }
+      case "response":
+        return res$;
+      default:
+        throw new RuntimeError(2809, ngDevMode && `Unreachable: unhandled observe type ${options.observe}}`);
+    }
+  }
+  delete(url, options = {}) {
+    return this.request("DELETE", url, options);
+  }
+  get(url, options = {}) {
+    return this.request("GET", url, options);
+  }
+  head(url, options = {}) {
+    return this.request("HEAD", url, options);
+  }
+  jsonp(url, callbackParam) {
+    return this.request("JSONP", url, {
+      params: new HttpParams().append(callbackParam, "JSONP_CALLBACK"),
+      observe: "body",
+      responseType: "json"
+    });
+  }
+  options(url, options = {}) {
+    return this.request("OPTIONS", url, options);
+  }
+  patch(url, body, options = {}) {
+    return this.request("PATCH", url, addBody(options, body));
+  }
+  post(url, body, options = {}) {
+    return this.request("POST", url, addBody(options, body));
+  }
+  put(url, body, options = {}) {
+    return this.request("PUT", url, addBody(options, body));
+  }
+  static \u0275fac = function HttpClient_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpClient)(\u0275\u0275inject(HttpHandler));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _HttpClient,
+    factory: _HttpClient.\u0275fac,
+    providedIn: "root"
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClient, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{
+    type: HttpHandler
+  }], null);
+})();
+var nextRequestId = 0;
+var foreignDocument;
+var JSONP_ERR_NO_CALLBACK = "JSONP injected script did not invoke callback.";
+var JSONP_ERR_WRONG_METHOD = "JSONP requests must use JSONP request method.";
+var JSONP_ERR_WRONG_RESPONSE_TYPE = "JSONP requests must use Json response type.";
+var JSONP_ERR_HEADERS_NOT_SUPPORTED = "JSONP requests do not support headers.";
+var JSONP_ERR_UNSAFE_URL = "JSONP requests only support absolute URLs with HTTP(S) protocols.";
+var JsonpCallbackContext = class {
+};
+function jsonpCallbackContext() {
+  if (typeof window === "object") {
+    return window;
+  }
+  return {};
+}
+var JsonpClientBackend = class _JsonpClientBackend {
+  callbackMap;
+  document;
+  resolvedPromise = Promise.resolve();
+  nonce = inject2(CSP_NONCE, {
+    optional: true
+  });
+  constructor(callbackMap, document2) {
+    this.callbackMap = callbackMap;
+    this.document = document2;
+  }
+  nextCallback() {
+    return `ng_jsonp_callback_${nextRequestId++}`;
+  }
+  handle(req) {
+    if (req.method !== "JSONP") {
+      throw new RuntimeError(2810, ngDevMode && JSONP_ERR_WRONG_METHOD);
+    } else if (req.responseType !== "json") {
+      throw new RuntimeError(2811, ngDevMode && JSONP_ERR_WRONG_RESPONSE_TYPE);
+    }
+    if (req.headers.keys().length > 0) {
+      throw new RuntimeError(2812, ngDevMode && JSONP_ERR_HEADERS_NOT_SUPPORTED);
+    }
+    if (!this.isAllowedJsonpUrl(req.urlWithParams)) {
+      throw new RuntimeError(2826, ngDevMode && JSONP_ERR_UNSAFE_URL);
+    }
+    return new Observable((observer) => {
+      const callback = this.nextCallback();
+      const url = req.urlWithParams.replace(/=JSONP_CALLBACK(&|$)/, `=${callback}$1`);
+      const node = this.document.createElement("script");
+      node.src = url;
+      if (this.nonce) {
+        node.setAttribute("nonce", this.nonce);
+      }
+      let body = null;
+      let finished = false;
+      this.callbackMap[callback] = (data) => {
+        delete this.callbackMap[callback];
+        body = data;
+        finished = true;
+      };
+      const cleanup = () => {
+        node.removeEventListener("load", onLoad);
+        node.removeEventListener("error", onError);
+        node.remove();
+        delete this.callbackMap[callback];
+      };
+      const onLoad = () => {
+        this.resolvedPromise.then(() => {
+          cleanup();
+          if (!finished) {
+            observer.error(new HttpErrorResponse({
+              url,
+              status: 0,
+              statusText: "JSONP Error",
+              error: new Error(JSONP_ERR_NO_CALLBACK)
+            }));
+            return;
+          }
+          observer.next(new HttpResponse({
+            body,
+            status: HTTP_STATUS_CODE_OK,
+            statusText: "OK",
+            url
+          }));
+          observer.complete();
+        });
+      };
+      const onError = (error) => {
+        cleanup();
+        observer.error(new HttpErrorResponse({
+          error,
+          status: 0,
+          statusText: "JSONP Error",
+          url
+        }));
+      };
+      node.addEventListener("load", onLoad);
+      node.addEventListener("error", onError);
+      this.document.body.appendChild(node);
+      observer.next({
+        type: HttpEventType.Sent
+      });
+      return () => {
+        if (!finished) {
+          this.removeListeners(node);
+        }
+        cleanup();
+      };
+    });
+  }
+  removeListeners(script) {
+    foreignDocument ??= this.document.implementation.createHTMLDocument();
+    foreignDocument.adoptNode(script);
+  }
+  isAllowedJsonpUrl(url) {
+    return /^https?:\/\//i.test(url);
+  }
+  static \u0275fac = function JsonpClientBackend_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _JsonpClientBackend)(\u0275\u0275inject(JsonpCallbackContext), \u0275\u0275inject(DOCUMENT));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _JsonpClientBackend,
+    factory: _JsonpClientBackend.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(JsonpClientBackend, [{
+    type: Injectable
+  }], () => [{
+    type: JsonpCallbackContext
+  }, {
+    type: void 0,
+    decorators: [{
+      type: Inject,
+      args: [DOCUMENT]
+    }]
+  }], null);
+})();
+function jsonpInterceptorFn(req, next) {
+  if (req.method === "JSONP") {
+    return inject2(JsonpClientBackend).handle(req);
+  }
+  return next(req);
+}
+var JsonpInterceptor = class _JsonpInterceptor {
+  injector;
+  constructor(injector) {
+    this.injector = injector;
+  }
+  intercept(initialRequest, next) {
+    return runInInjectionContext(this.injector, () => jsonpInterceptorFn(initialRequest, (downstreamRequest) => next.handle(downstreamRequest)));
+  }
+  static \u0275fac = function JsonpInterceptor_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _JsonpInterceptor)(\u0275\u0275inject(EnvironmentInjector));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _JsonpInterceptor,
+    factory: _JsonpInterceptor.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(JsonpInterceptor, [{
+    type: Injectable
+  }], () => [{
+    type: EnvironmentInjector
+  }], null);
+})();
+var HttpFeatureKind;
+(function(HttpFeatureKind2) {
+  HttpFeatureKind2[HttpFeatureKind2["Interceptors"] = 0] = "Interceptors";
+  HttpFeatureKind2[HttpFeatureKind2["LegacyInterceptors"] = 1] = "LegacyInterceptors";
+  HttpFeatureKind2[HttpFeatureKind2["CustomXsrfConfiguration"] = 2] = "CustomXsrfConfiguration";
+  HttpFeatureKind2[HttpFeatureKind2["NoXsrfProtection"] = 3] = "NoXsrfProtection";
+  HttpFeatureKind2[HttpFeatureKind2["JsonpSupport"] = 4] = "JsonpSupport";
+  HttpFeatureKind2[HttpFeatureKind2["RequestsMadeViaParent"] = 5] = "RequestsMadeViaParent";
+  HttpFeatureKind2[HttpFeatureKind2["Fetch"] = 6] = "Fetch";
+})(HttpFeatureKind || (HttpFeatureKind = {}));
+function makeHttpFeature(kind, providers) {
+  return {
+    \u0275kind: kind,
+    \u0275providers: providers
+  };
+}
+function provideHttpClient(...features) {
+  if (ngDevMode) {
+    const featureKinds = new Set(features.map((f) => f.\u0275kind));
+    if (featureKinds.has(HttpFeatureKind.NoXsrfProtection) && featureKinds.has(HttpFeatureKind.CustomXsrfConfiguration)) {
+      throw new Error(ngDevMode ? `Configuration error: found both withXsrfConfiguration() and withNoXsrfProtection() in the same call to provideHttpClient(), which is a contradiction.` : "");
+    }
+  }
+  const providers = [HttpClient, HttpInterceptorHandler, {
+    provide: HttpHandler,
+    useExisting: HttpInterceptorHandler
+  }, {
+    provide: HttpBackend,
+    useFactory: () => {
+      return inject2(FETCH_BACKEND, {
+        optional: true
+      }) ?? inject2(HttpXhrBackend);
+    }
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useValue: xsrfInterceptorFn,
+    multi: true
+  }];
+  for (const feature of features) {
+    providers.push(...feature.\u0275providers);
+  }
+  return makeEnvironmentProviders(providers);
+}
+function withInterceptors(interceptorFns) {
+  return makeHttpFeature(HttpFeatureKind.Interceptors, interceptorFns.map((interceptorFn) => {
+    return {
+      provide: HTTP_INTERCEPTOR_FNS,
+      useValue: interceptorFn,
+      multi: true
+    };
+  }));
+}
+var LEGACY_INTERCEPTOR_FN = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "LEGACY_INTERCEPTOR_FN" : "");
+function withInterceptorsFromDi() {
+  return makeHttpFeature(HttpFeatureKind.LegacyInterceptors, [{
+    provide: LEGACY_INTERCEPTOR_FN,
+    useFactory: legacyInterceptorFnFactory
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useExisting: LEGACY_INTERCEPTOR_FN,
+    multi: true
+  }]);
+}
+function withXsrfConfiguration({
+  cookieName,
+  headerName
+}) {
+  const providers = [];
+  if (cookieName !== void 0) {
+    providers.push({
+      provide: XSRF_COOKIE_NAME,
+      useValue: cookieName
+    });
+  }
+  if (headerName !== void 0) {
+    providers.push({
+      provide: XSRF_HEADER_NAME,
+      useValue: headerName
+    });
+  }
+  return makeHttpFeature(HttpFeatureKind.CustomXsrfConfiguration, providers);
+}
+function withNoXsrfProtection() {
+  return makeHttpFeature(HttpFeatureKind.NoXsrfProtection, [{
+    provide: XSRF_ENABLED,
+    useValue: false
+  }]);
+}
+function withJsonpSupport() {
+  return makeHttpFeature(HttpFeatureKind.JsonpSupport, [JsonpClientBackend, {
+    provide: JsonpCallbackContext,
+    useFactory: jsonpCallbackContext
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useValue: jsonpInterceptorFn,
+    multi: true
+  }]);
+}
+var HttpClientXsrfModule = class _HttpClientXsrfModule {
+  static disable() {
+    return {
+      ngModule: _HttpClientXsrfModule,
+      providers: [withNoXsrfProtection().\u0275providers]
+    };
+  }
+  static withOptions(options = {}) {
+    return {
+      ngModule: _HttpClientXsrfModule,
+      providers: withXsrfConfiguration(options).\u0275providers
+    };
+  }
+  static \u0275fac = function HttpClientXsrfModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpClientXsrfModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _HttpClientXsrfModule
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    providers: [HttpXsrfInterceptor, {
+      provide: HTTP_INTERCEPTORS,
+      useExisting: HttpXsrfInterceptor,
+      multi: true
+    }, {
+      provide: HttpXsrfTokenExtractor,
+      useClass: HttpXsrfCookieExtractor
+    }, withXsrfConfiguration({
+      cookieName: XSRF_DEFAULT_COOKIE_NAME,
+      headerName: XSRF_DEFAULT_HEADER_NAME
+    }).\u0275providers, {
+      provide: XSRF_ENABLED,
+      useValue: true
+    }]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientXsrfModule, [{
+    type: NgModule,
+    args: [{
+      providers: [HttpXsrfInterceptor, {
+        provide: HTTP_INTERCEPTORS,
+        useExisting: HttpXsrfInterceptor,
+        multi: true
+      }, {
+        provide: HttpXsrfTokenExtractor,
+        useClass: HttpXsrfCookieExtractor
+      }, withXsrfConfiguration({
+        cookieName: XSRF_DEFAULT_COOKIE_NAME,
+        headerName: XSRF_DEFAULT_HEADER_NAME
+      }).\u0275providers, {
+        provide: XSRF_ENABLED,
+        useValue: true
+      }]
+    }]
+  }], null, null);
+})();
+var HttpClientModule = class _HttpClientModule {
+  static \u0275fac = function HttpClientModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpClientModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _HttpClientModule
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    providers: [provideHttpClient(withInterceptorsFromDi())]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientModule, [{
+    type: NgModule,
+    args: [{
+      providers: [provideHttpClient(withInterceptorsFromDi())]
+    }]
+  }], null, null);
+})();
+var HttpClientJsonpModule = class _HttpClientJsonpModule {
+  static \u0275fac = function HttpClientJsonpModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HttpClientJsonpModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _HttpClientJsonpModule
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    providers: [withJsonpSupport().\u0275providers]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientJsonpModule, [{
+    type: NgModule,
+    args: [{
+      providers: [withJsonpSupport().\u0275providers]
+    }]
+  }], null, null);
+})();
+
+// node_modules/@angular/common/fesm2022/http.mjs
+/**
+ * @license Angular v21.2.19
+ * (c) 2010-2026 Google LLC. https://angular.dev/
+ * License: MIT
+ */
+var HTTP_TRANSFER_CACHE_ORIGIN_MAP = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "HTTP_TRANSFER_CACHE_ORIGIN_MAP" : "");
+var BODY = "b";
+var HEADERS = "h";
+var STATUS = "s";
+var STATUS_TEXT = "st";
+var REQ_URL = "u";
+var RESPONSE_TYPE = "rt";
+var CACHE_OPTIONS = new InjectionToken(typeof ngDevMode !== "undefined" && ngDevMode ? "HTTP_TRANSFER_STATE_CACHE_OPTIONS" : "");
+var ALLOWED_METHODS = ["GET", "HEAD"];
+function canUseOrCacheRequest(req, options) {
+  const _a = options, {
+    isCacheActive
+  } = _a, globalOptions = __objRest(_a, [
+    "isCacheActive"
+  ]);
+  const {
+    transferCache: requestOptions,
+    method: requestMethod
+  } = req;
+  if (!isCacheActive || requestOptions === false || hasOutgoingCredentials(req) || requestMethod === "POST" && !globalOptions.includePostRequests && !requestOptions || requestMethod !== "POST" && !ALLOWED_METHODS.includes(requestMethod) || !globalOptions.includeRequestsWithAuthHeaders && hasAuthHeaders(req) || hasUncacheableCacheControl(req.headers) || isNonCacheableRequest(req.cache) || globalOptions.filter?.(req) === false) {
+    return false;
+  }
+  return true;
+}
+function getHeadersToInclude(options, requestOptions) {
+  return typeof requestOptions === "object" && requestOptions.includeHeaders ? requestOptions.includeHeaders : options.includeHeaders;
+}
+function retrieveStateFromCache(req, options, transferState, originMap, storeKey, skipUseCacheChecks = false) {
+  if (!skipUseCacheChecks && !canUseOrCacheRequest(req, options)) {
+    return null;
+  }
+  if (originMap) {
+    throw new RuntimeError(2803, ngDevMode && "Angular detected that the `HTTP_TRANSFER_CACHE_ORIGIN_MAP` token is configured and present in the client side code. Please ensure that this token is only provided in the server code of the application.");
+  }
+  if (!storeKey) {
+    const requestUrl = false ? mapRequestOriginUrl(req.url, originMap) : req.url;
+    storeKey = makeCacheKey(req, requestUrl);
+  }
+  const response = transferState.get(storeKey, null);
+  if (!response) {
+    return null;
+  }
+  const {
+    [BODY]: undecodedBody,
+    [RESPONSE_TYPE]: responseType,
+    [HEADERS]: httpHeaders,
+    [STATUS]: status,
+    [STATUS_TEXT]: statusText,
+    [REQ_URL]: url
+  } = response;
+  let body = undecodedBody;
+  switch (responseType) {
+    case "arraybuffer":
+      body = fromBase64(undecodedBody);
+      break;
+    case "blob":
+      body = new Blob([fromBase64(undecodedBody)]);
+      break;
+  }
+  let headers = new HttpHeaders(httpHeaders);
+  if (typeof ngDevMode === "undefined" || ngDevMode) {
+    const {
+      transferCache: requestOptions
+    } = req;
+    const headersToInclude = getHeadersToInclude(options, requestOptions);
+    headers = appendMissingHeadersDetection(req.url, headers, headersToInclude ?? []);
+  }
+  return new HttpResponse({
+    body,
+    headers,
+    status,
+    statusText,
+    url
+  });
+}
+function hasAuthHeaders(req) {
+  const headers = req.headers;
+  return headers.has("authorization") || headers.has("proxy-authorization") || headers.has("cookie");
+}
+function hasOutgoingCredentials(req) {
+  const {
+    withCredentials,
+    credentials
+  } = req;
+  return withCredentials || credentials === "include" || credentials === "same-origin";
+}
+var UNCACHEABLE_CACHE_CONTROL_DIRECTIVES = /* @__PURE__ */ new Set(["no-store", "private", "no-cache"]);
+function hasUncacheableCacheControl(headers) {
+  const cacheControl = headers.get("cache-control");
+  if (!cacheControl) {
+    return false;
+  }
+  return cacheControl.split(",").some((directive) => {
+    const directiveName = directive.split("=", 1)[0].trim().toLowerCase();
+    return UNCACHEABLE_CACHE_CONTROL_DIRECTIVES.has(directiveName);
+  });
+}
+function isNonCacheableRequest(cache) {
+  return cache === "no-cache" || cache === "no-store";
+}
+function sortAndConcatParams(params) {
+  const searchParams = new URLSearchParams(params instanceof URLSearchParams ? params : params.toString());
+  searchParams.sort();
+  return searchParams.toString();
+}
+function makeCacheKey(request, mappedRequestUrl) {
+  const {
+    params,
+    method,
+    responseType
+  } = request;
+  const encodedParams = sortAndConcatParams(params);
+  let serializedBody = request.serializeBody();
+  if (serializedBody instanceof URLSearchParams) {
+    serializedBody = sortAndConcatParams(serializedBody);
+  } else if (typeof serializedBody !== "string") {
+    serializedBody = "";
+  }
+  const key = [method, responseType, mappedRequestUrl, serializedBody, encodedParams].join("|");
+  const hash = generateHash(key);
+  return makeStateKey(hash);
+}
+function fromBase64(base64) {
+  const binary = atob(base64);
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  return bytes.buffer;
+}
+function appendMissingHeadersDetection(url, headers, headersToInclude) {
+  const warningProduced = /* @__PURE__ */ new Set();
+  return new Proxy(headers, {
+    get(target, prop) {
+      const value = Reflect.get(target, prop);
+      const methods = /* @__PURE__ */ new Set(["get", "has", "getAll"]);
+      if (typeof value !== "function" || !methods.has(prop)) {
+        return value;
+      }
+      return (headerName) => {
+        const key = (prop + ":" + headerName).toLowerCase();
+        if (!headersToInclude.includes(headerName) && !warningProduced.has(key)) {
+          warningProduced.add(key);
+          const truncatedUrl = truncateMiddle(url);
+          console.warn(formatRuntimeError(-2802, `Angular detected that the \`${headerName}\` header is accessed, but the value of the header was not transferred from the server to the client by the HttpTransferCache. To include the value of the \`${headerName}\` header for the \`${truncatedUrl}\` request, use the \`includeHeaders\` list. The \`includeHeaders\` can be defined either on a request level by adding the \`transferCache\` parameter, or on an application level by adding the \`httpCacheTransfer.includeHeaders\` argument to the \`provideClientHydration()\` call. `));
+        }
+        return value.apply(target, [headerName]);
+      };
+    }
+  });
+}
+var SHA256_ROUND_CONSTANTS = /* @__PURE__ */ new Uint32Array([1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298]);
+var textEncoder;
+function generateHash(value) {
+  textEncoder ??= new TextEncoder();
+  const inputBytes = textEncoder.encode(value);
+  let hashState0 = 1779033703;
+  let hashState1 = 3144134277;
+  let hashState2 = 1013904242;
+  let hashState3 = 2773480762;
+  let hashState4 = 1359893119;
+  let hashState5 = 2600822924;
+  let hashState6 = 528734635;
+  let hashState7 = 1541459225;
+  const messageLengthInBits = inputBytes.length * 8;
+  const paddedLengthInBytes = (inputBytes.length + 8 >> 6) + 1 << 6;
+  const paddedBytes = new Uint8Array(paddedLengthInBytes);
+  paddedBytes.set(inputBytes);
+  paddedBytes[inputBytes.length] = 128;
+  const paddedBytesView = new DataView(paddedBytes.buffer);
+  const lowBits = messageLengthInBits >>> 0;
+  const highBits = messageLengthInBits / 4294967296 >>> 0;
+  paddedBytesView.setUint32(paddedLengthInBytes - 8, highBits, false);
+  paddedBytesView.setUint32(paddedLengthInBytes - 4, lowBits, false);
+  const messageSchedule = new Uint32Array(64);
+  for (let chunkOffset = 0; chunkOffset < paddedLengthInBytes; chunkOffset += 64) {
+    for (let i = 0; i < 16; i++) {
+      messageSchedule[i] = paddedBytesView.getUint32(chunkOffset + i * 4, false);
+    }
+    for (let i = 16; i < 64; i++) {
+      const prevWord15 = messageSchedule[i - 15];
+      const sigma0 = ((prevWord15 >>> 7 | prevWord15 << 25) ^ (prevWord15 >>> 18 | prevWord15 << 14) ^ prevWord15 >>> 3) >>> 0;
+      const prevWord2 = messageSchedule[i - 2];
+      const sigma1 = ((prevWord2 >>> 17 | prevWord2 << 15) ^ (prevWord2 >>> 19 | prevWord2 << 13) ^ prevWord2 >>> 10) >>> 0;
+      messageSchedule[i] = messageSchedule[i - 16] + sigma0 + messageSchedule[i - 7] + sigma1 >>> 0;
+    }
+    let workingStateA = hashState0;
+    let workingStateB = hashState1;
+    let workingStateC = hashState2;
+    let workingStateD = hashState3;
+    let workingStateE = hashState4;
+    let workingStateF = hashState5;
+    let workingStateG = hashState6;
+    let workingStateH = hashState7;
+    for (let i = 0; i < 64; i++) {
+      const capitalSigma1 = ((workingStateE >>> 6 | workingStateE << 26) ^ (workingStateE >>> 11 | workingStateE << 21) ^ (workingStateE >>> 25 | workingStateE << 7)) >>> 0;
+      const chFunction = (workingStateE & workingStateF ^ ~workingStateE & workingStateG) >>> 0;
+      const temp1 = workingStateH + capitalSigma1 + chFunction + SHA256_ROUND_CONSTANTS[i] + messageSchedule[i] >>> 0;
+      const capitalSigma0 = ((workingStateA >>> 2 | workingStateA << 30) ^ (workingStateA >>> 13 | workingStateA << 19) ^ (workingStateA >>> 22 | workingStateA << 10)) >>> 0;
+      const majFunction = (workingStateA & workingStateB ^ workingStateA & workingStateC ^ workingStateB & workingStateC) >>> 0;
+      const temp2 = capitalSigma0 + majFunction >>> 0;
+      workingStateH = workingStateG;
+      workingStateG = workingStateF;
+      workingStateF = workingStateE;
+      workingStateE = workingStateD + temp1 >>> 0;
+      workingStateD = workingStateC;
+      workingStateC = workingStateB;
+      workingStateB = workingStateA;
+      workingStateA = temp1 + temp2 >>> 0;
+    }
+    hashState0 = hashState0 + workingStateA >>> 0;
+    hashState1 = hashState1 + workingStateB >>> 0;
+    hashState2 = hashState2 + workingStateC >>> 0;
+    hashState3 = hashState3 + workingStateD >>> 0;
+    hashState4 = hashState4 + workingStateE >>> 0;
+    hashState5 = hashState5 + workingStateF >>> 0;
+    hashState6 = hashState6 + workingStateG >>> 0;
+    hashState7 = hashState7 + workingStateH >>> 0;
+  }
+  return [hashState0, hashState1, hashState2, hashState3, hashState4, hashState5, hashState6, hashState7].map((x) => x.toString(16).padStart(8, "0")).join("");
+}
+var httpResource = (() => {
+  const jsonFn = makeHttpResourceFn("json");
+  jsonFn.arrayBuffer = makeHttpResourceFn("arraybuffer");
+  jsonFn.blob = makeHttpResourceFn("blob");
+  jsonFn.text = makeHttpResourceFn("text");
+  return jsonFn;
+})();
+function makeHttpResourceFn(responseType) {
+  return function httpResource2(request, options) {
+    if (ngDevMode && !options?.injector) {
+      assertInInjectionContext(httpResource2);
+    }
+    const injector = options?.injector ?? inject2(Injector);
+    const cacheOptions = injector.get(CACHE_OPTIONS, null, {
+      optional: true
+    });
+    const transferState = injector.get(TransferState, null, {
+      optional: true
+    });
+    const originMap = injector.get(HTTP_TRANSFER_CACHE_ORIGIN_MAP, null, {
+      optional: true
+    });
+    const getInitialStream = (req) => {
+      if (cacheOptions && transferState && req) {
+        const cachedResponse = retrieveStateFromCache(req, cacheOptions, transferState, originMap);
+        if (cachedResponse) {
+          try {
+            const body = cachedResponse.body;
+            const parsed = options?.parse ? options.parse(body) : body;
+            return signal({
+              value: parsed
+            });
+          } catch (e) {
+            if (typeof ngDevMode === "undefined" || ngDevMode) {
+              console.warn(`Angular detected an error while parsing the cached response for the httpResource at \`${req.url}\`. The resource will fall back to its default value and try again asynchronously.`, e);
+            }
+          }
+        }
+      }
+      return void 0;
+    };
+    return new HttpResourceImpl(injector, () => normalizeRequest(request, responseType), options?.defaultValue, options?.debugName, options?.parse, options?.equal, getInitialStream);
+  };
+}
+function normalizeRequest(request, responseType) {
+  let unwrappedRequest = typeof request === "function" ? request() : request;
+  if (unwrappedRequest === void 0) {
+    return void 0;
+  } else if (typeof unwrappedRequest === "string") {
+    unwrappedRequest = {
+      url: unwrappedRequest
+    };
+  }
+  const headers = unwrappedRequest.headers instanceof HttpHeaders ? unwrappedRequest.headers : new HttpHeaders(unwrappedRequest.headers);
+  const params = unwrappedRequest.params instanceof HttpParams ? unwrappedRequest.params : new HttpParams({
+    fromObject: unwrappedRequest.params
+  });
+  return new HttpRequest(unwrappedRequest.method ?? "GET", unwrappedRequest.url, unwrappedRequest.body ?? null, {
+    headers,
+    params,
+    reportProgress: unwrappedRequest.reportProgress,
+    withCredentials: unwrappedRequest.withCredentials,
+    keepalive: unwrappedRequest.keepalive,
+    cache: unwrappedRequest.cache,
+    priority: unwrappedRequest.priority,
+    mode: unwrappedRequest.mode,
+    redirect: unwrappedRequest.redirect,
+    responseType,
+    context: unwrappedRequest.context,
+    transferCache: unwrappedRequest.transferCache,
+    credentials: unwrappedRequest.credentials,
+    referrer: unwrappedRequest.referrer,
+    referrerPolicy: unwrappedRequest.referrerPolicy,
+    integrity: unwrappedRequest.integrity,
+    timeout: unwrappedRequest.timeout
+  });
+}
+var HttpResourceImpl = class extends ResourceImpl {
+  client;
+  _headers = linkedSignal(__spreadProps(__spreadValues({}, ngDevMode ? {
+    debugName: "_headers"
+  } : {}), {
+    source: this.extRequest,
+    computation: () => void 0
+  }));
+  _progress = linkedSignal(__spreadProps(__spreadValues({}, ngDevMode ? {
+    debugName: "_progress"
+  } : {}), {
+    source: this.extRequest,
+    computation: () => void 0
+  }));
+  _statusCode = linkedSignal(__spreadProps(__spreadValues({}, ngDevMode ? {
+    debugName: "_statusCode"
+  } : {}), {
+    source: this.extRequest,
+    computation: () => void 0
+  }));
+  headers = computed(() => this.status() === "resolved" || this.status() === "error" ? this._headers() : void 0, ...ngDevMode ? [{
+    debugName: "headers"
+  }] : []);
+  progress = this._progress.asReadonly();
+  statusCode = this._statusCode.asReadonly();
+  constructor(injector, request, defaultValue, debugName, parse, equal, getInitialStream) {
+    super(request, ({
+      params: request2,
+      abortSignal
+    }) => {
+      let sub;
+      const onAbort = () => sub.unsubscribe();
+      abortSignal.addEventListener("abort", onAbort);
+      const stream = signal({
+        value: void 0
+      }, ...ngDevMode ? [{
+        debugName: "stream"
+      }] : []);
+      let resolve;
+      const promise = new Promise((r) => resolve = r);
+      const send = (value) => {
+        stream.set(value);
+        resolve?.(stream);
+        resolve = void 0;
+      };
+      sub = this.client.request(request2).subscribe({
+        next: (event) => {
+          switch (event.type) {
+            case HttpEventType.Response:
+              this._headers.set(event.headers);
+              this._statusCode.set(event.status);
+              try {
+                send({
+                  value: parse ? parse(event.body) : event.body
+                });
+              } catch (error) {
+                send({
+                  error: encapsulateResourceError(error)
+                });
+              }
+              break;
+            case HttpEventType.DownloadProgress:
+              this._progress.set(event);
+              break;
+          }
+        },
+        error: (error) => {
+          if (error instanceof HttpErrorResponse) {
+            this._headers.set(error.headers);
+            this._statusCode.set(error.status);
+          }
+          send({
+            error
+          });
+          abortSignal.removeEventListener("abort", onAbort);
+        },
+        complete: () => {
+          if (resolve) {
+            send({
+              error: new RuntimeError(991, ngDevMode && "Resource completed before producing a value")
+            });
+          }
+          abortSignal.removeEventListener("abort", onAbort);
+        }
+      });
+      return promise;
+    }, defaultValue, equal, debugName, injector, getInitialStream);
+    this.client = injector.get(HttpClient);
+  }
+  set(value) {
+    super.set(value);
+    this._headers.set(void 0);
+    this._progress.set(void 0);
+    this._statusCode.set(void 0);
+  }
+};
+
 // node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs
 /**
  * @license Angular v21.2.19
@@ -32738,7 +35457,7 @@ function defaultUrlMatcher(segments, segmentGroup, route) {
     posParams
   };
 }
-function firstValueFrom(source) {
+function firstValueFrom2(source) {
   return new Promise((resolve, reject) => {
     source.pipe(first()).subscribe({
       next: (value) => resolve(value),
@@ -32795,7 +35514,7 @@ function wrapIntoObservable(value) {
 }
 function wrapIntoPromise(value) {
   if (isObservable(value)) {
-    return firstValueFrom(value);
+    return firstValueFrom2(value);
   }
   return Promise.resolve(value);
 }
@@ -35160,7 +37879,7 @@ function getRedirectResult(redirectTo, currentSnapshot, injector) {
     return Promise.resolve(redirectTo);
   }
   const redirectToFn = redirectTo;
-  return firstValueFrom(wrapIntoObservable(runInInjectionContext(injector, () => redirectToFn(currentSnapshot))));
+  return firstValueFrom2(wrapIntoObservable(runInInjectionContext(injector, () => redirectToFn(currentSnapshot))));
 }
 function getOrCreateRouteInjectorIfNeeded(route, currentInjector) {
   if (route.providers && !route._injector) {
@@ -35556,7 +38275,7 @@ This is currently a dev mode only error but will become a call stack size exceed
       throw new Error(this.abortSignal.reason);
     }
     const createSnapshot = (result2) => this.createSnapshot(injector, route, result2.consumedSegments, result2.parameters, parentRoute);
-    const result = await firstValueFrom(matchWithChecks(rawSegment, route, segments, injector, this.urlSerializer, createSnapshot, this.abortSignal));
+    const result = await firstValueFrom2(matchWithChecks(rawSegment, route, segments, injector, this.urlSerializer, createSnapshot, this.abortSignal));
     if (route.path === "**") {
       rawSegment.children = {};
     }
@@ -35610,7 +38329,7 @@ This is currently a dev mode only error but will become a call stack size exceed
       if (this.abortSignal.aborted) {
         throw new Error(this.abortSignal.reason);
       }
-      const shouldLoadResult = await firstValueFrom(runCanLoadGuards(injector, route, segments, this.urlSerializer, this.abortSignal));
+      const shouldLoadResult = await firstValueFrom2(runCanLoadGuards(injector, route, segments, this.urlSerializer, this.abortSignal));
       if (shouldLoadResult) {
         const cfg = await this.configLoader.loadChildren(injector, route);
         route._loadedRoutes = cfg.routes;
@@ -36059,7 +38778,7 @@ function createRenderPromise(injector) {
     });
   });
 }
-var noop3 = () => {
+var noop4 = () => {
 };
 var NAVIGATION_ERROR_HANDLER = new InjectionToken(typeof ngDevMode === "undefined" || ngDevMode ? "navigation error handler" : "");
 var NavigationTransitions = class _NavigationTransitions {
@@ -36306,7 +39025,7 @@ var NavigationTransitions = class _NavigationTransitions {
         }
         completedOrAborted = true;
         this.currentNavigation.update((nav) => {
-          nav.abort = noop3;
+          nav.abort = noop4;
           return nav;
         });
         this.lastSuccessfulNavigation.set(untracked2(this.currentNavigation));
@@ -39873,13 +42592,13 @@ function setUpControl(control, dir, callSetDisabledState = setDisabledStateDefau
   setUpDisabledChangeHandler(control, dir);
 }
 function cleanUpControl(control, dir, validateControlPresenceOnChange = true) {
-  const noop4 = () => {
+  const noop5 = () => {
     if (validateControlPresenceOnChange && (typeof ngDevMode === "undefined" || ngDevMode)) {
       _noControlError(dir);
     }
   };
-  dir?.valueAccessor?.registerOnChange(noop4);
-  dir?.valueAccessor?.registerOnTouched(noop4);
+  dir?.valueAccessor?.registerOnChange(noop5);
+  dir?.valueAccessor?.registerOnTouched(noop5);
   cleanUpValidators(control, dir);
   if (control) {
     dir._invokeOnDestroyCallbacks();
@@ -39944,10 +42663,10 @@ function cleanUpValidators(control, dir) {
       }
     }
   }
-  const noop4 = () => {
+  const noop5 = () => {
   };
-  registerOnValidatorChange(dir._rawValidators, noop4);
-  registerOnValidatorChange(dir._rawAsyncValidators, noop4);
+  registerOnValidatorChange(dir._rawValidators, noop5);
+  registerOnValidatorChange(dir._rawAsyncValidators, noop5);
   return isControlUpdated;
 }
 function setUpViewChangePipeline(control, dir) {
@@ -43014,74 +45733,49 @@ var ReactiveFormsModule = class _ReactiveFormsModule {
   }], null, null);
 })();
 
+// src/app/inicio/inicio.ts
+var import_sweetalert22 = __toESM(require_sweetalert2_all());
+
+// src/app/config/api.config.ts
+var API_BASE_URL = "http://localhost/api_proyecto_biblioteca/public";
+
 // src/app/services/actividade-service.ts
+var import_sweetalert2 = __toESM(require_sweetalert2_all());
 var ActividadServicio = class _ActividadServicio {
-  actividades = [
-    {
-      tipo: "login",
-      descripcion: "Inicio de sesi\xF3n del sistema",
-      fecha: "28/08/2026 12:00",
-      user: "admin"
-    },
-    {
-      tipo: "login",
-      descripcion: "Inicio de sesi\xF3n del sistema",
-      fecha: "19/08/2026 10:30",
-      user: "admin"
-    },
-    {
-      tipo: "prestamo",
-      descripcion: "Nuevo pr\xE9stamo: Rayuela \u2192 Florencia Morales",
-      fecha: "19/08/2026 09:15",
-      user: "admin",
-      idrelacionado: "PR005"
-    },
-    {
-      tipo: "cuota",
-      descripcion: "Cuota cobrada: Mar\xEDa Gonz\xE1lez \u2014 Julio 2026 ($1.200)",
-      fecha: "18/08/2026 16:20",
-      user: "admin",
-      idrelacionado: "S001"
-    },
-    {
-      tipo: "socio",
-      descripcion: "Nuevo socio registrado: Pablo Torres (CAR010)",
-      fecha: "18/08/2026 14:45",
-      user: "admin",
-      idrelacionado: "S010"
-    },
-    {
-      tipo: "libro",
-      descripcion: "Nuevo libro registrado: Cien a\xF1os de soledad",
-      fecha: "17/08/2026 11:30",
-      user: "admin",
-      idrelacionado: "L001"
-    }
-  ];
+  http = inject2(HttpClient);
+  apiUrl = `${API_BASE_URL}/actividades`;
+  actividadesSubject = new BehaviorSubject([]);
+  erroresSubject = new Subject();
+  errores$ = this.erroresSubject.asObservable();
   obtenerActividades() {
-    return this.actividades;
+    return [...this.actividadesSubject.getValue()];
+  }
+  cargarActividades() {
+    return this.http.get(this.apiUrl).pipe(map((actividades) => actividades.map((_a) => {
+      var _b = _a, { id } = _b, actividad = __objRest(_b, ["id"]);
+      return actividad;
+    })), tap((actividades) => this.actividadesSubject.next(actividades)));
   }
   agregarActividad(actividad) {
-    this.actividades.unshift(actividad);
+    this.registrarActividad(actividad.tipo, actividad.descripcion, actividad.idrelacionado);
   }
   registrarActividad(tipo, descripcion, idRelacionado) {
-    const ahora = /* @__PURE__ */ new Date();
-    const fecha = ahora.toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
-    const hora = ahora.toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    });
-    this.agregarActividad({
+    this.http.post(this.apiUrl, {
       tipo,
       descripcion,
-      fecha: `${fecha} ${hora}`,
-      user: "admin",
-      idrelacionado: idRelacionado
+      idrelacionado: idRelacionado ?? null
+    }).pipe(switchMap(() => this.cargarActividades())).subscribe({
+      error: (error) => {
+        console.error("No se pudo registrar la actividad en la API.", error);
+        this.erroresSubject.next(error);
+        const mensaje = error instanceof Error ? error.message : "No se pudo guardar el registro de actividad.";
+        void import_sweetalert2.default.fire({
+          title: "No se pudo registrar la actividad",
+          text: mensaje,
+          icon: "warning",
+          confirmButtonColor: "#0d9488"
+        });
+      }
     });
   }
   static \u0275fac = function ActividadServicio_Factory(__ngFactoryType__) {
@@ -43100,178 +45794,69 @@ var ActividadServicio = class _ActividadServicio {
 
 // src/app/services/socio.ts
 var SocioServicio = class _SocioServicio {
-  socios = [];
-  contadorSocio = 1;
-  constructor() {
-    this.cargarSociosDePrueba();
-  }
-  cargarSociosDePrueba() {
-    const sociosDePrueba = [
-      {
-        nombre: "Luc\xEDa Fern\xE1ndez",
-        edad: 26,
-        dni: "32145678",
-        telefono: "+5491123456789",
-        email: "lucia.fernandez@gmail.com",
-        estado: "activo",
-        cuota: "pagada",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Mart\xEDn Gonz\xE1lez",
-        edad: 34,
-        dni: "29876543",
-        telefono: "+5491134567890",
-        email: "martin.gonzalez@gmail.com",
-        estado: "activo",
-        cuota: "pendiente",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Sof\xEDa Ram\xEDrez",
-        edad: 21,
-        dni: "33456789",
-        telefono: "+5491145678901",
-        email: "sofia.ramirez@hotmail.com",
-        estado: "activo",
-        cuota: "pagada",
-        prestamos: "En curso"
-      },
-      {
-        nombre: "Tom\xE1s Herrera",
-        edad: 42,
-        dni: "27654321",
-        telefono: "+5491156789012",
-        email: "tomas.herrera@gmail.com",
-        estado: "suspendido",
-        cuota: "pendiente",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Valentina Castro",
-        edad: 29,
-        dni: "31234567",
-        telefono: "+5491167890123",
-        email: "valentina.castro@gmail.com",
-        estado: "activo",
-        cuota: "pendiente",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Juli\xE1n Morales",
-        edad: 37,
-        dni: "28987654",
-        telefono: "+5491178901234",
-        email: "julian.morales@hotmail.com",
-        estado: "inactivo",
-        cuota: "vencida",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Camila Navarro",
-        edad: 19,
-        dni: "34567890",
-        telefono: "+5491189012345",
-        email: "camila.navarro@gmail.com",
-        estado: "activo",
-        cuota: "pagada",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Federico Ortiz",
-        edad: 31,
-        dni: "30123456",
-        telefono: "+5491190123456",
-        email: "federico.ortiz@gmail.com",
-        estado: "activo",
-        cuota: "pendiente",
-        prestamos: "En curso"
-      },
-      {
-        nombre: "Marina Acosta",
-        edad: 48,
-        dni: "25876543",
-        telefono: "+5491101234567",
-        email: "marina.acosta@hotmail.com",
-        estado: "inactivo",
-        cuota: "pagada",
-        prestamos: "Libre"
-      },
-      {
-        nombre: "Nicol\xE1s Vera",
-        edad: 16,
-        dni: "35678901",
-        telefono: "+5491112345678",
-        email: "nicolas.vera@gmail.com",
-        estado: "activo",
-        cuota: "pagada",
-        prestamos: "Libre"
-      }
-    ];
-    sociosDePrueba.forEach((socio) => this.agregarSocio(socio));
-  }
-  // ==========================================
-  // OBTENER SOCIOS
-  // ==========================================
+  http = inject2(HttpClient);
+  apiUrl = `${API_BASE_URL}/socios`;
+  sociosSubject = new BehaviorSubject([]);
+  socios$ = this.sociosSubject.asObservable();
   tenerSocios() {
-    return [...this.socios];
+    return [...this.sociosSubject.getValue()];
   }
-  // ==========================================
-  // AGREGAR SOCIO
-  // ==========================================
-  agregarSocio(socioData) {
-    const idSecuencia = this.contadorSocio.toString().padStart(3, "0");
-    const nuevoSocio = __spreadProps(__spreadValues({}, socioData), {
-      id: this.contadorSocio,
-      numCarnet: `c-${idSecuencia}`
-    });
-    this.socios = [
-      ...this.socios,
-      nuevoSocio
-    ];
-    this.contadorSocio++;
+  cargarSocios() {
+    return this.http.get(this.apiUrl).pipe(map((socios) => socios.map((socio) => this.fromApi(socio))), tap((socios) => this.sociosSubject.next(socios)));
   }
-  // ==========================================
-  // ACTUALIZAR SOCIO
-  // ==========================================
-  actualizarSocio(socioActualizado) {
-    const index = this.socios.findIndex((s) => s.id === socioActualizado.id);
-    if (index !== -1) {
-      this.socios = this.socios.map((s) => s.id === socioActualizado.id ? __spreadValues({}, socioActualizado) : s);
-    }
+  agregarSocio(socio) {
+    const carnetNumbers = this.tenerSocios().map((item) => Number(item.numCarnet.match(/\d+$/)?.[0] ?? 0));
+    const numCarnet = `C-${String(Math.max(0, ...carnetNumbers) + 1).padStart(4, "0")}`;
+    return this.http.post(this.apiUrl, this.toApi(__spreadProps(__spreadValues({}, socio), { id: 0, numCarnet }))).pipe(switchMap(() => this.cargarSocios()), map(() => void 0));
   }
-  // ==========================================
-  // MODIFICAR SOCIO
-  // ==========================================
-  modificarSocio(socioActualizado) {
-    this.actualizarSocio(socioActualizado);
+  actualizarSocio(socio) {
+    return this.http.put(`${this.apiUrl}/${socio.id}`, this.toApi(socio)).pipe(switchMap(() => this.cargarSocios()), map(() => void 0));
   }
-  // ==========================================
-  // ACTUALIZAR ESTADO PRÉSTAMO
-  // ==========================================
+  modificarSocio(socio) {
+    return this.actualizarSocio(socio);
+  }
   actualizarEstadoPrestamo(idSocio, nuevoEstado) {
-    const socio = this.socios.find((s) => s.id === Number(idSocio));
-    if (socio) {
-      socio.prestamos = nuevoEstado;
-    }
+    return this.actualizarCampo(idSocio, { prestamos: nuevoEstado });
   }
-  // ==========================================
-  // ACTUALIZAR ESTADO DEL SOCIO
-  // ==========================================
   actualizarEstadoSocio(idSocio, nuevoEstado) {
-    const socio = this.socios.find((s) => s.id === Number(idSocio));
-    if (socio) {
-      this.socios = this.socios.map((s) => s.id === Number(idSocio) ? __spreadProps(__spreadValues({}, s), { estado: nuevoEstado }) : s);
-    }
+    return this.actualizarCampo(idSocio, { estado: nuevoEstado });
   }
-  // ==========================================
-  // ACTUALIZAR ESTADO CUOTA
-  // ==========================================
   actualizarEstadoCuota(idSocio, nuevoEstado) {
-    const socio = this.socios.find((s) => s.id === Number(idSocio));
-    if (socio) {
-      this.socios = this.socios.map((s) => s.id === Number(idSocio) ? __spreadProps(__spreadValues({}, s), { cuota: nuevoEstado }) : s);
+    return this.actualizarCampo(idSocio, { cuota: nuevoEstado });
+  }
+  actualizarCampo(idSocio, cambios) {
+    const socio = this.tenerSocios().find((item) => item.id === Number(idSocio));
+    if (!socio) {
+      return throwError(() => new Error("No se encontr\xF3 el socio para actualizar."));
     }
+    return this.actualizarSocio(__spreadValues(__spreadValues({}, socio), cambios));
+  }
+  fromApi(socio) {
+    return {
+      id: Number(socio.id),
+      numCarnet: socio.num_carnet,
+      nombre: socio.nombre,
+      edad: Number(socio.edad),
+      dni: socio.dni,
+      telefono: socio.telefono ?? "",
+      email: socio.email ?? "",
+      estado: socio.estado,
+      cuota: socio.cuota,
+      prestamos: socio.prestamos
+    };
+  }
+  toApi(socio) {
+    return {
+      num_carnet: socio.numCarnet,
+      nombre: socio.nombre,
+      edad: socio.edad,
+      dni: socio.dni,
+      telefono: socio.telefono,
+      email: socio.email,
+      estado: socio.estado,
+      cuota: socio.cuota,
+      prestamos: socio.prestamos
+    };
   }
   static \u0275fac = function SocioServicio_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _SocioServicio)();
@@ -43284,201 +45869,94 @@ var SocioServicio = class _SocioServicio {
     args: [{
       providedIn: "root"
     }]
-  }], () => [], null);
-})();
-
-// src/app/services/libro-service.ts
-var LibroService = class _LibroService {
-  contador = 1;
-  librosSubject = new BehaviorSubject([]);
-  libros$ = this.librosSubject.asObservable();
-  constructor() {
-    this.generarLibrosDePrueba(20);
-  }
-  get libros() {
-    return this.librosSubject.getValue();
-  }
-  // Obtiene la primera copia disponible de un libro
-  obtenerSiguienteCopiaDisponible(libroId) {
-    const libro = this.libros.find((l) => l.id === libroId);
-    if (!libro)
-      return null;
-    return libro.listaCopias.find((c) => c.estado === "Disponible") || null;
-  }
-  // Presta una copia específica
-  prestarCopia(libroId, copiaId) {
-    const listaActual = [...this.libros];
-    const libro = listaActual.find((l) => l.id === libroId);
-    if (!libro)
-      return false;
-    const copia = libro.listaCopias.find((c) => c.id === copiaId && c.estado === "Disponible");
-    if (!copia)
-      return false;
-    copia.estado = "Prestada";
-    this.actualizarEstadoLibro(libro);
-    this.librosSubject.next(listaActual);
-    return true;
-  }
-  // Devuelve una copia dada su clave de inventario (Ej: INV001-01)
-  devolverCopiaPorInventario(inventarioId) {
-    const listaActual = [...this.libros];
-    for (const libro of listaActual) {
-      const copia = libro.listaCopias.find((c) => c.id === inventarioId);
-      if (copia && copia.estado === "Prestada") {
-        copia.estado = "Disponible";
-        this.actualizarEstadoLibro(libro);
-        this.librosSubject.next(listaActual);
-        break;
-      }
-    }
-  }
-  actualizarEstadoLibro(libro) {
-    libro.copias = libro.listaCopias.filter((c) => c.estado === "Disponible").length;
-    libro.estado = libro.copias === 0 ? "sin copias" : "disponible";
-  }
-  generarLibrosDePrueba(cantidad) {
-    const catalogos = [
-      { titulo: "Cien A\xF1os de Soledad", autor: "Gabriel Garc\xEDa M\xE1rquez" },
-      { titulo: "Don Quijote de la Mancha", autor: "Miguel de Cervantes" },
-      { titulo: "El Principito", autor: "Antoine de Saint-Exup\xE9ry" },
-      { titulo: "1984", autor: "George Orwell" },
-      { titulo: "Un Mundo Feliz", autor: "Aldous Huxley" },
-      { titulo: "Ficciones", autor: "Jorge Luis Borges" },
-      { titulo: "El Aleph", autor: "Jorge Luis Borges" },
-      { titulo: "La Odisea", autor: "Homero" },
-      { titulo: "Crimen y Castigo", autor: "Fi\xF3dor Dostoyevski" },
-      { titulo: "El Se\xF1or de los Anillos", autor: "J.R.R. Tolkien" },
-      { titulo: "Rayuela", autor: "Julio Cort\xE1zar" },
-      { titulo: "Pedro P\xE1ramo", autor: "Juan Rulfo" },
-      { titulo: "El T\xFAnel", autor: "Ernesto Sabato" },
-      { titulo: "La Metamorfosis", autor: "Franz Kafka" },
-      { titulo: "Ensayo sobre la Ceguera", autor: "Jos\xE9 Saramago" },
-      { titulo: "Los Miserables", autor: "Victor Hugo" },
-      { titulo: "La Sombra del Viento", autor: "Carlos Ruiz Zaf\xF3n" },
-      { titulo: "Fahrenheit 451", autor: "Ray Bradbury" },
-      { titulo: "Dr\xE1cula", autor: "Bram Stoker" },
-      { titulo: "El Retrato de Dorian Gray", autor: "Oscar Wilde" }
-    ];
-    const seleccionados = catalogos.sort(() => 0.5 - Math.random()).slice(0, cantidad);
-    const nuevosLibros = [];
-    seleccionados.forEach((item) => {
-      const copiasTotales = Math.floor(Math.random() * 4) + 1;
-      const nuevoId = "INV" + this.contador.toString().padStart(3, "0");
-      this.contador++;
-      const listaCopias = [];
-      for (let i = 1; i <= copiasTotales; i++) {
-        listaCopias.push({
-          id: `${nuevoId}-${i.toString().padStart(2, "0")}`,
-          estado: "Disponible"
-        });
-      }
-      nuevosLibros.push({
-        id: nuevoId,
-        titulo: item.titulo,
-        autor: item.autor,
-        copias: copiasTotales,
-        copiasTotales,
-        estado: "disponible",
-        listaCopias
-      });
-    });
-    this.librosSubject.next(nuevosLibros);
-  }
-  static \u0275fac = function LibroService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _LibroService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LibroService, factory: _LibroService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LibroService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [], null);
+  }], null, null);
 })();
 
 // src/app/services/prestamo.ts
 var PrestamoService = class _PrestamoService {
-  libroService = inject2(LibroService);
-  prestamos = [];
-  // ==========================================
-  // OBTENER PRÉSTAMOS
-  // ==========================================
+  http = inject2(HttpClient);
+  apiUrl = `${API_BASE_URL}/prestamos`;
+  prestamosSubject = new BehaviorSubject([]);
+  prestamos$ = this.prestamosSubject.asObservable();
   obtenerPrestamos() {
-    return this.prestamos;
+    return [...this.prestamosSubject.getValue()];
   }
-  // ==========================================
-  // AGREGAR PRÉSTAMO
-  // ==========================================
-  agregarPrestamo(nuevoPrestamo) {
-    const tienePrestamoActivo = this.prestamos.some((prestamo) => prestamo.socioId === nuevoPrestamo.socioId && prestamo.estado !== "devuelto");
-    if (tienePrestamoActivo) {
-      return false;
-    }
-    const libroId = nuevoPrestamo.libroId || this.libroService.libros.find((l) => l.titulo.toLowerCase() === nuevoPrestamo.libro.toLowerCase())?.id || "";
-    const exito = this.libroService.prestarCopia(libroId, nuevoPrestamo.inventario);
-    if (exito) {
-      this.prestamos.push(nuevoPrestamo);
-      return true;
-    }
-    return false;
+  cargarPrestamos() {
+    return this.http.get(this.apiUrl).pipe(map((prestamos) => prestamos.map((prestamo) => ({
+      id: String(prestamo.id),
+      socioId: Number(prestamo.socio_id),
+      socio: prestamo.socio_nombre,
+      libro: prestamo.libro_titulo ?? "",
+      libroId: String(prestamo.libro_id ?? ""),
+      inventario: prestamo.inventario,
+      fechaInicio: prestamo.fecha_inicio.slice(0, 10),
+      fechaVencimiento: prestamo.fecha_vencimiento.slice(0, 10),
+      estado: prestamo.estado,
+      renovaciones: Number(prestamo.renovaciones ?? 0),
+      motivoSuspension: prestamo.motivo_suspension ?? void 0
+    }))), tap((prestamos) => this.prestamosSubject.next(prestamos)));
   }
-  // ==========================================
-  // DEVOLVER PRÉSTAMO
-  // ==========================================
+  agregarPrestamo(nuevo) {
+    return this.http.post(this.apiUrl, {
+      id: nuevo.id,
+      socio_id: nuevo.socioId,
+      libro_id: nuevo.libroId,
+      inventario: nuevo.inventario,
+      fecha_inicio: nuevo.fechaInicio,
+      fecha_vencimiento: nuevo.fechaVencimiento
+    }).pipe(switchMap(() => this.cargarPrestamos()), map(() => void 0));
+  }
+  eliminarPrestamo(id) {
+    const prestamo = this.obtenerPrestamos().find((item) => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error("No se encontr\xF3 el pr\xE9stamo para eliminar."));
+    }
+    return this.http.delete(`${this.apiUrl}/${encodeURIComponent(id)}`).pipe(switchMap(() => this.cargarPrestamos()), map(() => prestamo));
+  }
   devolverPrestamo(id) {
-    const prestamo = this.prestamos.find((p) => p.id === id);
-    if (prestamo) {
-      prestamo.estado = "devuelto";
-      this.libroService.devolverCopiaPorInventario(prestamo.inventario);
-    }
+    return this.actualizar(id, { accion: "devolver" });
   }
-  // ==========================================
-  // RENOVAR PRÉSTAMO
-  // ==========================================
   renovarPrestamo(id) {
-    const prestamo = this.prestamos.find((p) => p.id === id);
-    if (prestamo) {
-      prestamo.renovaciones += 1;
-      const fechaActual = new Date(prestamo.fechaVencimiento);
-      fechaActual.setMonth(fechaActual.getMonth() + 1);
-      prestamo.fechaVencimiento = fechaActual.toISOString().split("T")[0];
+    const prestamo = this.obtenerPrestamos().find((item) => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error("No se encontr\xF3 el pr\xE9stamo para renovar."));
     }
-  }
-  // ==========================================
-  // ACTUALIZAR DATOS DEL SOCIO
-  // ==========================================
-  actualizarDatosSocio(socioId, nombreAnterior, nuevoNombre) {
-    this.prestamos.forEach((prestamo) => {
-      if (prestamo.socioId === socioId) {
-        prestamo.socio = nuevoNombre;
-        return;
-      }
-      if (prestamo.socio.trim().toLowerCase() === nombreAnterior.trim().toLowerCase()) {
-        prestamo.socioId = socioId;
-        prestamo.socio = nuevoNombre;
-      }
+    const fecha = /* @__PURE__ */ new Date(`${prestamo.fechaVencimiento}T00:00:00`);
+    fecha.setMonth(fecha.getMonth() + 1);
+    return this.actualizar(id, {
+      estado: prestamo.estado,
+      fecha_vencimiento: fecha.toISOString().slice(0, 10),
+      renovaciones: prestamo.renovaciones + 1,
+      motivo_suspension: prestamo.motivoSuspension ?? null
     });
   }
-  // ==========================================
-  // SUSPENDER PRÉSTAMO
-  // ==========================================
   suspenderPrestamo(id) {
-    const p = this.prestamos.find((p2) => p2.id === id);
-    if (p && p.estado !== "devuelto") {
-      p.estado = "suspendido";
+    const prestamo = this.obtenerPrestamos().find((item) => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error("No se encontr\xF3 el pr\xE9stamo para suspender."));
     }
+    return this.actualizar(id, {
+      estado: "suspendido",
+      fecha_vencimiento: prestamo.fechaVencimiento,
+      renovaciones: prestamo.renovaciones,
+      motivo_suspension: prestamo.motivoSuspension ?? null
+    });
   }
-  // ==========================================
-  // QUITAR SUSPENSIÓN
-  // ==========================================
   quitarSuspension(id) {
-    const p = this.prestamos.find((p2) => p2.id === id);
-    if (p && p.estado === "suspendido") {
-      const hoy = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-      p.estado = p.fechaVencimiento < hoy ? "atrasado" : "activo";
+    const prestamo = this.obtenerPrestamos().find((item) => item.id === id);
+    if (!prestamo) {
+      return throwError(() => new Error("No se encontr\xF3 el pr\xE9stamo."));
     }
+    const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    return this.actualizar(id, {
+      estado: prestamo.fechaVencimiento < hoy ? "atrasado" : "activo",
+      fecha_vencimiento: prestamo.fechaVencimiento,
+      renovaciones: prestamo.renovaciones,
+      motivo_suspension: null
+    });
+  }
+  actualizar(id, datos) {
+    return this.http.put(`${this.apiUrl}/${encodeURIComponent(id)}`, datos).pipe(switchMap(() => this.cargarPrestamos()), map(() => void 0));
   }
   static \u0275fac = function PrestamoService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _PrestamoService)();
@@ -43492,6 +45970,73 @@ var PrestamoService = class _PrestamoService {
       providedIn: "root"
     }]
   }], null, null);
+})();
+
+// src/app/services/auth-service.ts
+var AuthService = class _AuthService {
+  http;
+  apiUrl = `${API_BASE_URL}/usuarios`;
+  constructor(http) {
+    this.http = http;
+  }
+  registro(datos) {
+    return this.http.post(`${this.apiUrl}/registro`, datos);
+  }
+  login(email, contrase\u00F1a) {
+    return this.http.post(`${this.apiUrl}/login`, {
+      email,
+      contrasenia: contrase\u00F1a
+    }).pipe(tap((respuesta) => {
+      localStorage.setItem("token", respuesta.token);
+      localStorage.setItem("usuario", JSON.stringify(respuesta.usuario));
+    }));
+  }
+  // Cierra la sesión eliminando los datos del almacenamiento local
+  logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+  }
+  // Obtiene el token guardado actualmente
+  getToken() {
+    return localStorage.getItem("token");
+  }
+  getUsuario() {
+    const usuarioGuardado = localStorage.getItem("usuario");
+    if (!usuarioGuardado) {
+      return null;
+    }
+    try {
+      const usuario = JSON.parse(usuarioGuardado);
+      if (typeof usuario === "object" && usuario !== null && "id" in usuario && "nombre" in usuario && "rol" in usuario && (typeof usuario.id === "number" || typeof usuario.id === "string") && typeof usuario.nombre === "string" && typeof usuario.rol === "string") {
+        return {
+          id: usuario.id,
+          nombre: usuario.nombre,
+          rol: usuario.rol
+        };
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  estaLogueado() {
+    return Boolean(this.getToken());
+  }
+  esAdmin() {
+    return this.getUsuario()?.rol === "admin";
+  }
+  static \u0275fac = function AuthService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AuthService)(\u0275\u0275inject(HttpClient));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AuthService, factory: _AuthService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AuthService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{ type: HttpClient }], null);
 })();
 
 // src/app/inicio/inicio.ts
@@ -43653,6 +46198,7 @@ var Inicio = class _Inicio {
   actividadServicio;
   socioServicio;
   prestamoService;
+  authService;
   // ==========================================
   // FECHA ACTUAL
   // ==========================================
@@ -43672,11 +46218,12 @@ var Inicio = class _Inicio {
   // ==========================================
   // CONSTRUCTOR
   // ==========================================
-  constructor(router, actividadServicio, socioServicio, prestamoService) {
+  constructor(router, actividadServicio, socioServicio, prestamoService, authService) {
     this.router = router;
     this.actividadServicio = actividadServicio;
     this.socioServicio = socioServicio;
     this.prestamoService = prestamoService;
+    this.authService = authService;
   }
   // ==========================================
   // AL INICIAR
@@ -43687,8 +46234,20 @@ var Inicio = class _Inicio {
       this.actualizarFecha();
       this.actualizarEstadisticas();
     }, 6e4);
-    this.obtenerActividades();
-    this.actualizarEstadisticas();
+    this.socioServicio.cargarSocios().subscribe({
+      next: () => this.actualizarEstadisticas(),
+      error: (error) => this.mostrarErrorApi(error)
+    });
+    if (this.authService.estaLogueado()) {
+      this.prestamoService.cargarPrestamos().subscribe({
+        next: () => this.actualizarEstadisticas(),
+        error: (error) => this.mostrarErrorApi(error)
+      });
+      this.actividadServicio.cargarActividades().subscribe({
+        next: (actividades) => this.actividadesRecientes = actividades.slice(0, 4),
+        error: (error) => this.mostrarErrorApi(error)
+      });
+    }
   }
   // ==========================================
   // ESTADÍSTICAS
@@ -43735,8 +46294,7 @@ var Inicio = class _Inicio {
   // OBTENER ACTIVIDADES
   // ==========================================
   obtenerActividades() {
-    const actividades = this.actividadServicio.obtenerActividades();
-    this.actividadesRecientes = actividades.slice(0, 4);
+    this.actividadesRecientes = this.actividadServicio.obtenerActividades().slice(0, 4);
   }
   // ==========================================
   // FECHA ACTUAL
@@ -43755,6 +46313,15 @@ var Inicio = class _Inicio {
   // ==========================================
   ngOnDestroy() {
     clearInterval(this.intervalo);
+  }
+  mostrarErrorApi(error) {
+    const mensaje = error instanceof Error ? error.message : "No se pudieron cargar los datos desde la API.";
+    void import_sweetalert22.default.fire({
+      title: "Error de conexi\xF3n con la API",
+      text: mensaje,
+      icon: "error",
+      confirmButtonColor: "#0d9488"
+    });
   }
   // ==========================================
   // NUEVO PRÉSTAMO
@@ -43777,7 +46344,7 @@ var Inicio = class _Inicio {
     });
   }
   static \u0275fac = function Inicio_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Inicio)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(PrestamoService));
+    return new (__ngFactoryType__ || _Inicio)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(PrestamoService), \u0275\u0275directiveInject(AuthService));
   };
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Inicio, selectors: [["app-inicio"]], decls: 85, vars: 12, consts: [[1, "inicio"], [1, "encabezado"], [1, "estadisticas"], ["routerLink", "/prestamos", 1, "tarjeta", "estadistica", "vencidos"], [1, "icono"], [1, "tarjeta", "estadistica", "pendientes", 3, "routerLink", "queryParams"], ["routerLink", "/socios", 1, "tarjeta", "estadistica", "activos"], [1, "busqueda"], [1, "titulo-busqueda"], [1, "icono-lupa"], [1, "busqueda-express-control"], [1, "campo-busqueda"], ["type", "text", "placeholder", "Ej: Ana Mart\xEDnez, DNI o c-001", "autocomplete", "off", "role", "combobox", "aria-autocomplete", "list", "aria-controls", "sugerencias-socios", 3, "ngModelChange", "keyup.enter", "ngModel"], ["type", "button", 1, "btn-buscar", 3, "click"], ["id", "sugerencias-socios", "role", "listbox", "aria-label", "Socios encontrados", 1, "sugerencias-express"], [1, "resultado-express"], [1, "sin-resultado-express"], [1, "acciones"], [1, "accion", "nuevo-prestamo", 3, "click"], [1, "accion-icono"], ["routerLink", "/cuotas", 1, "accion", "cobrar-cuota"], [1, "accion", "cargar-socio", 3, "click"], [1, "actividad"], [1, "actividad-header"], ["routerLink", "/actividades"], [1, "actividad-lista"], [1, "actividad-item"], ["type", "button", "role", "option", 1, "sugerencia-express"], ["type", "button", "role", "option", 1, "sugerencia-express", 3, "click"], [1, "sugerencia-identidad"], [1, "sugerencia-estado"], [1, "resultado-identidad"], [1, "resultado-punto"], [1, "resultado-carnet"], [1, "resultado-datos"], [1, "resultado-estado"], [1, "descripcion"], [1, "fecha"], [1, "usuario"]], template: function Inicio_Template(rf, ctx) {
     if (rf & 1) {
@@ -44129,56 +46696,80 @@ var Inicio = class _Inicio {
   </div>\r
 \r
 </div>`, styles: ["/* src/app/inicio/inicio.css */\n* {\n  box-sizing: border-box;\n}\n.inicio {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.encabezado {\n  margin-bottom: 25px;\n}\n.encabezado h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.encabezado span {\n  color: #718096;\n  font-size: 13px;\n}\n.estadisticas {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.tarjeta {\n  background: white;\n  border-radius: 16px;\n  min-height: 92px;\n  padding: 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);\n}\n.tarjeta:hover {\n  transform: translateY(-2px);\n}\n.estadistica .icono {\n  width: 48px;\n  height: 48px;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 25px;\n}\n.estadistica strong {\n  display: block;\n  font-size: 23px;\n  margin-bottom: 4px;\n  color: #12263a;\n}\n.estadistica span {\n  display: block;\n  font-size: 12px;\n  color: #718096;\n}\n.vencidos .icono {\n  background: #fff0f1;\n  color: #ff5360;\n}\n.pendientes .icono {\n  background: #fff7eb;\n  color: #ff9718;\n}\n.activos .icono {\n  background: #e7f8f7;\n  color: #20b5ac;\n}\n.busqueda {\n  background: white;\n  border-radius: 16px;\n  padding: 27px 25px 25px;\n  margin-bottom: 24px;\n  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07);\n}\n.titulo-busqueda {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-bottom: 17px;\n}\n.icono-lupa {\n  font-size: 30px;\n  color: #20b5ac;\n}\n.titulo-busqueda h3 {\n  margin: 0 0 3px;\n  font-size: 15px;\n}\n.titulo-busqueda small {\n  color: #8995a5;\n  font-size: 11px;\n}\n.busqueda-express-control {\n  position: relative;\n}\n.campo-busqueda {\n  height: 46px;\n  border: 1px solid #dce2e8;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  padding-left: 15px;\n  overflow: hidden;\n}\n.campo-busqueda > span {\n  color: #91a0af;\n  font-size: 20px;\n}\n.campo-busqueda input {\n  flex: 1;\n  height: 100%;\n  border: none;\n  outline: none;\n  padding: 0 12px;\n  font-size: 13px;\n  color: #34495e;\n}\n.campo-busqueda input::placeholder {\n  color: #9aa6b4;\n}\n.btn-buscar {\n  height: 100%;\n  border: none;\n  background: #2bb5aa;\n  color: white;\n  font-weight: 600;\n  padding: 0 25px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.btn-buscar:hover {\n  background: #20a69c;\n}\n.sugerencias-express {\n  position: absolute;\n  top: calc(100% + 5px);\n  right: 0;\n  left: 0;\n  z-index: 5;\n  overflow: hidden;\n  border: 1px solid #dce2e8;\n  border-radius: 10px;\n  background: #fff;\n  box-shadow: 0 8px 20px rgba(25, 42, 58, 0.14);\n}\n.sugerencia-express {\n  display: flex;\n  width: 100%;\n  min-height: 58px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 0;\n  border-bottom: 1px solid #edf0f3;\n  background: white;\n  color: #30445a;\n  text-align: left;\n  cursor: pointer;\n}\n.sugerencia-express:last-child {\n  border-bottom: 0;\n}\n.sugerencia-express:hover,\n.sugerencia-express:focus-visible {\n  background: #f0faf9;\n  outline: none;\n}\n.sugerencia-identidad {\n  display: grid;\n  gap: 4px;\n  min-width: 0;\n}\n.sugerencia-identidad strong {\n  overflow: hidden;\n  color: #12263a;\n  font-size: 13px;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.sugerencia-identidad small {\n  color: #718096;\n  font-size: 11px;\n}\n.sugerencia-estado {\n  flex: 0 0 auto;\n  color: #15803d;\n  font-size: 11px;\n  font-weight: 700;\n}\n.sugerencia-estado.inactivo {\n  color: #be123c;\n}\n.resultado-express {\n  position: relative;\n  margin-top: 16px;\n  padding: 16px 18px;\n  border: 2px solid #22c55e;\n  border-radius: 12px;\n  background: #f0fdf4;\n}\n.resultado-identidad {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  color: #12263a;\n  font-size: 14px;\n}\n.resultado-punto {\n  width: 12px;\n  height: 12px;\n  border-radius: 50%;\n  background: #22c55e;\n}\n.resultado-punto.inactivo {\n  background: #fb7185;\n}\n.resultado-carnet {\n  color: #718096;\n  font-size: 12px;\n}\n.resultado-datos {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 6px 24px;\n  margin-top: 12px;\n  color: #30445a;\n  font-size: 12px;\n}\n.resultado-estado {\n  position: absolute;\n  top: 16px;\n  right: 18px;\n  padding: 5px 12px;\n  border-radius: 20px;\n  background: #dcfce7;\n  color: #15803d;\n  font-size: 11px;\n  font-weight: 700;\n}\n.resultado-estado.estado-alerta {\n  background: #fef3c7;\n  color: #b45309;\n}\n.sin-resultado-express {\n  margin-top: 16px;\n  padding: 16px;\n  border: 1px solid #fecaca;\n  border-radius: 12px;\n  background: #fef2f2;\n  color: #b91c1c;\n  font-size: 12px;\n}\n.acciones {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;\n  margin-bottom: 24px;\n}\n.accion {\n  height: 150px;\n  border-radius: 16px;\n  color: white;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  cursor: pointer;\n  transition: transform 0.2s ease;\n}\n.accion:hover {\n  transform: translateY(-2px);\n}\n.accion-icono {\n  width: 49px;\n  height: 49px;\n  border-radius: 12px;\n  background: rgba(255, 255, 255, 0.22);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 27px;\n  margin-bottom: 13px;\n}\n.accion h3 {\n  margin: 0 0 5px;\n  font-size: 15px;\n}\n.accion span {\n  font-size: 11px;\n  opacity: 0.85;\n}\n.nuevo-prestamo {\n  background: #2bb5aa;\n}\n.cobrar-cuota {\n  background: #ff9619;\n}\n.cargar-socio {\n  background: #1d3345;\n}\n.actividad {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.actividad-header {\n  height: 56px;\n  padding: 0 25px;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  border-bottom: 1px solid #edf0f3;\n}\n.actividad-header h3 {\n  margin: 0;\n  font-size: 15px;\n  color: #12263a;\n}\n.actividad-header a {\n  color: #16aaa1;\n  text-decoration: none;\n  font-size: 11px;\n  font-weight: 600;\n}\n.actividad-item {\n  min-height: 48px;\n  padding: 0 25px;\n  display: grid;\n  grid-template-columns: max-content minmax(0, 1fr) auto 50px;\n  align-items: center;\n  gap: 12px;\n  border-bottom: 1px solid #f0f2f4;\n  font-size: 12px;\n}\n.descripcion {\n  color: #293d50;\n}\n.fecha {\n  color: #8491a0;\n  font-size: 11px;\n}\n.usuario {\n  color: #8491a0;\n  font-size: 11px;\n  text-align: right;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-eliminacion {\n  background-color: #ffe8e8;\n  color: #ea3333;\n}\n.badge-edicion {\n  background-color: #ffe8fd;\n  color: #ea33d2;\n}\n@media (max-width: 900px) {\n  .estadisticas,\n  .acciones {\n    grid-template-columns: 1fr;\n  }\n  .actividad-item {\n    grid-template-columns: 65px 1fr;\n    padding: 12px 20px;\n  }\n  .fecha,\n  .usuario {\n    display: none;\n  }\n}\n@media (max-width: 600px) {\n  .inicio {\n    padding: 20px 15px;\n  }\n  .busqueda {\n    padding: 20px 16px;\n  }\n  .campo-busqueda {\n    height: auto;\n    flex-wrap: wrap;\n    padding: 8px;\n  }\n  .campo-busqueda input {\n    height: 42px;\n    min-width: 150px;\n  }\n  .btn-buscar {\n    height: 42px;\n    border-radius: 8px;\n  }\n  .actividad-header {\n    padding: 0 18px;\n  }\n  .actividad-item {\n    padding: 12px 18px;\n  }\n}\n/*# sourceMappingURL=inicio.css.map */\n"] }]
-  }], () => [{ type: Router }, { type: ActividadServicio }, { type: SocioServicio }, { type: PrestamoService }], null);
+  }], () => [{ type: Router }, { type: ActividadServicio }, { type: SocioServicio }, { type: PrestamoService }, { type: AuthService }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Inicio, { className: "Inicio", filePath: "app/inicio/inicio.ts", lineNumber: 23 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Inicio, { className: "Inicio", filePath: "app/inicio/inicio.ts", lineNumber: 25 });
 })();
 
 // src/app/inicio-sesion/inicio-sesion.ts
-var import_sweetalert2 = __toESM(require_sweetalert2_all());
+var import_sweetalert23 = __toESM(require_sweetalert2_all());
+function InicioSesion_Conditional_26_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 18);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r0.error);
+  }
+}
 var InicioSesion = class _InicioSesion {
   router;
+  auth;
+  actividadServicio;
   email = "";
   password = "";
-  constructor(router) {
+  iniciandoSesion = false;
+  error = "";
+  constructor(router, auth, actividadServicio) {
     this.router = router;
+    this.auth = auth;
+    this.actividadServicio = actividadServicio;
   }
   iniciarSesion() {
-    const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
+    if (this.iniciandoSesion) {
+      return;
+    }
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!this.email || !regexEmail.test(this.email.trim())) {
-      import_sweetalert2.default.fire({
+      import_sweetalert23.default.fire({
         title: "Correo Inv\xE1lido",
-        text: "Por favor ingres\xE1 un correo v\xE1lido (@gmail.com o @hotmail.com).",
+        text: "Ingres\xE1 un correo electr\xF3nico v\xE1lido.",
         icon: "warning",
         confirmButtonColor: "#0d9488"
       });
       return;
     }
-    if (!this.password || this.password.length < 4) {
-      import_sweetalert2.default.fire({
-        title: "Contrase\xF1a Corta",
-        text: "La contrase\xF1a debe tener al menos 4 caracteres.",
+    if (!this.password.trim()) {
+      import_sweetalert23.default.fire({
+        title: "Contrase\xF1a requerida",
+        text: "Ingres\xE1 tu contrase\xF1a.",
         icon: "warning",
         confirmButtonColor: "#0d9488"
       });
       return;
     }
-    import_sweetalert2.default.fire({
-      title: "\xA1Bienvenido!",
-      text: "Inicio de sesi\xF3n exitoso.",
-      icon: "success",
-      confirmButtonColor: "#0d9488",
-      timer: 1500,
-      showConfirmButton: false
-    }).then(() => {
-      this.router.navigate(["/inicio"]);
+    this.error = "";
+    this.iniciandoSesion = true;
+    this.auth.login(this.email.trim(), this.password).pipe(finalize(() => {
+      this.iniciandoSesion = false;
+    })).subscribe({
+      next: ({ usuario }) => {
+        this.actividadServicio.registrarActividad("login", "Inicio de sesi\xF3n del sistema", String(usuario.id));
+        void this.router.navigate(["/inicio"]);
+      },
+      error: (error) => {
+        this.error = error instanceof HttpErrorResponse ? error.error?.error ?? (error.status === 0 ? "No se pudo conectar con el servidor. Verific\xE1 que el backend est\xE9 iniciado." : "No se pudo iniciar sesi\xF3n.") : "No se pudo iniciar sesi\xF3n.";
+      }
     });
   }
   static \u0275fac = function InicioSesion_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _InicioSesion)(\u0275\u0275directiveInject(Router));
+    return new (__ngFactoryType__ || _InicioSesion)(\u0275\u0275directiveInject(Router), \u0275\u0275directiveInject(AuthService), \u0275\u0275directiveInject(ActividadServicio));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _InicioSesion, selectors: [["app-inicio-sesion"]], decls: 28, vars: 2, consts: [[1, "login-container"], [1, "login-card"], [1, "login-header"], [1, "logo-icon"], ["src", "/OIP.webp", "alt", "logo"], [1, "subtitle"], [1, "login-form", 3, "ngSubmit"], [1, "form-group"], ["for", "email"], [1, "input-wrapper"], ["viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "input-icon"], ["d", "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"], ["points", "22,6 12,13 2,6"], ["type", "email", "id", "email", "name", "email", "placeholder", "ejemplo@gmail.com", "required", "", 3, "ngModelChange", "ngModel"], ["for", "password"], ["x", "3", "y", "11", "width", "18", "height", "11", "rx", "2", "ry", "2"], ["d", "M7 11V7a5 5 0 0 1 10 0v4"], ["type", "password", "id", "password", "name", "password", "placeholder", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", "required", "", 3, "ngModelChange", "ngModel"], ["type", "submit", 1, "btn-login"]], template: function InicioSesion_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _InicioSesion, selectors: [["app-inicio-sesion"]], decls: 29, vars: 5, consts: [[1, "login-container"], [1, "login-card"], [1, "login-header"], [1, "logo-icon"], ["src", "/OIP.webp", "alt", "logo"], [1, "subtitle"], [1, "login-form", 3, "ngSubmit"], [1, "form-group"], ["for", "email"], [1, "input-wrapper"], ["viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "input-icon"], ["d", "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"], ["points", "22,6 12,13 2,6"], ["type", "email", "id", "email", "name", "email", "placeholder", "ejemplo@gmail.com", "required", "", 3, "ngModelChange", "ngModel"], ["for", "password"], ["x", "3", "y", "11", "width", "18", "height", "11", "rx", "2", "ry", "2"], ["d", "M7 11V7a5 5 0 0 1 10 0v4"], ["type", "password", "id", "password", "name", "password", "placeholder", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", "required", "", 3, "ngModelChange", "ngModel"], ["role", "alert", 1, "error"], ["type", "submit", 1, "btn-login", 3, "disabled"]], template: function InicioSesion_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div", 3);
       \u0275\u0275element(4, "img", 4);
@@ -44223,8 +46814,9 @@ var InicioSesion = class _InicioSesion {
         return $event;
       });
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(26, "button", 18);
-      \u0275\u0275text(27, " Iniciar Sesi\xF3n ");
+      \u0275\u0275conditionalCreate(26, InicioSesion_Conditional_26_Template, 2, 1, "p", 18);
+      \u0275\u0275elementStart(27, "button", 19);
+      \u0275\u0275text(28);
       \u0275\u0275elementEnd()()()();
     }
     if (rf & 2) {
@@ -44232,44 +46824,167 @@ var InicioSesion = class _InicioSesion {
       \u0275\u0275twoWayProperty("ngModel", ctx.email);
       \u0275\u0275advance(8);
       \u0275\u0275twoWayProperty("ngModel", ctx.password);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(ctx.error ? 26 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275property("disabled", ctx.iniciandoSesion);
+      \u0275\u0275advance();
+      \u0275\u0275textInterpolate1(" ", ctx.iniciandoSesion ? "Conectando..." : "Iniciar Sesi\xF3n", " ");
     }
-  }, dependencies: [FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.login-container[_ngcontent-%COMP%] {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header[_ngcontent-%COMP%] {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon[_ngcontent-%COMP%] {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper[_ngcontent-%COMP%] {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login[_ngcontent-%COMP%] {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */"] });
+  }, dependencies: [FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.login-container[_ngcontent-%COMP%] {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header[_ngcontent-%COMP%] {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon[_ngcontent-%COMP%] {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper[_ngcontent-%COMP%] {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.error[_ngcontent-%COMP%] {\n  margin: 0;\n  color: #b91c1c;\n  font-size: 13px;\n}\n.btn-login[_ngcontent-%COMP%] {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InicioSesion, [{
     type: Component,
-    args: [{ selector: "app-inicio-sesion", imports: [FormsModule], template: '<div class="login-container">\r\n  <div class="login-card">\r\n    \r\n    <!-- Header / Logo de la Biblioteca -->\r\n    <div class="login-header">\r\n      <div class="logo-icon">\r\n        <img src="/OIP.webp" alt="logo">\r\n      </div>\r\n      <h2>Sistema de Biblioteca</h2>\r\n      <p class="subtitle">Ingres\xE1 tus credenciales para acceder</p>\r\n    </div>\r\n\r\n    <!-- Formulario -->\r\n    <form (ngSubmit)="iniciarSesion()" class="login-form">\r\n      \r\n      <!-- Campo Email -->\r\n      <div class="form-group">\r\n        <label for="email">Correo Electr\xF3nico</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>\r\n            <polyline points="22,6 12,13 2,6"></polyline>\r\n          </svg>\r\n          <input \r\n            type="email" \r\n            id="email" \r\n            [(ngModel)]="email" \r\n            name="email" \r\n            placeholder="ejemplo@gmail.com" \r\n            required />\r\n        </div>\r\n      </div>\r\n\r\n      <!-- Campo Contrase\xF1a -->\r\n      <div class="form-group">\r\n        <label for="password">Contrase\xF1a</label>\r\n        <div class="input-wrapper">\r\n          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r\n            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>\r\n            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>\r\n          </svg>\r\n          <input \r\n            type="password" \r\n            id="password" \r\n            [(ngModel)]="password" \r\n            name="password" \r\n            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" \r\n            required />\r\n        </div>\r\n      </div>\r\n      <!-- Bot\xF3n de Ingreso -->\r\n      <button type="submit" class="btn-login">\r\n        Iniciar Sesi\xF3n\r\n      </button>\r\n    </form>\r\n\r\n  </div>\r\n</div>', styles: ["/* src/app/inicio-sesion/inicio-sesion.css */\n.login-container {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon svg {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon img {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header h2 {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper input {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.btn-login {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */\n"] }]
-  }], () => [{ type: Router }], null);
+    args: [{ selector: "app-inicio-sesion", imports: [FormsModule], template: `<div class="login-container">\r
+  <div class="login-card">\r
+    \r
+    <!-- Header / Logo de la Biblioteca -->\r
+    <div class="login-header">\r
+      <div class="logo-icon">\r
+        <img src="/OIP.webp" alt="logo">\r
+      </div>\r
+      <h2>Sistema de Biblioteca</h2>\r
+      <p class="subtitle">Ingres\xE1 tus credenciales para acceder</p>\r
+    </div>\r
+\r
+    <!-- Formulario -->\r
+    <form (ngSubmit)="iniciarSesion()" class="login-form">\r
+      \r
+      <!-- Campo Email -->\r
+      <div class="form-group">\r
+        <label for="email">Correo Electr\xF3nico</label>\r
+        <div class="input-wrapper">\r
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>\r
+            <polyline points="22,6 12,13 2,6"></polyline>\r
+          </svg>\r
+          <input \r
+            type="email" \r
+            id="email" \r
+            [(ngModel)]="email" \r
+            name="email" \r
+            placeholder="ejemplo@gmail.com" \r
+            required />\r
+        </div>\r
+      </div>\r
+\r
+      <!-- Campo Contrase\xF1a -->\r
+      <div class="form-group">\r
+        <label for="password">Contrase\xF1a</label>\r
+        <div class="input-wrapper">\r
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">\r
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>\r
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>\r
+          </svg>\r
+          <input \r
+            type="password" \r
+            id="password" \r
+            [(ngModel)]="password" \r
+            name="password" \r
+            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" \r
+            required />\r
+        </div>\r
+      </div>\r
+\r
+      @if (error) {\r
+        <p class="error" role="alert">{{ error }}</p>\r
+      }\r
+\r
+      <!-- Bot\xF3n de Ingreso -->\r
+      <button type="submit" class="btn-login" [disabled]="iniciandoSesion">\r
+        {{ iniciandoSesion ? 'Conectando...' : 'Iniciar Sesi\xF3n' }}\r
+      </button>\r
+    </form>\r
+\r
+  </div>\r
+</div>`, styles: ["/* src/app/inicio-sesion/inicio-sesion.css */\n.login-container {\n  min-height: 100vh;\n  width: 100%;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  background-color: #eef4f7;\n  padding: 20px;\n  box-sizing: border-box;\n}\n.login-card {\n  background-color: #ffffff;\n  width: 100%;\n  max-width: 400px;\n  padding: 36px 32px;\n  border-radius: 16px;\n  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);\n}\n.login-header {\n  text-align: center;\n  margin-bottom: 28px;\n}\n.logo-icon {\n  width: 56px;\n  height: 56px;\n  background-color: rgba(13, 148, 136, 0.1);\n  color: #0d9488;\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  margin: 0 auto 16px auto;\n}\n.logo-icon svg {\n  width: 28px;\n  height: 28px;\n}\n.logo-icon img {\n  max-width: 120px;\n  height: auto;\n  display: block;\n  object-fit: contain;\n}\n.login-header h2 {\n  margin: 0 0 6px 0;\n  font-size: 22px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.subtitle {\n  margin: 0;\n  font-size: 13px;\n  color: #64748b;\n}\n.login-form {\n  display: flex;\n  flex-direction: column;\n  gap: 18px;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.input-wrapper {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n.input-icon {\n  position: absolute;\n  left: 12px;\n  width: 18px;\n  height: 18px;\n  color: #94a3b8;\n  pointer-events: none;\n}\n.input-wrapper input {\n  width: 100%;\n  padding: 10px 14px 10px 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.input-wrapper input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.error {\n  margin: 0;\n  color: #b91c1c;\n  font-size: 13px;\n}\n.btn-login {\n  margin-top: 8px;\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 12px;\n  border-radius: 8px;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background-color 0.2s ease;\n}\n.btn-login:hover {\n  background-color: #0f766e;\n}\n/*# sourceMappingURL=inicio-sesion.css.map */\n"] }]
+  }], () => [{ type: Router }, { type: AuthService }, { type: ActividadServicio }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InicioSesion, { className: "InicioSesion", filePath: "app/inicio-sesion/inicio-sesion.ts", lineNumber: 12 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InicioSesion, { className: "InicioSesion", filePath: "app/inicio-sesion/inicio-sesion.ts", lineNumber: 16 });
 })();
 
 // src/app/libros/libros.ts
-var import_sweetalert22 = __toESM(require_sweetalert2_all());
+var import_sweetalert24 = __toESM(require_sweetalert2_all());
+
+// src/app/services/libro-service.ts
+var LibroService = class _LibroService {
+  http = inject2(HttpClient);
+  apiUrl = `${API_BASE_URL}/libros`;
+  librosSubject = new BehaviorSubject([]);
+  libros$ = this.librosSubject.asObservable();
+  get libros() {
+    return this.librosSubject.getValue();
+  }
+  cargarLibros() {
+    return this.http.get(this.apiUrl).pipe(map((libros) => libros.map((libro) => ({
+      id: String(libro.id),
+      titulo: libro.titulo,
+      autor: libro.autor,
+      copias: Number(libro.copias),
+      copiasTotales: Number(libro.copiasTotales),
+      estado: libro.estado,
+      listaCopias: libro.listaCopias ?? []
+    }))), tap((libros) => this.librosSubject.next(libros)));
+  }
+  guardarLibro(titulo, autor, cantidad) {
+    const existente = this.libros.find((libro) => libro.titulo.trim().toLowerCase() === titulo.trim().toLowerCase() && libro.autor.trim().toLowerCase() === autor.trim().toLowerCase());
+    const request = existente ? this.http.put(`${this.apiUrl}/${encodeURIComponent(existente.id)}`, {
+      titulo: existente.titulo,
+      autor: existente.autor,
+      copias: existente.copiasTotales + cantidad,
+      estado: "disponible"
+    }) : this.http.post(this.apiUrl, {
+      id: `INV${Date.now().toString(36).toUpperCase()}`,
+      titulo: titulo.trim(),
+      autor: autor.trim(),
+      copias: cantidad
+    });
+    return request.pipe(switchMap(() => this.cargarLibros()), map(() => void 0));
+  }
+  obtenerSiguienteCopiaDisponible(libroId) {
+    const libro = this.libros.find((item) => item.id === libroId);
+    return libro?.listaCopias.find((copia) => copia.estado === "Disponible") ?? null;
+  }
+  static \u0275fac = function LibroService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _LibroService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LibroService, factory: _LibroService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LibroService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/libros/libros.ts
 var _forTrack02 = ($index, $item) => $item.id;
 function Libros_Conditional_34_For_1_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td", 15);
+    \u0275\u0275elementStart(0, "tr", 15)(1, "td", 16);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "td", 16)(4, "strong");
+    \u0275\u0275elementStart(3, "td", 17)(4, "strong");
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td", 17);
+    \u0275\u0275elementStart(6, "td", 18);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td", 18)(9, "strong");
+    \u0275\u0275elementStart(8, "td", 19)(9, "strong");
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "td", 18)(12, "strong");
+    \u0275\u0275elementStart(11, "td", 19)(12, "strong");
     \u0275\u0275text(13);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(14, "td")(15, "span", 19);
+    \u0275\u0275elementStart(14, "td")(15, "span", 20);
     \u0275\u0275text(16);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(17, "td")(18, "button", 20);
+    \u0275\u0275elementStart(17, "td")(18, "button", 21);
     \u0275\u0275listener("click", function Libros_Conditional_34_For_1_Template_button_click_18_listener() {
       const libro_r2 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r2 = \u0275\u0275nextContext(2);
@@ -44298,7 +47013,7 @@ function Libros_Conditional_34_For_1_Template(rf, ctx) {
 }
 function Libros_Conditional_34_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, Libros_Conditional_34_For_1_Template, 20, 7, "tr", null, _forTrack02);
+    \u0275\u0275repeaterCreate(0, Libros_Conditional_34_For_1_Template, 20, 7, "tr", 15, _forTrack02);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
@@ -44307,7 +47022,7 @@ function Libros_Conditional_34_Template(rf, ctx) {
 }
 function Libros_Conditional_35_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 21)(2, "p");
+    \u0275\u0275elementStart(0, "tr")(1, "td", 22)(2, "p");
     \u0275\u0275text(3, "No hay libros cargados en el sistema.");
     \u0275\u0275elementEnd()()();
   }
@@ -44315,10 +47030,10 @@ function Libros_Conditional_35_Template(rf, ctx) {
 function Libros_div_36_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 22)(1, "div", 23)(2, "div", 24)(3, "h2");
+    \u0275\u0275elementStart(0, "div", 23)(1, "div", 24)(2, "div", 25)(3, "h2");
     \u0275\u0275text(4, "Agregar Nuevo Libro");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 25);
+    \u0275\u0275elementStart(5, "button", 26);
     \u0275\u0275listener("click", function Libros_div_36_Template_button_click_5_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44326,16 +47041,16 @@ function Libros_div_36_Template(rf, ctx) {
     });
     \u0275\u0275text(6, "\xD7");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "form", 26);
+    \u0275\u0275elementStart(7, "form", 27);
     \u0275\u0275listener("ngSubmit", function Libros_div_36_Template_form_ngSubmit_7_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.agregarLibro());
     });
-    \u0275\u0275elementStart(8, "div", 27)(9, "label");
+    \u0275\u0275elementStart(8, "div", 28)(9, "label");
     \u0275\u0275text(10, "T\xEDtulo");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "input", 28);
+    \u0275\u0275elementStart(11, "input", 29);
     \u0275\u0275twoWayListener("ngModelChange", function Libros_div_36_Template_input_ngModelChange_11_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44343,10 +47058,10 @@ function Libros_div_36_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(12, "div", 27)(13, "label");
+    \u0275\u0275elementStart(12, "div", 28)(13, "label");
     \u0275\u0275text(14, "Autor");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "input", 29);
+    \u0275\u0275elementStart(15, "input", 30);
     \u0275\u0275twoWayListener("ngModelChange", function Libros_div_36_Template_input_ngModelChange_15_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44354,10 +47069,10 @@ function Libros_div_36_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(16, "div", 27)(17, "label");
+    \u0275\u0275elementStart(16, "div", 28)(17, "label");
     \u0275\u0275text(18, "Cantidad de Copias");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "input", 30);
+    \u0275\u0275elementStart(19, "input", 31);
     \u0275\u0275twoWayListener("ngModelChange", function Libros_div_36_Template_input_ngModelChange_19_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44365,10 +47080,10 @@ function Libros_div_36_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(20, "div", 31)(21, "button", 32);
+    \u0275\u0275elementStart(20, "div", 32)(21, "button", 33);
     \u0275\u0275text(22, "Guardar");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(23, "button", 33);
+    \u0275\u0275elementStart(23, "button", 34);
     \u0275\u0275listener("click", function Libros_div_36_Template_button_click_23_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44390,7 +47105,7 @@ function Libros_div_36_Template(rf, ctx) {
 function Libros_div_37_div_27_button_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 45);
+    \u0275\u0275elementStart(0, "button", 46);
     \u0275\u0275listener("click", function Libros_div_37_div_27_button_8_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r6);
       const ctx_r2 = \u0275\u0275nextContext(3);
@@ -44402,16 +47117,16 @@ function Libros_div_37_div_27_button_8_Template(rf, ctx) {
 }
 function Libros_div_37_div_27_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 41)(1, "div", 42)(2, "span");
+    \u0275\u0275elementStart(0, "div", 42)(1, "div", 43)(2, "span");
     \u0275\u0275text(3, "C\xD3DIGO DE COPIA");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(4, "strong");
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "span", 43);
+    \u0275\u0275elementStart(6, "span", 44);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(8, Libros_div_37_div_27_button_8_Template, 2, 0, "button", 44);
+    \u0275\u0275template(8, Libros_div_37_div_27_button_8_Template, 2, 0, "button", 45);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -44429,13 +47144,13 @@ function Libros_div_37_div_27_Template(rf, ctx) {
 function Libros_div_37_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 22)(1, "div", 34)(2, "div", 24)(3, "div")(4, "h2");
+    \u0275\u0275elementStart(0, "div", 23)(1, "div", 35)(2, "div", 25)(3, "div")(4, "h2");
     \u0275\u0275text(5, "Copias del Libro");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "p", 35);
+    \u0275\u0275elementStart(6, "p", 36);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "button", 25);
+    \u0275\u0275elementStart(8, "button", 26);
     \u0275\u0275listener("click", function Libros_div_37_Template_button_click_8_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44443,7 +47158,7 @@ function Libros_div_37_Template(rf, ctx) {
     });
     \u0275\u0275text(9, "\xD7");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(10, "div", 36)(11, "div")(12, "span");
+    \u0275\u0275elementStart(10, "div", 37)(11, "div")(12, "span");
     \u0275\u0275text(13, "AUTOR");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(14, "strong");
@@ -44461,10 +47176,10 @@ function Libros_div_37_Template(rf, ctx) {
     \u0275\u0275elementStart(24, "strong");
     \u0275\u0275text(25);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(26, "div", 37);
-    \u0275\u0275template(27, Libros_div_37_div_27_Template, 9, 4, "div", 38);
+    \u0275\u0275elementStart(26, "div", 38);
+    \u0275\u0275template(27, Libros_div_37_div_27_Template, 9, 4, "div", 39);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(28, "div", 39)(29, "button", 40);
+    \u0275\u0275elementStart(28, "div", 40)(29, "button", 41);
     \u0275\u0275listener("click", function Libros_div_37_Template_button_click_29_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -44504,6 +47219,9 @@ var Libros = class _Libros {
     this.sub = this.libroService.libros$.subscribe((data) => {
       this.libros = data;
     });
+    this.libroService.cargarLibros().subscribe({
+      error: (error) => this.mostrarErrorApi(error)
+    });
   }
   ngOnDestroy() {
     this.sub.unsubscribe();
@@ -44530,7 +47248,7 @@ var Libros = class _Libros {
   }
   agregarLibro() {
     if (!this.nuevoTitulo.trim() || !this.nuevoAutor.trim() || this.nuevasCopias < 1) {
-      import_sweetalert22.default.fire({
+      import_sweetalert24.default.fire({
         title: "Campos Incompletos",
         text: "Por favor completa todos los campos correctamente.",
         icon: "warning",
@@ -44538,66 +47256,33 @@ var Libros = class _Libros {
       });
       return;
     }
-    const tituloNuevo = this.nuevoTitulo.trim().toLowerCase();
-    const autorNuevo = this.nuevoAutor.trim().toLowerCase();
-    const libroExistente = this.libros.find((l) => l.titulo.trim().toLowerCase() === tituloNuevo && l.autor.trim().toLowerCase() === autorNuevo);
-    if (libroExistente) {
-      const cantidadActual = libroExistente.listaCopias.length;
-      for (let i = 1; i <= this.nuevasCopias; i++) {
-        const numeroCopia = (cantidadActual + i).toString().padStart(2, "0");
-        libroExistente.listaCopias.push({
-          id: `${libroExistente.id}-${numeroCopia}`,
-          estado: "Disponible"
+    const titulo = this.nuevoTitulo.trim();
+    const autor = this.nuevoAutor.trim();
+    const existente = this.libros.find((libro) => libro.titulo.trim().toLowerCase() === titulo.toLowerCase() && libro.autor.trim().toLowerCase() === autor.toLowerCase());
+    this.libroService.guardarLibro(titulo, autor, this.nuevasCopias).subscribe({
+      next: () => {
+        this.actividadServicio.registrarActividad("libro", existente ? `Copias agregadas al libro: ${existente.titulo} (${this.nuevasCopias})` : `Nuevo libro registrado: ${titulo} (${autor}, ${this.nuevasCopias} copias)`, existente?.id);
+        this.closeModal();
+        void import_sweetalert24.default.fire({
+          title: existente ? "\xA1Copias Agregadas!" : "\xA1Libro Agregado!",
+          text: existente ? `Se agregaron ${this.nuevasCopias} nuevas copias a "${existente.titulo}".` : `El libro "${titulo}" se guard\xF3 exitosamente.`,
+          icon: "success",
+          confirmButtonColor: "#0d9488",
+          timer: 2e3,
+          showConfirmButton: false
         });
-      }
-      libroExistente.copiasTotales += this.nuevasCopias;
-      this.actualizarEstadoLibro(libroExistente);
-      this.actividadServicio.registrarActividad("libro", `Copias agregadas al libro: ${libroExistente.titulo} (${this.nuevasCopias})`, libroExistente.id);
-      this.closeModal();
-      import_sweetalert22.default.fire({
-        title: "\xA1Copias Agregadas!",
-        text: `Se agregaron ${this.nuevasCopias} nuevas copias a "${libroExistente.titulo}".`,
-        icon: "success",
-        confirmButtonColor: "#0d9488",
-        timer: 2e3,
-        showConfirmButton: false
-      });
-      return;
-    }
-    const nuevoId = "INV" + (this.libros.length + 1).toString().padStart(3, "0");
-    const listaCopias = [];
-    for (let i = 1; i <= this.nuevasCopias; i++) {
-      const numeroCopia = i.toString().padStart(2, "0");
-      listaCopias.push({
-        id: `${nuevoId}-${numeroCopia}`,
-        estado: "Disponible"
-      });
-    }
-    const nuevoLibro = {
-      id: nuevoId,
-      titulo: this.nuevoTitulo.trim(),
-      autor: this.nuevoAutor.trim(),
-      copias: this.nuevasCopias,
-      copiasTotales: this.nuevasCopias,
-      estado: "disponible",
-      listaCopias
-    };
-    this.actualizarEstadoLibro(nuevoLibro);
-    this.libros.push(nuevoLibro);
-    this.actividadServicio.registrarActividad("libro", `Nuevo libro registrado: ${nuevoLibro.titulo} (${nuevoLibro.autor}, ${nuevoLibro.copiasTotales} copias)`, nuevoLibro.id);
-    this.closeModal();
-    import_sweetalert22.default.fire({
-      title: "\xA1Libro Agregado!",
-      text: `El libro "${nuevoLibro.titulo}" se ha guardado exitosamente.`,
-      icon: "success",
-      confirmButtonColor: "#0d9488",
-      timer: 2e3,
-      showConfirmButton: false
+      },
+      error: (error) => this.mostrarErrorApi(error)
     });
   }
-  actualizarEstadoLibro(libro) {
-    libro.copias = libro.listaCopias.filter((c) => c.estado === "Disponible").length;
-    libro.estado = libro.copias === 0 ? "sin copias" : "disponible";
+  mostrarErrorApi(error) {
+    const mensaje = error instanceof Error ? error.message : "No se pudo completar la operaci\xF3n.";
+    void import_sweetalert24.default.fire({
+      title: "Error de conexi\xF3n con la API",
+      text: mensaje,
+      icon: "error",
+      confirmButtonColor: "#0d9488"
+    });
   }
   irAPrestamo(libro) {
     this.cerrarCopias();
@@ -44620,7 +47305,7 @@ var Libros = class _Libros {
   static \u0275fac = function Libros_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _Libros)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Libros, selectors: [["app-libros"]], decls: 38, vars: 6, consts: [[1, "body"], [1, "main-content"], [1, "header"], [1, "h1"], [1, "add-button", 3, "click"], [1, "search-card"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por t\xEDtulo, autor, ID o copia...", 3, "ngModelChange", "ngModel"], [1, "book-count"], [1, "table-container"], [1, "table"], ["class", "modal-overlay", 4, "ngIf"], [1, "text-muted"], [1, "title"], [1, "author"], [1, "copies"], [1, "status", 3, "ngClass"], [1, "view-button", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], [1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "titulo", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "autor", "required", "", 3, "ngModelChange", "ngModel"], ["type", "number", "name", "copias", "min", "1", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "modal-card", "copias-card"], [1, "nombre-libro"], [1, "info-libro"], [1, "lista-copias"], ["class", "copia-row", 4, "ngFor", "ngForOf"], [1, "copias-footer"], [1, "cancel-btn", 3, "click"], [1, "copia-row"], [1, "copia-info"], [1, "copia-status", 3, "ngClass"], ["class", "accion-copia devolver", 3, "click", 4, "ngIf"], [1, "accion-copia", "devolver", 3, "click"]], template: function Libros_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Libros, selectors: [["app-libros"]], decls: 38, vars: 6, consts: [[1, "body"], [1, "main-content"], [1, "header"], [1, "h1"], [1, "add-button", 3, "click"], [1, "search-card"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por t\xEDtulo, autor, ID o copia...", 3, "ngModelChange", "ngModel"], [1, "book-count"], [1, "table-container"], [1, "table"], ["class", "modal-overlay", 4, "ngIf"], [1, "book-row"], [1, "text-muted"], [1, "title"], [1, "author"], [1, "copies"], [1, "status", 3, "ngClass"], [1, "view-button", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], [1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "titulo", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "autor", "required", "", 3, "ngModelChange", "ngModel"], ["type", "number", "name", "copias", "min", "1", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "modal-card", "copias-card"], [1, "nombre-libro"], [1, "info-libro"], [1, "lista-copias"], ["class", "copia-row", 4, "ngFor", "ngForOf"], [1, "copias-footer"], [1, "cancel-btn", 3, "click"], [1, "copia-row"], [1, "copia-info"], [1, "copia-status", 3, "ngClass"], ["class", "accion-copia devolver", 3, "click", 4, "ngIf"], [1, "accion-copia", "devolver", 3, "click"]], template: function Libros_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "main", 1)(2, "header", 2)(3, "h1", 3);
       \u0275\u0275text(4, "Libros");
@@ -44688,7 +47373,7 @@ var Libros = class _Libros {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isCopiasModalOpen && ctx.libroSeleccionado);
     }
-  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, MinValidator, NgModel, NgForm], styles: ["\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card[_ngcontent-%COMP%], \n.books-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card[_ngcontent-%COMP%] {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.book-count[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.empty-state-row[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%], \n.copies[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author[_ngcontent-%COMP%] {\n  color: #475569;\n  font-size: 13px;\n}\n.status[_ngcontent-%COMP%] {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button[_ngcontent-%COMP%] {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button[_ngcontent-%COMP%]:hover {\n  background: #bae6fd;\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card[_ngcontent-%COMP%] {\n  max-width: 580px;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn[_ngcontent-%COMP%], \n.cancel-btn[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro[_ngcontent-%COMP%] {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro[_ngcontent-%COMP%]   div[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status[_ngcontent-%COMP%] {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia[_ngcontent-%COMP%] {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, MinValidator, NgModel, NgForm], styles: ["\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card[_ngcontent-%COMP%], \n.books-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card[_ngcontent-%COMP%] {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.book-count[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody[_ngcontent-%COMP%]   tr.book-row[_ngcontent-%COMP%] {\n  transition: background-color 0.15s ease;\n}\ntbody[_ngcontent-%COMP%]   tr.book-row[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.empty-state-row[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%], \n.copies[_ngcontent-%COMP%]   strong[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author[_ngcontent-%COMP%] {\n  color: #475569;\n  font-size: 13px;\n}\n.status[_ngcontent-%COMP%] {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button[_ngcontent-%COMP%] {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button[_ngcontent-%COMP%]:hover {\n  background: #bae6fd;\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card[_ngcontent-%COMP%] {\n  max-width: 580px;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn[_ngcontent-%COMP%], \n.cancel-btn[_ngcontent-%COMP%] {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro[_ngcontent-%COMP%] {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro[_ngcontent-%COMP%]   div[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row[_ngcontent-%COMP%] {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status[_ngcontent-%COMP%] {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada[_ngcontent-%COMP%] {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia[_ngcontent-%COMP%] {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Libros, [{
@@ -44735,7 +47420,7 @@ var Libros = class _Libros {
     <tbody>\r
       @if (librosFiltrados.length > 0){\r
       @for(libro of librosFiltrados; track libro.id){\r
-      <tr>\r
+      <tr class="book-row">\r
         <td class="text-muted">{{ libro.id }}</td>\r
         <td class="title"><strong>{{ libro.titulo }}</strong></td>\r
         <td class="author">{{ libro.autor }}</td>\r
@@ -44838,7 +47523,7 @@ var Libros = class _Libros {
   </div>\r
 </div>\r
  </div>\r
-`, styles: ["/* src/app/libros/libros.css */\n.body {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card,\n.books-card {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.book-count {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.empty-state-row {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title strong,\n.copies strong {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author {\n  color: #475569;\n  font-size: 13px;\n}\n.status {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button:hover {\n  background: #bae6fd;\n}\n.modal-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card {\n  max-width: 580px;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n}\n.modal-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn,\n.cancel-btn {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro div {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro span {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info span {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */\n"] }]
+`, styles: ["/* src/app/libros/libros.css */\n.body {\n  width: 100%;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.main-content {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  margin-bottom: 25px;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.add-button {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.add-button:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.search-card,\n.books-card {\n  background: #ffffff;\n  border-radius: 12px;\n  width: 100%;\n}\n.search-card {\n  padding: 18px 20px;\n  display: flex;\n  align-items: center;\n  gap: 16px;\n  margin-bottom: 20px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box:focus-within {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 1px #0d9488;\n  border-radius: 12px;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.book-count {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 500;\n  white-space: nowrap;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody tr.book-row {\n  transition: background-color 0.15s ease;\n}\ntbody tr.book-row:hover {\n  background-color: #f8fafc;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.empty-state-row {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  padding: 50px 20px;\n  text-align: center;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.title strong,\n.copies strong {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.author {\n  color: #475569;\n  font-size: 13px;\n}\n.status {\n  display: inline-flex;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.status.available {\n  background: #dcfce7;\n  color: #15803d;\n}\n.status.unavailable {\n  background: #ffe4e6;\n  color: #c2410c;\n}\n.view-button {\n  border: none;\n  background: #e0f2fe;\n  color: #1e40af;\n  font-size: 12px;\n  font-weight: 600;\n  padding: 6px 14px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.view-button:hover {\n  background: #bae6fd;\n}\n.modal-overlay {\n  position: fixed;\n  inset: 0;\n  background: rgba(15, 23, 42, 0.4);\n  -webkit-backdrop-filter: blur(2px);\n  backdrop-filter: blur(2px);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  width: 100%;\n  max-width: 440px;\n  border-radius: 12px;\n  padding: 24px;\n}\n.modal-card.copias-card {\n  max-width: 580px;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 20px;\n  color: #94a3b8;\n  cursor: pointer;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  height: 40px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 0 12px;\n  font-size: 13px;\n  outline: none;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n}\n.modal-actions {\n  display: flex;\n  gap: 10px;\n  margin-top: 20px;\n}\n.submit-btn,\n.cancel-btn {\n  flex: 1;\n  height: 40px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.submit-btn {\n  background: #0d9488;\n  color: #ffffff;\n  border: none;\n}\n.cancel-btn {\n  background: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n}\n.nombre-libro {\n  margin: 4px 0 0;\n  color: #64748b;\n  font-size: 13px;\n}\n.info-libro {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 10px;\n  margin-bottom: 20px;\n  padding: 12px 16px;\n  background: #f8fafc;\n  border-radius: 8px;\n}\n.info-libro div {\n  display: flex;\n  flex-direction: column;\n  text-align: center;\n}\n.info-libro span {\n  color: #64748b;\n  font-size: 10px;\n  font-weight: 700;\n}\n.lista-copias {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  max-height: 280px;\n  overflow-y: auto;\n}\n.copia-row {\n  display: grid;\n  grid-template-columns: 1fr auto;\n  align-items: center;\n  gap: 12px;\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n}\n.copia-info {\n  display: flex;\n  flex-direction: column;\n}\n.copia-info span {\n  color: #64748b;\n  font-size: 10px;\n}\n.copia-status {\n  padding: 4px 10px;\n  border-radius: 12px;\n  font-size: 11px;\n  font-weight: 600;\n}\n.copia-status.disponible {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copia-status.prestada {\n  background: #ffe4e6;\n  color: #e11d48;\n}\n.accion-copia {\n  border: none;\n  border-radius: 6px;\n  padding: 6px 12px;\n  font-size: 11px;\n  font-weight: 600;\n  cursor: pointer;\n}\n.accion-copia.devolver {\n  background: #dcfce7;\n  color: #15803d;\n}\n.copias-footer {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 16px;\n}\n/*# sourceMappingURL=libros.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
@@ -44846,7 +47531,7 @@ var Libros = class _Libros {
 })();
 
 // src/app/prestamos/prestamos.ts
-var import_sweetalert23 = __toESM(require_sweetalert2_all());
+var import_sweetalert25 = __toESM(require_sweetalert2_all());
 var _forTrack03 = ($index, $item) => $item.valor;
 var _forTrack12 = ($index, $item) => $item.id;
 function Prestamos_For_14_Template(rf, ctx) {
@@ -44864,20 +47549,20 @@ function Prestamos_For_14_Template(rf, ctx) {
   if (rf & 2) {
     const opcion_r2 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275classProp("active", ctx_r2.filtro === opcion_r2.valor);
+    \u0275\u0275classProp("active", ctx_r2.filtro === opcion_r2.valor)("filter-activo", opcion_r2.valor === "activo")("filter-vencido", opcion_r2.valor === "atrasado")("filter-suspendido", opcion_r2.valor === "suspendido");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", opcion_r2.etiqueta, " ");
   }
 }
 function Prestamos_For_39_Conditional_28_Template(rf, ctx) {
   if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 30);
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 34);
     \u0275\u0275listener("click", function Prestamos_For_39_Conditional_28_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r4);
-      const prestamo_r5 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275restoreView(_r5);
+      const prestamo_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.quitarSuspension(prestamo_r5));
+      return \u0275\u0275resetView(ctx_r2.quitarSuspension(prestamo_r6));
     });
     \u0275\u0275text(1, " Quitar suspensi\xF3n ");
     \u0275\u0275elementEnd();
@@ -44885,13 +47570,13 @@ function Prestamos_For_39_Conditional_28_Template(rf, ctx) {
 }
 function Prestamos_For_39_Conditional_29_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 34);
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 38);
     \u0275\u0275listener("click", function Prestamos_For_39_Conditional_29_Conditional_0_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r7);
-      const prestamo_r5 = \u0275\u0275nextContext(2).$implicit;
+      \u0275\u0275restoreView(_r8);
+      const prestamo_r6 = \u0275\u0275nextContext(2).$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.renovarPrestamo(prestamo_r5));
+      return \u0275\u0275resetView(ctx_r2.renovarPrestamo(prestamo_r6));
     });
     \u0275\u0275elementStart(1, "span");
     \u0275\u0275text(2, "\u21BB");
@@ -44902,26 +47587,26 @@ function Prestamos_For_39_Conditional_29_Conditional_0_Template(rf, ctx) {
 }
 function Prestamos_For_39_Conditional_29_Template(rf, ctx) {
   if (rf & 1) {
-    const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275conditionalCreate(0, Prestamos_For_39_Conditional_29_Conditional_0_Template, 4, 0, "button", 31);
-    \u0275\u0275elementStart(1, "button", 32);
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275conditionalCreate(0, Prestamos_For_39_Conditional_29_Conditional_0_Template, 4, 0, "button", 35);
+    \u0275\u0275elementStart(1, "button", 36);
     \u0275\u0275listener("click", function Prestamos_For_39_Conditional_29_Template_button_click_1_listener() {
-      \u0275\u0275restoreView(_r6);
-      const prestamo_r5 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275restoreView(_r7);
+      const prestamo_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.suspenderPrestamo(prestamo_r5));
+      return \u0275\u0275resetView(ctx_r2.suspenderPrestamo(prestamo_r6));
     });
     \u0275\u0275elementStart(2, "span");
     \u0275\u0275text(3, "\u26A0");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " Suspender ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 33);
+    \u0275\u0275elementStart(5, "button", 37);
     \u0275\u0275listener("click", function Prestamos_For_39_Conditional_29_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r6);
-      const prestamo_r5 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275restoreView(_r7);
+      const prestamo_r6 = \u0275\u0275nextContext().$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.devolverPrestamo(prestamo_r5));
+      return \u0275\u0275resetView(ctx_r2.devolverPrestamo(prestamo_r6));
     });
     \u0275\u0275elementStart(6, "span");
     \u0275\u0275text(7, "\u2713");
@@ -44930,12 +47615,13 @@ function Prestamos_For_39_Conditional_29_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const prestamo_r5 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275conditional(prestamo_r5.renovaciones < 2 ? 0 : -1);
+    const prestamo_r6 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional(prestamo_r6.renovaciones < 2 ? 0 : -1);
   }
 }
 function Prestamos_For_39_Template(rf, ctx) {
   if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr")(1, "td")(2, "span", 18);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd()();
@@ -44962,237 +47648,310 @@ function Prestamos_For_39_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(26, "td")(27, "div", 28);
     \u0275\u0275conditionalCreate(28, Prestamos_For_39_Conditional_28_Template, 2, 0, "button", 29)(29, Prestamos_For_39_Conditional_29_Template, 9, 1);
-    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(30, "button", 30);
+    \u0275\u0275listener("click", function Prestamos_For_39_Template_button_click_30_listener() {
+      const prestamo_r6 = \u0275\u0275restoreView(_r4).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r2.eliminarPrestamo(prestamo_r6));
+    });
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(31, "svg", 31);
+    \u0275\u0275element(32, "path", 32)(33, "path", 33);
+    \u0275\u0275elementEnd()()()()();
   }
   if (rf & 2) {
-    const prestamo_r5 = ctx.$implicit;
+    const prestamo_r6 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(prestamo_r5.id);
+    \u0275\u0275textInterpolate(prestamo_r6.id);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(prestamo_r5.socio);
+    \u0275\u0275textInterpolate(prestamo_r6.socio);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(prestamo_r5.libro);
+    \u0275\u0275textInterpolate(prestamo_r6.libro);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(prestamo_r5.inventario);
+    \u0275\u0275textInterpolate(prestamo_r6.inventario);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(prestamo_r5.fechaInicio);
+    \u0275\u0275textInterpolate(prestamo_r6.fechaInicio);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(prestamo_r5.fechaVencimiento);
+    \u0275\u0275textInterpolate(prestamo_r6.fechaVencimiento);
     \u0275\u0275advance(2);
-    \u0275\u0275classProp("estado-activo", prestamo_r5.estado === "activo")("estado-vencido", prestamo_r5.estado === "atrasado")("estado-devuelto", prestamo_r5.estado === "devuelto")("estado-suspendido", prestamo_r5.estado === "suspendido");
+    \u0275\u0275classProp("estado-activo", prestamo_r6.estado === "activo")("estado-vencido", prestamo_r6.estado === "atrasado")("estado-devuelto", prestamo_r6.estado === "devuelto")("estado-suspendido", prestamo_r6.estado === "suspendido");
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", prestamo_r5.estado, " ");
+    \u0275\u0275textInterpolate1(" ", prestamo_r6.estado, " ");
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate1("", prestamo_r5.renovaciones, "/2");
+    \u0275\u0275textInterpolate1("", prestamo_r6.renovaciones, "/2");
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(prestamo_r5.estado === "suspendido" ? 28 : prestamo_r5.estado !== "devuelto" ? 29 : -1);
+    \u0275\u0275conditional(prestamo_r6.estado === "suspendido" ? 28 : prestamo_r6.estado !== "devuelto" ? 29 : -1);
   }
 }
 function Prestamos_ForEmpty_40_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 35);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 39);
     \u0275\u0275text(2, "No se encontraron pr\xE9stamos.");
     \u0275\u0275elementEnd()();
   }
 }
-function Prestamos_Conditional_41_For_17_Template(rf, ctx) {
+function Prestamos_Conditional_41_Conditional_15_For_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "option", 43);
-    \u0275\u0275text(1);
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 60);
+    \u0275\u0275listener("click", function Prestamos_Conditional_41_Conditional_15_For_2_Template_button_click_0_listener() {
+      const socio_r12 = \u0275\u0275restoreView(_r11).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r2.seleccionarSocio(socio_r12));
+    });
+    \u0275\u0275elementStart(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "small");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const socio_r12 = ctx.$implicit;
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(socio_r12.nombre);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate2("", socio_r12.numCarnet, " \xB7 DNI: ", socio_r12.dni);
+  }
+}
+function Prestamos_Conditional_41_Conditional_15_ForEmpty_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "No se encontraron socios disponibles.");
+    \u0275\u0275elementEnd();
+  }
+}
+function Prestamos_Conditional_41_Conditional_15_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 47);
+    \u0275\u0275repeaterCreate(1, Prestamos_Conditional_41_Conditional_15_For_2_Template, 5, 3, "button", 58, _forTrack12, false, Prestamos_Conditional_41_Conditional_15_ForEmpty_3_Template, 2, 0, "p", 59);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const socio_r10 = ctx.$implicit;
-    \u0275\u0275property("ngValue", socio_r10.id);
+    const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate2("", socio_r10.nombre, " (DNI: ", socio_r10.dni, ")");
+    \u0275\u0275repeater(ctx_r2.sociosFiltradosPorBusqueda);
   }
 }
-function Prestamos_Conditional_41_Conditional_18_Template(rf, ctx) {
+function Prestamos_Conditional_41_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 44)(1, "small");
-    \u0275\u0275text(2, "Debes seleccionar un socio.");
+    \u0275\u0275elementStart(0, "div", 48)(1, "small");
+    \u0275\u0275text(2, "Busc\xE1 y seleccion\xE1 un socio de la lista.");
     \u0275\u0275elementEnd()();
   }
 }
-function Prestamos_Conditional_41_For_27_Template(rf, ctx) {
+function Prestamos_Conditional_41_Conditional_23_For_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "option", 47);
-    \u0275\u0275text(1);
+    const _r13 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 60);
+    \u0275\u0275listener("click", function Prestamos_Conditional_41_Conditional_23_For_2_Template_button_click_0_listener() {
+      const libro_r14 = \u0275\u0275restoreView(_r13).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r2.seleccionarLibro(libro_r14));
+    });
+    \u0275\u0275elementStart(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "small");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const libro_r14 = ctx.$implicit;
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(libro_r14.titulo);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate2("", libro_r14.autor, " \xB7 ", libro_r14.id);
+  }
+}
+function Prestamos_Conditional_41_Conditional_23_ForEmpty_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 59);
+    \u0275\u0275text(1, "No se encontraron libros disponibles.");
+    \u0275\u0275elementEnd();
+  }
+}
+function Prestamos_Conditional_41_Conditional_23_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 47);
+    \u0275\u0275repeaterCreate(1, Prestamos_Conditional_41_Conditional_23_For_2_Template, 5, 3, "button", 58, _forTrack12, false, Prestamos_Conditional_41_Conditional_23_ForEmpty_3_Template, 2, 0, "p", 59);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const libro_r11 = ctx.$implicit;
-    \u0275\u0275property("value", libro_r11.id);
+    const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(libro_r11.titulo);
+    \u0275\u0275repeater(ctx_r2.librosFiltradosPorBusqueda);
   }
 }
-function Prestamos_Conditional_41_Conditional_28_Template(rf, ctx) {
+function Prestamos_Conditional_41_Conditional_24_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 44)(1, "small");
-    \u0275\u0275text(2, "Debes seleccionar un libro.");
+    \u0275\u0275elementStart(0, "div", 48)(1, "small");
+    \u0275\u0275text(2, "Busc\xE1 y seleccion\xE1 un libro de la lista.");
     \u0275\u0275elementEnd()();
   }
 }
-function Prestamos_Conditional_41_For_37_Template(rf, ctx) {
+function Prestamos_Conditional_41_For_33_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "option", 47);
+    \u0275\u0275elementStart(0, "option", 52);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const copia_r12 = ctx.$implicit;
-    \u0275\u0275property("value", copia_r12.id);
+    const copia_r15 = ctx.$implicit;
+    \u0275\u0275property("value", copia_r15.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(copia_r12.id);
+    \u0275\u0275textInterpolate(copia_r15.id);
   }
 }
-function Prestamos_Conditional_41_Conditional_38_Template(rf, ctx) {
+function Prestamos_Conditional_41_Conditional_34_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 44)(1, "small");
+    \u0275\u0275elementStart(0, "div", 48)(1, "small");
     \u0275\u0275text(2, "Debes seleccionar un c\xF3digo de inventario.");
     \u0275\u0275elementEnd()();
   }
 }
 function Prestamos_Conditional_41_Template(rf, ctx) {
   if (rf & 1) {
-    const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 16)(1, "div", 36)(2, "div", 37)(3, "h2");
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 40)(2, "div", 41)(3, "h2");
     \u0275\u0275text(4, "Registrar Nuevo Pr\xE9stamo");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 38);
+    \u0275\u0275elementStart(5, "button", 42);
     \u0275\u0275listener("click", function Prestamos_Conditional_41_Template_button_click_5_listener() {
-      \u0275\u0275restoreView(_r8);
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.closeModal());
     });
     \u0275\u0275text(6, "\xD7");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "form", 39, 0);
+    \u0275\u0275elementStart(7, "form", 43, 0);
     \u0275\u0275listener("ngSubmit", function Prestamos_Conditional_41_Template_form_ngSubmit_7_listener() {
-      \u0275\u0275restoreView(_r8);
-      const prestamoForm_r9 = \u0275\u0275reference(8);
+      \u0275\u0275restoreView(_r9);
+      const prestamoForm_r10 = \u0275\u0275reference(8);
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(prestamoForm_r9.valid && ctx_r2.crearPrestamo());
+      return \u0275\u0275resetView(prestamoForm_r10.valid && ctx_r2.socioSeleccionadoId && ctx_r2.libroSeleccionadoId && ctx_r2.crearPrestamo());
     });
-    \u0275\u0275elementStart(9, "div", 40)(10, "label");
+    \u0275\u0275elementStart(9, "div", 44)(10, "label");
     \u0275\u0275text(11, "Socio");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "select", 41, 1);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_select_ngModelChange_12_listener($event) {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275elementStart(12, "div", 45)(13, "input", 46, 1);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_13_listener($event) {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r2.socioSeleccionadoId, $event) || (ctx_r2.socioSeleccionadoId = $event);
+      \u0275\u0275twoWayBindingSet(ctx_r2.busquedaSocio, $event) || (ctx_r2.busquedaSocio = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementStart(14, "option", 42);
-    \u0275\u0275text(15, "Seleccion\xE1 un socio");
-    \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(16, Prestamos_Conditional_41_For_17_Template, 2, 3, "option", 43, _forTrack12);
-    \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(18, Prestamos_Conditional_41_Conditional_18_Template, 3, 0, "div", 44);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "div", 40)(20, "label");
-    \u0275\u0275text(21, "T\xEDtulo del Libro");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "select", 45, 2);
-    \u0275\u0275listener("ngModelChange", function Prestamos_Conditional_41_Template_select_ngModelChange_22_listener($event) {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275listener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_13_listener() {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
-      ctx_r2.libroSeleccionadoId = $event;
-      return \u0275\u0275resetView(ctx_r2.onLibroChange());
+      return \u0275\u0275resetView(ctx_r2.actualizarBusquedaSocio());
     });
-    \u0275\u0275elementStart(24, "option", 46);
-    \u0275\u0275text(25, "Seleccion\xE1 un libro");
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(26, Prestamos_Conditional_41_For_27_Template, 2, 2, "option", 47, _forTrack12);
+    \u0275\u0275conditionalCreate(15, Prestamos_Conditional_41_Conditional_15_Template, 4, 1, "div", 47);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(28, Prestamos_Conditional_41_Conditional_28_Template, 3, 0, "div", 44);
+    \u0275\u0275conditionalCreate(16, Prestamos_Conditional_41_Conditional_16_Template, 3, 0, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(29, "div", 40)(30, "label");
-    \u0275\u0275text(31, "C\xF3digo de Inventario");
+    \u0275\u0275elementStart(17, "div", 44)(18, "label");
+    \u0275\u0275text(19, "T\xEDtulo del Libro");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(32, "select", 48, 3);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_select_ngModelChange_32_listener($event) {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275elementStart(20, "div", 45)(21, "input", 49, 2);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_21_listener($event) {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r2 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r2.busquedaLibro, $event) || (ctx_r2.busquedaLibro = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_21_listener() {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r2 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r2.actualizarBusquedaLibro());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(23, Prestamos_Conditional_41_Conditional_23_Template, 4, 1, "div", 47);
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(24, Prestamos_Conditional_41_Conditional_24_Template, 3, 0, "div", 48);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(25, "div", 44)(26, "label");
+    \u0275\u0275text(27, "C\xF3digo de Inventario");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(28, "select", 50, 3);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_select_ngModelChange_28_listener($event) {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.inventario, $event) || (ctx_r2.inventario = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275elementStart(34, "option", 46);
-    \u0275\u0275text(35, "Seleccion\xE1 un c\xF3digo de inventario");
+    \u0275\u0275elementStart(30, "option", 51);
+    \u0275\u0275text(31, "Seleccion\xE1 un c\xF3digo de inventario");
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(36, Prestamos_Conditional_41_For_37_Template, 2, 2, "option", 47, _forTrack12);
+    \u0275\u0275repeaterCreate(32, Prestamos_Conditional_41_For_33_Template, 2, 2, "option", 52, _forTrack12);
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(38, Prestamos_Conditional_41_Conditional_38_Template, 3, 0, "div", 44);
+    \u0275\u0275conditionalCreate(34, Prestamos_Conditional_41_Conditional_34_Template, 3, 0, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(39, "div", 40)(40, "label");
-    \u0275\u0275text(41, "Fecha de Inicio");
+    \u0275\u0275elementStart(35, "div", 44)(36, "label");
+    \u0275\u0275text(37, "Fecha de Inicio");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(42, "input", 49);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_42_listener($event) {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275elementStart(38, "input", 53);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_38_listener($event) {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.fechaInicio, $event) || (ctx_r2.fechaInicio = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(43, "div", 40)(44, "label");
-    \u0275\u0275text(45, "Fecha de Vencimiento");
+    \u0275\u0275elementStart(39, "div", 44)(40, "label");
+    \u0275\u0275text(41, "Fecha de Vencimiento");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(46, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_46_listener($event) {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275elementStart(42, "input", 54);
+    \u0275\u0275twoWayListener("ngModelChange", function Prestamos_Conditional_41_Template_input_ngModelChange_42_listener($event) {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.fechaVencimiento, $event) || (ctx_r2.fechaVencimiento = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(47, "div", 51)(48, "button", 52);
-    \u0275\u0275text(49, "Guardar");
+    \u0275\u0275elementStart(43, "div", 55)(44, "button", 56);
+    \u0275\u0275text(45, "Guardar");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(50, "button", 53);
-    \u0275\u0275listener("click", function Prestamos_Conditional_41_Template_button_click_50_listener() {
-      \u0275\u0275restoreView(_r8);
+    \u0275\u0275elementStart(46, "button", 57);
+    \u0275\u0275listener("click", function Prestamos_Conditional_41_Template_button_click_46_listener() {
+      \u0275\u0275restoreView(_r9);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.closeModal());
     });
-    \u0275\u0275text(51, "Cancelar");
+    \u0275\u0275text(47, "Cancelar");
     \u0275\u0275elementEnd()()()()();
   }
   if (rf & 2) {
-    const prestamoForm_r9 = \u0275\u0275reference(8);
-    const socioModel_r13 = \u0275\u0275reference(13);
-    const libroModel_r14 = \u0275\u0275reference(23);
-    const inventarioModel_r15 = \u0275\u0275reference(33);
+    const prestamoForm_r10 = \u0275\u0275reference(8);
+    const busquedaSocioModel_r16 = \u0275\u0275reference(14);
+    const busquedaLibroModel_r17 = \u0275\u0275reference(22);
+    const inventarioModel_r18 = \u0275\u0275reference(29);
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275advance(12);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r2.socioSeleccionadoId);
+    \u0275\u0275advance(13);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r2.busquedaSocio);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngValue", null);
+    \u0275\u0275conditional(!ctx_r2.socioSeleccionadoId && ctx_r2.busquedaSocio.trim() ? 15 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(busquedaSocioModel_r16.invalid && busquedaSocioModel_r16.touched || prestamoForm_r10.submitted && !ctx_r2.socioSeleccionadoId ? 16 : -1);
+    \u0275\u0275advance(5);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r2.busquedaLibro);
     \u0275\u0275advance(2);
-    \u0275\u0275repeater(ctx_r2.sociosDisponibles);
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(socioModel_r13.invalid && socioModel_r13.touched ? 18 : -1);
-    \u0275\u0275advance(4);
-    \u0275\u0275property("ngModel", ctx_r2.libroSeleccionadoId);
-    \u0275\u0275advance(4);
-    \u0275\u0275repeater(ctx_r2.librosDisponibles);
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(libroModel_r14.invalid && libroModel_r14.touched ? 28 : -1);
+    \u0275\u0275conditional(!ctx_r2.libroSeleccionadoId && ctx_r2.busquedaLibro.trim() ? 23 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(busquedaLibroModel_r17.invalid && busquedaLibroModel_r17.touched || prestamoForm_r10.submitted && !ctx_r2.libroSeleccionadoId ? 24 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.inventario);
     \u0275\u0275advance(4);
     \u0275\u0275repeater(ctx_r2.copiasDisponiblesParaPrestamo);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(inventarioModel_r15.invalid && inventarioModel_r15.touched ? 38 : -1);
+    \u0275\u0275conditional(inventarioModel_r18.invalid && inventarioModel_r18.touched ? 34 : -1);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.fechaInicio);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.fechaVencimiento);
     \u0275\u0275advance(2);
-    \u0275\u0275property("disabled", !prestamoForm_r9.valid);
+    \u0275\u0275property("disabled", !prestamoForm_r10.valid || !ctx_r2.socioSeleccionadoId || !ctx_r2.libroSeleccionadoId);
   }
 }
 var Prestamos = class _Prestamos {
@@ -45200,6 +47959,7 @@ var Prestamos = class _Prestamos {
   socioService;
   libroService;
   actividadServicio;
+  ngZone;
   changeDetector;
   route;
   prestamos = [];
@@ -45207,44 +47967,41 @@ var Prestamos = class _Prestamos {
   busqueda = "";
   filtro = "todos";
   opcionesFiltro = [
-    {
-      valor: "todos",
-      etiqueta: "Todos"
-    },
-    {
-      valor: "activo",
-      etiqueta: "Activo"
-    },
-    {
-      valor: "atrasado",
-      etiqueta: "Vencidos"
-    },
-    {
-      valor: "suspendido",
-      etiqueta: "Suspendidos"
-    }
+    { valor: "todos", etiqueta: "Todos" },
+    { valor: "activo", etiqueta: "Activo" },
+    { valor: "atrasado", etiqueta: "Vencidos" },
+    { valor: "suspendido", etiqueta: "Suspendidos" }
   ];
   isModalOpen = false;
   socioSeleccionadoId = null;
+  busquedaSocio = "";
   libroSeleccionadoId = "";
+  busquedaLibro = "";
   inventario = "";
   copiasDisponiblesParaPrestamo = [];
   fechaInicio = "";
   fechaVencimiento = "";
   sub = new Subscription();
-  constructor(prestamoService, socioService, libroService, actividadServicio, changeDetector, route) {
+  constructor(prestamoService, socioService, libroService, actividadServicio, ngZone, changeDetector, route) {
     this.prestamoService = prestamoService;
     this.socioService = socioService;
     this.libroService = libroService;
     this.actividadServicio = actividadServicio;
+    this.ngZone = ngZone;
     this.changeDetector = changeDetector;
     this.route = route;
   }
-  // ==========================================
-  // INICIO
-  // ==========================================
   ngOnInit() {
-    this.actualizarPrestamos();
+    this.prestamoService.cargarPrestamos().subscribe({
+      next: () => this.actualizarPrestamos(),
+      error: (error) => this.mostrarErrorApi(error)
+    });
+    this.socioService.cargarSocios().subscribe({
+      error: (error) => this.mostrarErrorApi(error)
+    });
+    this.libroService.cargarLibros().subscribe({
+      error: (error) => this.mostrarErrorApi(error)
+    });
     this.sub = this.libroService.libros$.subscribe((libros) => {
       this.librosDisponibles = libros.filter((l) => l.copias > 0);
     });
@@ -45255,27 +48012,46 @@ var Prestamos = class _Prestamos {
       }
     }));
   }
-  // ==========================================
-  // DESTRUIR
-  // ==========================================
   ngOnDestroy() {
     this.sub.unsubscribe();
   }
-  // ==========================================
-  // SOCIOS DISPONIBLES
-  // ==========================================
   get sociosDisponibles() {
     return this.socioService.tenerSocios().filter((s) => s.estado === "activo" && !this.prestamoService.obtenerPrestamos().some((prestamo) => prestamo.socioId === s.id && prestamo.estado !== "devuelto"));
   }
-  // ==========================================
-  // ACTUALIZAR PRÉSTAMOS
-  // ==========================================
+  get sociosFiltradosPorBusqueda() {
+    const termino = this.busquedaSocio.trim().toLowerCase();
+    if (!termino) {
+      return [];
+    }
+    return this.sociosDisponibles.filter((socio) => [socio.nombre, socio.dni, socio.numCarnet].some((valor) => String(valor ?? "").toLowerCase().includes(termino)));
+  }
+  actualizarBusquedaSocio() {
+    this.socioSeleccionadoId = null;
+  }
+  seleccionarSocio(socio) {
+    this.socioSeleccionadoId = socio.id;
+    this.busquedaSocio = `${socio.nombre} (DNI: ${socio.dni})`;
+  }
+  get librosFiltradosPorBusqueda() {
+    const termino = this.busquedaLibro.trim().toLowerCase();
+    if (!termino) {
+      return [];
+    }
+    return this.librosDisponibles.filter((libro) => [libro.titulo, libro.autor, libro.id].some((valor) => String(valor ?? "").toLowerCase().includes(termino)));
+  }
+  actualizarBusquedaLibro() {
+    this.libroSeleccionadoId = "";
+    this.inventario = "";
+    this.onLibroChange();
+  }
+  seleccionarLibro(libro) {
+    this.libroSeleccionadoId = libro.id;
+    this.busquedaLibro = libro.titulo;
+    this.onLibroChange();
+  }
   actualizarPrestamos() {
     this.prestamos = this.prestamoService.obtenerPrestamos().filter((p) => p.estado !== "devuelto");
   }
-  // ==========================================
-  // FILTRAR PRÉSTAMOS
-  // ==========================================
   get prestamosFiltrados() {
     const texto = this.busqueda.toLowerCase().trim();
     return this.prestamos.filter((p) => {
@@ -45287,50 +48063,40 @@ var Prestamos = class _Prestamos {
       return coincideBusqueda && coincideFiltro;
     });
   }
-  // ==========================================
-  // CAMBIAR FILTRO
-  // ==========================================
   cambiarFiltro(filtro) {
     this.filtro = filtro;
   }
-  // ==========================================
-  // CAMBIO DE LIBRO
-  // ==========================================
   onLibroChange() {
     this.inventario = "";
     const libroObj = this.librosDisponibles.find((l) => l.id === this.libroSeleccionadoId);
     this.copiasDisponiblesParaPrestamo = libroObj ? libroObj.listaCopias.filter((c) => c.estado === "Disponible") : [];
   }
-  // ==========================================
-  // FECHA
-  // ==========================================
   obtenerFechaFormateada(meses = 0) {
     const fecha = /* @__PURE__ */ new Date();
     fecha.setMonth(fecha.getMonth() + meses);
     return fecha.toISOString().split("T")[0];
   }
-  // ==========================================
-  // ABRIR MODAL
-  // ==========================================
   openModal() {
     this.isModalOpen = true;
+    this.socioSeleccionadoId = null;
+    this.busquedaSocio = "";
+    this.libroSeleccionadoId = "";
+    this.busquedaLibro = "";
+    this.inventario = "";
+    this.copiasDisponiblesParaPrestamo = [];
     this.fechaInicio = this.obtenerFechaFormateada(0);
     this.fechaVencimiento = this.obtenerFechaFormateada(1);
   }
-  // ==========================================
-  // CERRAR MODAL
-  // ==========================================
   closeModal() {
     this.isModalOpen = false;
     this.socioSeleccionadoId = null;
+    this.busquedaSocio = "";
     this.libroSeleccionadoId = "";
+    this.busquedaLibro = "";
     this.inventario = "";
     this.copiasDisponiblesParaPrestamo = [];
   }
-  // ==========================================
-  // CREAR PRÉSTAMO
-  // ==========================================
-  crearPrestamo() {
+  async crearPrestamo() {
     if (!this.socioSeleccionadoId || !this.libroSeleccionadoId || !this.inventario.trim()) {
       return false;
     }
@@ -45339,14 +48105,13 @@ var Prestamos = class _Prestamos {
     if (!socioObj || !libroObj) {
       return false;
     }
+    const confirmado = await this.confirmar("\xBFEst\xE1s seguro?", `\xBFDeseas registrar el pr\xE9stamo de "${libroObj.titulo}" para ${socioObj.nombre}?`, "Agregar");
+    if (!confirmado) {
+      return false;
+    }
     const nuevoPrestamo = {
       id: `PR${String(this.prestamoService.obtenerPrestamos().length + 1).padStart(3, "0")}`,
-      // ====================================
-      // IMPORTANTE
-      // GUARDAMOS EL ID DEL SOCIO
-      // ====================================
       socioId: socioObj.id,
-      // Nombre que se muestra
       socio: socioObj.nombre,
       libro: libroObj.titulo,
       libroId: libroObj.id,
@@ -45356,22 +48121,62 @@ var Prestamos = class _Prestamos {
       estado: "activo",
       renovaciones: 0
     };
-    if (this.prestamoService.agregarPrestamo(nuevoPrestamo)) {
-      this.socioService.actualizarEstadoPrestamo(socioObj.id, "En curso");
+    try {
+      await firstValueFrom(this.prestamoService.agregarPrestamo(nuevoPrestamo));
       this.actividadServicio.registrarActividad("prestamo", `Nuevo pr\xE9stamo: ${libroObj.titulo} para ${socioObj.nombre} (copia ${nuevoPrestamo.inventario})`, nuevoPrestamo.id);
+      this.ngZone.run(() => {
+        this.actualizarPrestamos();
+        this.closeModal();
+        this.changeDetector.detectChanges();
+      });
+      await import_sweetalert25.default.fire({
+        title: "\xA1Pr\xE9stamo registrado!",
+        text: `El pr\xE9stamo de "${libroObj.titulo}" para ${socioObj.nombre} se guard\xF3 exitosamente.`,
+        icon: "success",
+        confirmButtonColor: "#0d9488",
+        timer: 2e3,
+        showConfirmButton: false
+      });
+      return true;
+    } catch (error) {
+      await this.mostrarErrorApi(error);
+      return false;
+    }
+  }
+  async eliminarPrestamo(prestamo) {
+    const confirmado = await this.confirmar("\xBFEliminar pr\xE9stamo?", `Se eliminar\xE1 el pr\xE9stamo de "${prestamo.libro}" para ${prestamo.socio} y se registrar\xE1 la eliminaci\xF3n en Actividad.`, "Eliminar");
+    if (!confirmado) {
+      return;
+    }
+    let eliminado;
+    try {
+      eliminado = await firstValueFrom(this.prestamoService.eliminarPrestamo(prestamo.id));
+    } catch (error) {
+      await this.mostrarErrorApi(error);
+      return;
+    }
+    this.actividadServicio.registrarActividad("eliminacion", `Pr\xE9stamo eliminado: ${eliminado.libro} para ${eliminado.socio} (copia ${eliminado.inventario})`, eliminado.id);
+    this.ngZone.run(() => {
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
-      this.closeModal();
-      return true;
-    }
-    return false;
+    });
+    await import_sweetalert25.default.fire({
+      title: "Pr\xE9stamo eliminado",
+      text: "El pr\xE9stamo fue eliminado y qued\xF3 registrado en Actividad.",
+      icon: "success",
+      confirmButtonColor: "#0d9488",
+      timer: 2e3,
+      showConfirmButton: false
+    });
   }
-  // ==========================================
-  // RENOVAR PRÉSTAMO
-  // ==========================================
-  renovarPrestamo(prestamo) {
+  async renovarPrestamo(prestamo) {
     const socioObj = this.socioService.tenerSocios().find((s) => s.id === prestamo.socioId);
-    this.prestamoService.renovarPrestamo(prestamo.id);
+    try {
+      await firstValueFrom(this.prestamoService.renovarPrestamo(prestamo.id));
+    } catch (error) {
+      await this.mostrarErrorApi(error);
+      return;
+    }
     const actualizado = this.prestamos.find((p) => p.id === prestamo.id) || prestamo;
     this.actividadServicio.registrarActividad("prestamo", `Pr\xE9stamo renovado: ${actualizado.libro} para ${actualizado.socio}; vence ${actualizado.fechaVencimiento}`, actualizado.id);
     this.actualizarPrestamos();
@@ -45386,62 +48191,61 @@ var Prestamos = class _Prestamos {
       window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensaje)}`, "_blank");
     }
   }
-  // ==========================================
-  // DEVOLVER PRÉSTAMO
-  // ==========================================
   devolverPrestamo(prestamo) {
-    this.confirmar("\xBFEst\xE1s seguro?", `\xBFDeseas devolver "${prestamo.libro}"?`, "S\xED, devolver").then((confirmado) => {
+    this.confirmar("\xBFEst\xE1s seguro?", `\xBFDeseas devolver "${prestamo.libro}"?`, "S\xED, devolver").then(async (confirmado) => {
       if (!confirmado) {
         return;
       }
-      const socioObj = this.socioService.tenerSocios().find((s) => s.id === prestamo.socioId);
-      this.prestamoService.devolverPrestamo(prestamo.id);
+      try {
+        await firstValueFrom(this.prestamoService.devolverPrestamo(prestamo.id));
+      } catch (error) {
+        await this.mostrarErrorApi(error);
+        return;
+      }
       this.actividadServicio.registrarActividad("prestamo", `Pr\xE9stamo devuelto: ${prestamo.libro} por ${prestamo.socio}`, prestamo.id);
-      if (socioObj) {
-        this.socioService.actualizarEstadoPrestamo(socioObj.id, "Libre");
-      }
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
     });
   }
-  // ==========================================
-  // SUSPENDER PRÉSTAMO
-  // ==========================================
   suspenderPrestamo(prestamo) {
-    this.confirmar("\xBFSuspender pr\xE9stamo?", `Se suspender\xE1 el pr\xE9stamo de "${prestamo.libro}" a nombre de ${prestamo.socio}.`, "S\xED, suspender").then((confirmado) => {
+    this.confirmar("\xBFSuspender pr\xE9stamo?", `Se suspender\xE1 el pr\xE9stamo de "${prestamo.libro}" a nombre de ${prestamo.socio}.`, "S\xED, suspender").then(async (confirmado) => {
       if (!confirmado) {
         return;
       }
-      this.prestamoService.suspenderPrestamo(prestamo.id);
+      try {
+        await firstValueFrom(this.prestamoService.suspenderPrestamo(prestamo.id));
+        await firstValueFrom(this.socioService.actualizarEstadoSocio(prestamo.socioId, "suspendido"));
+      } catch (error) {
+        await this.mostrarErrorApi(error);
+        return;
+      }
       this.actividadServicio.registrarActividad("prestamo", `Pr\xE9stamo suspendido: ${prestamo.libro} para ${prestamo.socio}`, prestamo.id);
-      this.socioService.actualizarEstadoSocio(prestamo.socioId, "suspendido");
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
     });
   }
-  // ==========================================
-  // QUITAR SUSPENSIÓN
-  // ==========================================
   quitarSuspension(prestamo) {
-    this.confirmar("\xBFQuitar suspensi\xF3n?", `El pr\xE9stamo de "${prestamo.libro}" volver\xE1 a estar vigente.`, "S\xED, quitar").then((confirmado) => {
+    this.confirmar("\xBFQuitar suspensi\xF3n?", `El pr\xE9stamo de "${prestamo.libro}" volver\xE1 a estar vigente.`, "S\xED, quitar").then(async (confirmado) => {
       if (!confirmado) {
         return;
       }
-      this.prestamoService.quitarSuspension(prestamo.id);
-      this.actividadServicio.registrarActividad("prestamo", `Suspensi\xF3n retirada: pr\xE9stamo de ${prestamo.libro} para ${prestamo.socio}`, prestamo.id);
-      const socioObj = this.socioService.tenerSocios().find((s) => s.id === prestamo.socioId);
-      if (socioObj?.estado === "suspendido") {
-        this.socioService.actualizarEstadoSocio(prestamo.socioId, "activo");
+      try {
+        await firstValueFrom(this.prestamoService.quitarSuspension(prestamo.id));
+        const socio = this.socioService.tenerSocios().find((item) => item.id === prestamo.socioId);
+        if (socio?.estado === "suspendido") {
+          await firstValueFrom(this.socioService.actualizarEstadoSocio(prestamo.socioId, "activo"));
+        }
+      } catch (error) {
+        await this.mostrarErrorApi(error);
+        return;
       }
+      this.actividadServicio.registrarActividad("prestamo", `Suspensi\xF3n retirada: pr\xE9stamo de ${prestamo.libro} para ${prestamo.socio}`, prestamo.id);
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
     });
   }
-  // ==========================================
-  // CONFIRMACIÓN
-  // ==========================================
   async confirmar(titulo, texto, textoConfirmar) {
-    const { isConfirmed } = await import_sweetalert23.default.fire({
+    const { isConfirmed } = await import_sweetalert25.default.fire({
       title: titulo,
       text: texto,
       icon: "warning",
@@ -45453,10 +48257,19 @@ var Prestamos = class _Prestamos {
     });
     return isConfirmed;
   }
+  mostrarErrorApi(error) {
+    const mensaje = error instanceof Error ? error.message : "No se pudo completar la operaci\xF3n en la API.";
+    return import_sweetalert25.default.fire({
+      title: "Error de conexi\xF3n con la API",
+      text: mensaje,
+      icon: "error",
+      confirmButtonColor: "#0d9488"
+    }).then(() => void 0);
+  }
   static \u0275fac = function Prestamos_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Prestamos)(\u0275\u0275directiveInject(PrestamoService), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(LibroService), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ActivatedRoute));
+    return new (__ngFactoryType__ || _Prestamos)(\u0275\u0275directiveInject(PrestamoService), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(LibroService), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(NgZone), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ActivatedRoute));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Prestamos, selectors: [["app-prestamos"]], decls: 42, vars: 4, consts: [["prestamoForm", "ngForm"], ["socioModel", "ngModel"], ["libroModel", "ngModel"], ["inventarioModel", "ngModel"], [1, "prestamos-container"], [1, "main"], [1, "page-header"], [1, "btn-nuevo", 3, "click"], [1, "toolbar"], [1, "search-box"], [1, "search-icon"], ["type", "text", "placeholder", "Buscar por socio, libro o ID de inventario...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter", 3, "active"], [1, "records"], [1, "table-container"], [1, "modal-overlay"], [1, "filter", 3, "click"], [1, "prestamo-id"], [1, "socio"], [1, "socio-nombre"], [1, "libro"], [1, "libro-nombre"], [1, "inventario"], [1, "fecha"], [1, "fecha", "vencimiento"], [1, "estado"], [1, "renovaciones"], [1, "acciones"], [1, "btn-quitar-suspension"], [1, "btn-quitar-suspension", 3, "click"], [1, "btn-renovar"], [1, "btn-suspender", 3, "click"], [1, "btn-devolver", 3, "click"], [1, "btn-renovar", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["name", "socioSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["disabled", "", 3, "ngValue"], [3, "ngValue"], [1, "alert-error"], ["name", "libroSeleccionadoId", "required", "", 3, "ngModelChange", "ngModel"], ["value", "", "disabled", ""], [3, "value"], ["name", "inventario", "required", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaInicio", "readonly", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaVencimiento", "readonly", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"]], template: function Prestamos_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Prestamos, selectors: [["app-prestamos"]], decls: 42, vars: 4, consts: [["prestamoForm", "ngForm"], ["busquedaSocioModel", "ngModel"], ["busquedaLibroModel", "ngModel"], ["inventarioModel", "ngModel"], [1, "prestamos-container"], [1, "main"], [1, "page-header"], [1, "btn-nuevo", 3, "click"], [1, "toolbar"], [1, "search-box"], [1, "search-icon"], ["type", "text", "placeholder", "Buscar por socio, libro o ID de inventario...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter", 3, "active", "filter-activo", "filter-vencido", "filter-suspendido"], [1, "records"], [1, "table-container"], [1, "modal-overlay"], [1, "filter", 3, "click"], [1, "prestamo-id"], [1, "socio"], [1, "socio-nombre"], [1, "libro"], [1, "libro-nombre"], [1, "inventario"], [1, "fecha"], [1, "fecha", "vencimiento"], [1, "estado"], [1, "renovaciones"], [1, "acciones"], [1, "btn-quitar-suspension"], ["type", "button", "title", "Eliminar pr\xE9stamo", "aria-label", "Eliminar pr\xE9stamo", 1, "btn-eliminar", 3, "click"], ["aria-hidden", "true", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "1.8", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"], ["d", "M10 11v5M14 11v5"], [1, "btn-quitar-suspension", 3, "click"], [1, "btn-renovar"], [1, "btn-suspender", 3, "click"], [1, "btn-devolver", 3, "click"], [1, "btn-renovar", 3, "click"], ["colspan", "8", 1, "sin-resultados"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], [1, "prestamo-search-wrapper"], ["type", "search", "name", "busquedaSocio", "placeholder", "Buscar por nombre, DNI o carnet...", "autocomplete", "off", "required", "", 3, "ngModelChange", "ngModel"], [1, "prestamo-search-results"], [1, "alert-error"], ["type", "search", "name", "busquedaLibro", "placeholder", "Buscar por t\xEDtulo, autor o c\xF3digo...", "autocomplete", "off", "required", "", 3, "ngModelChange", "ngModel"], ["name", "inventario", "required", "", 3, "ngModelChange", "ngModel"], ["value", "", "disabled", ""], [3, "value"], ["type", "date", "name", "fechaInicio", "readonly", "", 3, "ngModelChange", "ngModel"], ["type", "date", "name", "fechaVencimiento", "readonly", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"], ["type", "button", 1, "prestamo-search-result"], [1, "prestamo-search-empty"], ["type", "button", 1, "prestamo-search-result", 3, "click"]], template: function Prestamos_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 4)(1, "div", 5)(2, "div", 6)(3, "h1");
       \u0275\u0275text(4, "Pr\xE9stamos");
@@ -45477,7 +48290,7 @@ var Prestamos = class _Prestamos {
       });
       \u0275\u0275elementEnd()();
       \u0275\u0275elementStart(12, "div", 12);
-      \u0275\u0275repeaterCreate(13, Prestamos_For_14_Template, 2, 3, "button", 13, _forTrack03);
+      \u0275\u0275repeaterCreate(13, Prestamos_For_14_Template, 2, 9, "button", 13, _forTrack03);
       \u0275\u0275elementStart(15, "span", 14);
       \u0275\u0275text(16);
       \u0275\u0275elementEnd()()();
@@ -45506,9 +48319,9 @@ var Prestamos = class _Prestamos {
       \u0275\u0275text(36, "ACCIONES");
       \u0275\u0275elementEnd()()();
       \u0275\u0275elementStart(37, "tbody");
-      \u0275\u0275repeaterCreate(38, Prestamos_For_39_Template, 30, 17, "tr", null, _forTrack12, false, Prestamos_ForEmpty_40_Template, 3, 0, "tr");
+      \u0275\u0275repeaterCreate(38, Prestamos_For_39_Template, 34, 17, "tr", null, _forTrack12, false, Prestamos_ForEmpty_40_Template, 3, 0, "tr");
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275conditionalCreate(41, Prestamos_Conditional_41_Template, 52, 10, "div", 16);
+      \u0275\u0275conditionalCreate(41, Prestamos_Conditional_41_Template, 48, 11, "div", 16);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -45523,14 +48336,12 @@ var Prestamos = class _Prestamos {
       \u0275\u0275advance(3);
       \u0275\u0275conditional(ctx.isModalOpen ? 41 : -1);
     }
-  }, dependencies: [FormsModule, \u0275NgNoValidate, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.prestamos-container[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.page-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-nuevo[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-nuevo[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.plus[_ngcontent-%COMP%] {\n  font-size: 18px;\n  font-weight: 500;\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.records[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nthead[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n}\nthead[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n  height: auto;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n  height: auto;\n  transition: background-color 0.15s ease;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:nth-child(even) {\n  background-color: #ffffff;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.prestamo-id[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n}\n.socio[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.socio-nombre[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n}\n.socio-estado[_ngcontent-%COMP%] {\n  color: #23b2a0;\n  font-size: 12px;\n  font-weight: 600;\n}\n.libro[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  max-width: 220px;\n}\n.libro-nombre[_ngcontent-%COMP%] {\n  display: block;\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.inventario[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  font-size: 12px;\n  margin-top: 2px;\n}\n.fecha[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.vencimiento[_ngcontent-%COMP%] {\n  color: #0f172a;\n}\n.estado[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.estado-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.estado-vencido[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\n.estado-devuelto[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n}\n.renovaciones[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.acciones[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-renovar[_ngcontent-%COMP%] {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #e0f7f4;\n  color: #168f81;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-renovar[_ngcontent-%COMP%]:hover {\n  background-color: #c9f0eb;\n  transform: translateY(-1px);\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.btn-renovar[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 14px;\n}\n.btn-devolver[_ngcontent-%COMP%] {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #dcfce7;\n  color: #15803d;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-devolver[_ngcontent-%COMP%]:hover {\n  background-color: #bbf7d0;\n  transform: translateY(-1px);\n}\n.btn-devolver[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 12px;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #94a3b8;\n  font-size: 13px;\n}\n@media (max-width: 768px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .page-header[_ngcontent-%COMP%] {\n    margin-bottom: 16px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 24px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 16px;\n    border-radius: 18px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .records[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    border-radius: 18px;\n    padding: 10px;\n  }\n  th[_ngcontent-%COMP%] {\n    padding: 14px;\n    font-size: 10px;\n  }\n  td[_ngcontent-%COMP%] {\n    padding: 14px;\n    font-size: 13px;\n  }\n}\n@media (max-width: 600px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding: 16px 10px;\n  }\n  .page-header[_ngcontent-%COMP%] {\n    align-items: center;\n    gap: 12px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-nuevo[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .plus[_ngcontent-%COMP%] {\n    font-size: 16px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 14px;\n    gap: 14px;\n    border-radius: 18px;\n  }\n  .search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n    padding: 11px 14px 11px 40px;\n    font-size: 13px;\n  }\n  .search-icon[_ngcontent-%COMP%] {\n    left: 14px;\n    font-size: 17px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n    gap: 6px;\n  }\n  .filter[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:nth-child(even) {\n    background-color: #ffffff;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:hover {\n    background-color: #ffffff;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n    font-size: 13px;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .socio[_ngcontent-%COMP%] {\n    align-items: flex-end;\n  }\n  .socio-nombre[_ngcontent-%COMP%] {\n    font-size: 13px;\n  }\n  .libro[_ngcontent-%COMP%] {\n    align-items: flex-end;\n    max-width: 55%;\n  }\n  .libro-nombre[_ngcontent-%COMP%] {\n    font-size: 13px;\n  }\n  .acciones[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: flex-end;\n    flex-wrap: wrap;\n    gap: 6px;\n  }\n  .btn-renovar[_ngcontent-%COMP%], \n   .btn-devolver[_ngcontent-%COMP%] {\n    padding: 7px 12px;\n    font-size: 11px;\n  }\n}\n@media (max-width: 400px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding-left: 8px;\n    padding-right: 8px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 20px;\n  }\n  .btn-nuevo[_ngcontent-%COMP%] {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 12px;\n  }\n  .filter[_ngcontent-%COMP%] {\n    padding: 7px 8px;\n    font-size: 11px;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n    padding: 12px 14px;\n  }\n  td[_ngcontent-%COMP%] {\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 8px;\n  width: 100%;\n  max-width: 500px;\n  padding: 24px;\n  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  color: #1f2937;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 1.5rem;\n  cursor: pointer;\n  color: #6b7280;\n}\n.form-group[_ngcontent-%COMP%] {\n  margin-bottom: 16px;\n  display: flex;\n  flex-direction: column;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 0.875rem;\n  font-weight: 600;\n  margin-bottom: 6px;\n  color: #374151;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%], \n.form-group[_ngcontent-%COMP%]   select[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  font-size: 0.875rem;\n  outline: none;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus, \n.form-group[_ngcontent-%COMP%]   select[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #ef4444;\n  margin-top: 4px;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-weight: 500;\n}\n.submit-btn[_ngcontent-%COMP%]:disabled {\n  background-color: #9ca3af;\n  cursor: not-allowed;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: transparent;\n  color: #4b5563;\n  border: 1px solid #d1d5db;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.btn-suspender[_ngcontent-%COMP%] {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender[_ngcontent-%COMP%]:hover {\n  background: #ffe69c;\n}\n.estado-suspendido[_ngcontent-%COMP%] {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea[_ngcontent-%COMP%] {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-suspender[_ngcontent-%COMP%] {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender[_ngcontent-%COMP%]:hover {\n  background: #ffe69c;\n}\n.estado-suspendido[_ngcontent-%COMP%] {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea[_ngcontent-%COMP%] {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=prestamos.css.map */"] });
+  }, dependencies: [CommonModule, FormsModule, \u0275NgNoValidate, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, NgModel, NgForm], styles: ["\n.prestamos-container[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.page-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-nuevo[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-nuevo[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.plus[_ngcontent-%COMP%] {\n  font-size: 18px;\n  font-weight: 500;\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter.filter-activo.active[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.filter.filter-vencido.active[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.filter.filter-suspendido.active[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\n.records[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nthead[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n}\nthead[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n  height: auto;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n  height: auto;\n  transition: background-color 0.15s ease;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:nth-child(even) {\n  background-color: #ffffff;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.prestamo-id[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n}\n.socio[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.socio-nombre[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n}\n.socio-estado[_ngcontent-%COMP%] {\n  color: #23b2a0;\n  font-size: 12px;\n  font-weight: 600;\n}\n.libro[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  max-width: 220px;\n}\n.libro-nombre[_ngcontent-%COMP%] {\n  display: block;\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.inventario[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  font-size: 12px;\n  margin-top: 2px;\n}\n.fecha[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.vencimiento[_ngcontent-%COMP%] {\n  color: #0f172a;\n}\n.estado[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.estado-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.estado-vencido[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\n.estado-devuelto[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n}\n.renovaciones[_ngcontent-%COMP%] {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.acciones[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-eliminar[_ngcontent-%COMP%] {\n  display: inline-flex;\n  width: 32px;\n  height: 32px;\n  flex: 0 0 auto;\n  align-items: center;\n  justify-content: center;\n  padding: 0;\n  border: 0;\n  border-radius: 50%;\n  background: #fee2e2;\n  color: #b42323;\n  cursor: pointer;\n  transition: background-color 0.2s ease, transform 0.2s ease;\n}\n.btn-eliminar[_ngcontent-%COMP%]:hover {\n  background: #fecaca;\n  transform: translateY(-1px);\n}\n.btn-eliminar[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 16px;\n  height: 16px;\n}\n.btn-renovar[_ngcontent-%COMP%] {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #e0f7f4;\n  color: #168f81;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-renovar[_ngcontent-%COMP%]:hover {\n  background-color: #c9f0eb;\n  transform: translateY(-1px);\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.btn-renovar[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 14px;\n}\n.btn-devolver[_ngcontent-%COMP%] {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #dcfce7;\n  color: #15803d;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-devolver[_ngcontent-%COMP%]:hover {\n  background-color: #bbf7d0;\n  transform: translateY(-1px);\n}\n.btn-devolver[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  font-size: 12px;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #94a3b8;\n  font-size: 13px;\n}\n@media (max-width: 768px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .page-header[_ngcontent-%COMP%] {\n    margin-bottom: 16px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 24px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 16px;\n    border-radius: 18px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .records[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    border-radius: 18px;\n    padding: 10px;\n  }\n  th[_ngcontent-%COMP%] {\n    padding: 14px;\n    font-size: 10px;\n  }\n  td[_ngcontent-%COMP%] {\n    padding: 14px;\n    font-size: 13px;\n  }\n}\n@media (max-width: 600px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding: 16px 10px;\n  }\n  .page-header[_ngcontent-%COMP%] {\n    align-items: center;\n    gap: 12px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-nuevo[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .plus[_ngcontent-%COMP%] {\n    font-size: 16px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 14px;\n    gap: 14px;\n    border-radius: 18px;\n  }\n  .search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n    padding: 11px 14px 11px 40px;\n    font-size: 13px;\n  }\n  .search-icon[_ngcontent-%COMP%] {\n    left: 14px;\n    font-size: 17px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n    gap: 6px;\n  }\n  .filter[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:nth-child(even) {\n    background-color: #ffffff;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%]:hover {\n    background-color: #ffffff;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n    font-size: 13px;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .socio[_ngcontent-%COMP%] {\n    align-items: flex-end;\n  }\n  .socio-nombre[_ngcontent-%COMP%] {\n    font-size: 13px;\n  }\n  .libro[_ngcontent-%COMP%] {\n    align-items: flex-end;\n    max-width: 55%;\n  }\n  .libro-nombre[_ngcontent-%COMP%] {\n    font-size: 13px;\n  }\n  .acciones[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: flex-end;\n    flex-wrap: wrap;\n    gap: 6px;\n  }\n  .btn-renovar[_ngcontent-%COMP%], \n   .btn-devolver[_ngcontent-%COMP%] {\n    padding: 7px 12px;\n    font-size: 11px;\n  }\n}\n@media (max-width: 400px) {\n  .prestamos-container[_ngcontent-%COMP%] {\n    padding-left: 8px;\n    padding-right: 8px;\n  }\n  .page-header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 20px;\n  }\n  .btn-nuevo[_ngcontent-%COMP%] {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .toolbar[_ngcontent-%COMP%] {\n    padding: 12px;\n  }\n  .filter[_ngcontent-%COMP%] {\n    padding: 7px 8px;\n    font-size: 11px;\n  }\n  tbody[_ngcontent-%COMP%]   tr[_ngcontent-%COMP%] {\n    padding: 12px 14px;\n  }\n  td[_ngcontent-%COMP%] {\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 8px;\n  width: 100%;\n  max-width: 500px;\n  padding: 24px;\n  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  color: #1f2937;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: none;\n  border: none;\n  font-size: 1.5rem;\n  cursor: pointer;\n  color: #6b7280;\n}\n.form-group[_ngcontent-%COMP%] {\n  margin-bottom: 16px;\n  display: flex;\n  flex-direction: column;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 0.875rem;\n  font-weight: 600;\n  margin-bottom: 6px;\n  color: #374151;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%], \n.form-group[_ngcontent-%COMP%]   select[_ngcontent-%COMP%] {\n  padding: 10px 12px;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  font-size: 0.875rem;\n  outline: none;\n}\n.prestamo-search-wrapper[_ngcontent-%COMP%] {\n  position: relative;\n}\n.prestamo-search-wrapper[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  box-sizing: border-box;\n}\n.prestamo-search-results[_ngcontent-%COMP%] {\n  position: absolute;\n  top: calc(100% + 4px);\n  right: 0;\n  left: 0;\n  z-index: 10;\n  max-height: 220px;\n  overflow-y: auto;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  background: #ffffff;\n  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);\n}\n.prestamo-search-result[_ngcontent-%COMP%] {\n  display: flex;\n  width: 100%;\n  flex-direction: column;\n  gap: 3px;\n  padding: 10px 12px;\n  border: 0;\n  background: #ffffff;\n  color: #1f2937;\n  cursor: pointer;\n  text-align: left;\n}\n.prestamo-search-result[_ngcontent-%COMP%]    + .prestamo-search-result[_ngcontent-%COMP%] {\n  border-top: 1px solid #f1f5f9;\n}\n.prestamo-search-result[_ngcontent-%COMP%]:hover, \n.prestamo-search-result[_ngcontent-%COMP%]:focus-visible {\n  background: #f8fafc;\n}\n.prestamo-search-result[_ngcontent-%COMP%]   small[_ngcontent-%COMP%], \n.prestamo-search-empty[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-size: 0.75rem;\n}\n.prestamo-search-empty[_ngcontent-%COMP%] {\n  margin: 0;\n  padding: 10px 12px;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus, \n.form-group[_ngcontent-%COMP%]   select[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #ef4444;\n  margin-top: 4px;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-weight: 500;\n}\n.submit-btn[_ngcontent-%COMP%]:disabled {\n  background-color: #0d9488;\n  color: white;\n  cursor: not-allowed;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: transparent;\n  color: #4b5563;\n  border: 1px solid #d1d5db;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.btn-suspender[_ngcontent-%COMP%] {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender[_ngcontent-%COMP%]:hover {\n  background: #ffe69c;\n}\n.estado-suspendido[_ngcontent-%COMP%] {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea[_ngcontent-%COMP%] {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-suspender[_ngcontent-%COMP%] {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender[_ngcontent-%COMP%]:hover {\n  background: #ffe69c;\n}\n.estado-suspendido[_ngcontent-%COMP%] {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea[_ngcontent-%COMP%] {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=prestamos.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Prestamos, [{
     type: Component,
-    args: [{ selector: "app-prestamos", standalone: true, imports: [
-      FormsModule
-    ], template: `<div class="prestamos-container">\r
+    args: [{ selector: "app-prestamos", standalone: true, imports: [CommonModule, FormsModule], template: `<div class="prestamos-container">\r
   <div class="main">\r
 \r
     <!-- HEADER -->\r
@@ -45551,6 +48362,9 @@ var Prestamos = class _Prestamos {
           <button\r
             class="filter"\r
             [class.active]="filtro === opcion.valor"\r
+            [class.filter-activo]="opcion.valor === 'activo'"\r
+            [class.filter-vencido]="opcion.valor === 'atrasado'"\r
+            [class.filter-suspendido]="opcion.valor === 'suspendido'"\r
             (click)="cambiarFiltro(opcion.valor)">\r
             {{ opcion.etiqueta }}\r
           </button>\r
@@ -45632,6 +48446,18 @@ var Prestamos = class _Prestamos {
                       <span>\u2713</span> Devolver\r
                     </button>\r
                   }\r
+\r
+                  <button\r
+                    type="button"\r
+                    class="btn-eliminar"\r
+                    title="Eliminar pr\xE9stamo"\r
+                    aria-label="Eliminar pr\xE9stamo"\r
+                    (click)="eliminarPrestamo(prestamo)">\r
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path>\r
+                      <path d="M10 11v5M14 11v5"></path>\r
+                    </svg>\r
+                  </button>\r
                 </div>\r
               </td>\r
             </tr>\r
@@ -45656,25 +48482,42 @@ var Prestamos = class _Prestamos {
           <button type="button" (click)="closeModal()" class="close-btn">&times;</button>\r
         </div>\r
 \r
-        <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && crearPrestamo()">\r
+        <form #prestamoForm="ngForm" (ngSubmit)="prestamoForm.valid && socioSeleccionadoId && libroSeleccionadoId && crearPrestamo()">\r
 \r
           <!-- Socio -->\r
           <div class="form-group">\r
             <label>Socio</label>\r
-            <select\r
-              [(ngModel)]="socioSeleccionadoId"\r
-              name="socioSeleccionadoId"\r
-              #socioModel="ngModel"\r
-              required>\r
-              <option [ngValue]="null" disabled>Seleccion\xE1 un socio</option>\r
-              @for (socio of sociosDisponibles; track socio.id) {\r
-                <option [ngValue]="socio.id">{{ socio.nombre }} (DNI: {{ socio.dni }})</option>\r
-              }\r
-            </select>\r
+            <div class="prestamo-search-wrapper">\r
+              <input\r
+                type="search"\r
+                [(ngModel)]="busquedaSocio"\r
+                (ngModelChange)="actualizarBusquedaSocio()"\r
+                name="busquedaSocio"\r
+                #busquedaSocioModel="ngModel"\r
+                placeholder="Buscar por nombre, DNI o carnet..."\r
+                autocomplete="off"\r
+                required>\r
 \r
-            @if (socioModel.invalid && socioModel.touched) {\r
+              @if (!socioSeleccionadoId && busquedaSocio.trim()) {\r
+                <div class="prestamo-search-results">\r
+                  @for (socio of sociosFiltradosPorBusqueda; track socio.id) {\r
+                    <button\r
+                      type="button"\r
+                      class="prestamo-search-result"\r
+                      (click)="seleccionarSocio(socio)">\r
+                      <span>{{ socio.nombre }}</span>\r
+                      <small>{{ socio.numCarnet }} \xB7 DNI: {{ socio.dni }}</small>\r
+                    </button>\r
+                  } @empty {\r
+                    <p class="prestamo-search-empty">No se encontraron socios disponibles.</p>\r
+                  }\r
+                </div>\r
+              }\r
+            </div>\r
+\r
+            @if ((busquedaSocioModel.invalid && busquedaSocioModel.touched) || (prestamoForm.submitted && !socioSeleccionadoId)) {\r
               <div class="alert-error">\r
-                <small>Debes seleccionar un socio.</small>\r
+                <small>Busc\xE1 y seleccion\xE1 un socio de la lista.</small>\r
               </div>\r
             }\r
           </div>\r
@@ -45682,21 +48525,37 @@ var Prestamos = class _Prestamos {
           <!-- Libro -->\r
           <div class="form-group">\r
             <label>T\xEDtulo del Libro</label>\r
-            <select\r
-              [ngModel]="libroSeleccionadoId"\r
-              (ngModelChange)="libroSeleccionadoId = $event; onLibroChange()"\r
-              name="libroSeleccionadoId"\r
-              #libroModel="ngModel"\r
-              required>\r
-              <option value="" disabled>Seleccion\xE1 un libro</option>\r
-              @for (libro of librosDisponibles; track libro.id) {\r
-                <option [value]="libro.id">{{ libro.titulo }}</option>\r
-              }\r
-            </select>\r
+            <div class="prestamo-search-wrapper">\r
+              <input\r
+                type="search"\r
+                [(ngModel)]="busquedaLibro"\r
+                (ngModelChange)="actualizarBusquedaLibro()"\r
+                name="busquedaLibro"\r
+                #busquedaLibroModel="ngModel"\r
+                placeholder="Buscar por t\xEDtulo, autor o c\xF3digo..."\r
+                autocomplete="off"\r
+                required>\r
 \r
-            @if (libroModel.invalid && libroModel.touched) {\r
+              @if (!libroSeleccionadoId && busquedaLibro.trim()) {\r
+                <div class="prestamo-search-results">\r
+                  @for (libro of librosFiltradosPorBusqueda; track libro.id) {\r
+                    <button\r
+                      type="button"\r
+                      class="prestamo-search-result"\r
+                      (click)="seleccionarLibro(libro)">\r
+                      <span>{{ libro.titulo }}</span>\r
+                      <small>{{ libro.autor }} \xB7 {{ libro.id }}</small>\r
+                    </button>\r
+                  } @empty {\r
+                    <p class="prestamo-search-empty">No se encontraron libros disponibles.</p>\r
+                  }\r
+                </div>\r
+              }\r
+            </div>\r
+\r
+            @if ((busquedaLibroModel.invalid && busquedaLibroModel.touched) || (prestamoForm.submitted && !libroSeleccionadoId)) {\r
               <div class="alert-error">\r
-                <small>Debes seleccionar un libro.</small>\r
+                <small>Busc\xE1 y seleccion\xE1 un libro de la lista.</small>\r
               </div>\r
             }\r
           </div>\r
@@ -45735,7 +48594,7 @@ var Prestamos = class _Prestamos {
 \r
           <!-- ACCIONES MODAL -->\r
           <div class="modal-actions">\r
-            <button type="submit" [disabled]="!prestamoForm.valid" class="submit-btn">Guardar</button>\r
+            <button type="submit" [disabled]="!prestamoForm.valid || !socioSeleccionadoId || !libroSeleccionadoId" class="submit-btn">Guardar</button>\r
             <button type="button" (click)="closeModal()" class="cancel-btn">Cancelar</button>\r
           </div>\r
 \r
@@ -45744,52 +48603,58 @@ var Prestamos = class _Prestamos {
     </div>\r
   }\r
 </div>\r
-`, styles: ["/* src/app/prestamos/prestamos.css */\n.prestamos-container {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.page-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.page-header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-nuevo {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-nuevo:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.plus {\n  font-size: 18px;\n  font-weight: 500;\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.records {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nthead {\n  background-color: #ffffff;\n}\nthead tr {\n  height: auto;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody tr {\n  height: auto;\n  transition: background-color 0.15s ease;\n}\ntbody tr:nth-child(even) {\n  background-color: #ffffff;\n}\ntbody tr:hover {\n  background-color: #f8fafc;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody tr:last-child td {\n  border-bottom: none;\n}\n.prestamo-id {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n}\n.socio {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.socio-nombre {\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n}\n.socio-estado {\n  color: #23b2a0;\n  font-size: 12px;\n  font-weight: 600;\n}\n.libro {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  max-width: 220px;\n}\n.libro-nombre {\n  display: block;\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.inventario {\n  color: #94a3b8;\n  font-size: 12px;\n  margin-top: 2px;\n}\n.fecha {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.vencimiento {\n  color: #0f172a;\n}\n.estado {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.estado-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.estado-vencido {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\n.estado-devuelto {\n  background-color: #f1f5f9;\n  color: #64748b;\n}\n.renovaciones {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.acciones {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-renovar {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #e0f7f4;\n  color: #168f81;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-renovar:hover {\n  background-color: #c9f0eb;\n  transform: translateY(-1px);\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.btn-renovar span {\n  font-size: 14px;\n}\n.btn-devolver {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #dcfce7;\n  color: #15803d;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-devolver:hover {\n  background-color: #bbf7d0;\n  transform: translateY(-1px);\n}\n.btn-devolver span {\n  font-size: 12px;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #94a3b8;\n  font-size: 13px;\n}\n@media (max-width: 768px) {\n  .prestamos-container {\n    padding: 16px 12px;\n  }\n  .page-header {\n    margin-bottom: 16px;\n  }\n  .page-header h1 {\n    font-size: 24px;\n  }\n  .toolbar {\n    padding: 16px;\n    border-radius: 18px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .records {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n  .table-container {\n    border-radius: 18px;\n    padding: 10px;\n  }\n  th {\n    padding: 14px;\n    font-size: 10px;\n  }\n  td {\n    padding: 14px;\n    font-size: 13px;\n  }\n}\n@media (max-width: 600px) {\n  .prestamos-container {\n    padding: 16px 10px;\n  }\n  .page-header {\n    align-items: center;\n    gap: 12px;\n  }\n  .page-header h1 {\n    font-size: 22px;\n  }\n  .btn-nuevo {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .plus {\n    font-size: 16px;\n  }\n  .toolbar {\n    padding: 14px;\n    gap: 14px;\n    border-radius: 18px;\n  }\n  .search-box input {\n    padding: 11px 14px 11px 40px;\n    font-size: 13px;\n  }\n  .search-icon {\n    left: 14px;\n    font-size: 17px;\n  }\n  .filter-group {\n    width: 100%;\n    gap: 6px;\n  }\n  .filter {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tbody tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  tbody tr:nth-child(even) {\n    background-color: #ffffff;\n  }\n  tbody tr:hover {\n    background-color: #ffffff;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n    font-size: 13px;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .socio {\n    align-items: flex-end;\n  }\n  .socio-nombre {\n    font-size: 13px;\n  }\n  .libro {\n    align-items: flex-end;\n    max-width: 55%;\n  }\n  .libro-nombre {\n    font-size: 13px;\n  }\n  .acciones {\n    display: flex;\n    justify-content: flex-end;\n    flex-wrap: wrap;\n    gap: 6px;\n  }\n  .btn-renovar,\n  .btn-devolver {\n    padding: 7px 12px;\n    font-size: 11px;\n  }\n}\n@media (max-width: 400px) {\n  .prestamos-container {\n    padding-left: 8px;\n    padding-right: 8px;\n  }\n  .page-header h1 {\n    font-size: 20px;\n  }\n  .btn-nuevo {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .toolbar {\n    padding: 12px;\n  }\n  .filter {\n    padding: 7px 8px;\n    font-size: 11px;\n  }\n  tbody tr {\n    padding: 12px 14px;\n  }\n  td {\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  border-radius: 8px;\n  width: 100%;\n  max-width: 500px;\n  padding: 24px;\n  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  color: #1f2937;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 1.5rem;\n  cursor: pointer;\n  color: #6b7280;\n}\n.form-group {\n  margin-bottom: 16px;\n  display: flex;\n  flex-direction: column;\n}\n.form-group label {\n  font-size: 0.875rem;\n  font-weight: 600;\n  margin-bottom: 6px;\n  color: #374151;\n}\n.form-group input,\n.form-group select {\n  padding: 10px 12px;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  font-size: 0.875rem;\n  outline: none;\n}\n.form-group input:focus,\n.form-group select:focus {\n  border-color: #0d9488;\n}\n.alert-error {\n  color: #ef4444;\n  margin-top: 4px;\n}\n.modal-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-weight: 500;\n}\n.submit-btn:disabled {\n  background-color: #9ca3af;\n  cursor: not-allowed;\n}\n.cancel-btn {\n  background-color: transparent;\n  color: #4b5563;\n  border: 1px solid #d1d5db;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=prestamos.css.map */\n"] }]
-  }], () => [{ type: PrestamoService }, { type: SocioServicio }, { type: LibroService }, { type: ActividadServicio }, { type: ChangeDetectorRef }, { type: ActivatedRoute }], null);
+`, styles: ["/* src/app/prestamos/prestamos.css */\n.prestamos-container {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.page-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.page-header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-nuevo {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-nuevo:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.plus {\n  font-size: 18px;\n  font-weight: 500;\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter.filter-activo.active {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.filter.filter-vencido.active {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.filter.filter-suspendido.active {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\n.records {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nthead {\n  background-color: #ffffff;\n}\nthead tr {\n  height: auto;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody tr {\n  height: auto;\n  transition: background-color 0.15s ease;\n}\ntbody tr:nth-child(even) {\n  background-color: #ffffff;\n}\ntbody tr:hover {\n  background-color: #f8fafc;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntbody tr:last-child td {\n  border-bottom: none;\n}\n.prestamo-id {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n}\n.socio {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n}\n.socio-nombre {\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n}\n.socio-estado {\n  color: #23b2a0;\n  font-size: 12px;\n  font-weight: 600;\n}\n.libro {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  max-width: 220px;\n}\n.libro-nombre {\n  display: block;\n  color: #0f172a;\n  font-size: 14px;\n  font-weight: 700;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.inventario {\n  color: #94a3b8;\n  font-size: 12px;\n  margin-top: 2px;\n}\n.fecha {\n  color: #64748b;\n  font-size: 13px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.vencimiento {\n  color: #0f172a;\n}\n.estado {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.estado-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.estado-vencido {\n  background-color: #fee2e2;\n  color: #dc2626;\n}\n.estado-devuelto {\n  background-color: #f1f5f9;\n  color: #64748b;\n}\n.renovaciones {\n  color: #0f172a;\n  font-size: 13px;\n  font-weight: 600;\n}\n.acciones {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-eliminar {\n  display: inline-flex;\n  width: 32px;\n  height: 32px;\n  flex: 0 0 auto;\n  align-items: center;\n  justify-content: center;\n  padding: 0;\n  border: 0;\n  border-radius: 50%;\n  background: #fee2e2;\n  color: #b42323;\n  cursor: pointer;\n  transition: background-color 0.2s ease, transform 0.2s ease;\n}\n.btn-eliminar:hover {\n  background: #fecaca;\n  transform: translateY(-1px);\n}\n.btn-eliminar svg {\n  width: 16px;\n  height: 16px;\n}\n.btn-renovar {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #e0f7f4;\n  color: #168f81;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-renovar:hover {\n  background-color: #c9f0eb;\n  transform: translateY(-1px);\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.btn-renovar span {\n  font-size: 14px;\n}\n.btn-devolver {\n  height: auto;\n  padding: 7px 14px;\n  border: none;\n  border-radius: 30px;\n  background-color: #dcfce7;\n  color: #15803d;\n  font-size: 12px;\n  font-weight: 600;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  white-space: nowrap;\n  transition: all 0.2s ease;\n}\n.btn-devolver:hover {\n  background-color: #bbf7d0;\n  transform: translateY(-1px);\n}\n.btn-devolver span {\n  font-size: 12px;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #94a3b8;\n  font-size: 13px;\n}\n@media (max-width: 768px) {\n  .prestamos-container {\n    padding: 16px 12px;\n  }\n  .page-header {\n    margin-bottom: 16px;\n  }\n  .page-header h1 {\n    font-size: 24px;\n  }\n  .toolbar {\n    padding: 16px;\n    border-radius: 18px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .records {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n  .table-container {\n    border-radius: 18px;\n    padding: 10px;\n  }\n  th {\n    padding: 14px;\n    font-size: 10px;\n  }\n  td {\n    padding: 14px;\n    font-size: 13px;\n  }\n}\n@media (max-width: 600px) {\n  .prestamos-container {\n    padding: 16px 10px;\n  }\n  .page-header {\n    align-items: center;\n    gap: 12px;\n  }\n  .page-header h1 {\n    font-size: 22px;\n  }\n  .btn-nuevo {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .plus {\n    font-size: 16px;\n  }\n  .toolbar {\n    padding: 14px;\n    gap: 14px;\n    border-radius: 18px;\n  }\n  .search-box input {\n    padding: 11px 14px 11px 40px;\n    font-size: 13px;\n  }\n  .search-icon {\n    left: 14px;\n    font-size: 17px;\n  }\n  .filter-group {\n    width: 100%;\n    gap: 6px;\n  }\n  .filter {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tbody tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  tbody tr:nth-child(even) {\n    background-color: #ffffff;\n  }\n  tbody tr:hover {\n    background-color: #ffffff;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n    font-size: 13px;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .socio {\n    align-items: flex-end;\n  }\n  .socio-nombre {\n    font-size: 13px;\n  }\n  .libro {\n    align-items: flex-end;\n    max-width: 55%;\n  }\n  .libro-nombre {\n    font-size: 13px;\n  }\n  .acciones {\n    display: flex;\n    justify-content: flex-end;\n    flex-wrap: wrap;\n    gap: 6px;\n  }\n  .btn-renovar,\n  .btn-devolver {\n    padding: 7px 12px;\n    font-size: 11px;\n  }\n}\n@media (max-width: 400px) {\n  .prestamos-container {\n    padding-left: 8px;\n    padding-right: 8px;\n  }\n  .page-header h1 {\n    font-size: 20px;\n  }\n  .btn-nuevo {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .toolbar {\n    padding: 12px;\n  }\n  .filter {\n    padding: 7px 8px;\n    font-size: 11px;\n  }\n  tbody tr {\n    padding: 12px 14px;\n  }\n  td {\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 1000;\n}\n.modal-card {\n  background: #ffffff;\n  border-radius: 8px;\n  width: 100%;\n  max-width: 500px;\n  padding: 24px;\n  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 1.25rem;\n  color: #1f2937;\n}\n.close-btn {\n  background: none;\n  border: none;\n  font-size: 1.5rem;\n  cursor: pointer;\n  color: #6b7280;\n}\n.form-group {\n  margin-bottom: 16px;\n  display: flex;\n  flex-direction: column;\n}\n.form-group label {\n  font-size: 0.875rem;\n  font-weight: 600;\n  margin-bottom: 6px;\n  color: #374151;\n}\n.form-group input,\n.form-group select {\n  padding: 10px 12px;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  font-size: 0.875rem;\n  outline: none;\n}\n.prestamo-search-wrapper {\n  position: relative;\n}\n.prestamo-search-wrapper input {\n  width: 100%;\n  box-sizing: border-box;\n}\n.prestamo-search-results {\n  position: absolute;\n  top: calc(100% + 4px);\n  right: 0;\n  left: 0;\n  z-index: 10;\n  max-height: 220px;\n  overflow-y: auto;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n  background: #ffffff;\n  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);\n}\n.prestamo-search-result {\n  display: flex;\n  width: 100%;\n  flex-direction: column;\n  gap: 3px;\n  padding: 10px 12px;\n  border: 0;\n  background: #ffffff;\n  color: #1f2937;\n  cursor: pointer;\n  text-align: left;\n}\n.prestamo-search-result + .prestamo-search-result {\n  border-top: 1px solid #f1f5f9;\n}\n.prestamo-search-result:hover,\n.prestamo-search-result:focus-visible {\n  background: #f8fafc;\n}\n.prestamo-search-result small,\n.prestamo-search-empty {\n  color: #64748b;\n  font-size: 0.75rem;\n}\n.prestamo-search-empty {\n  margin: 0;\n  padding: 10px 12px;\n}\n.form-group input:focus,\n.form-group select:focus {\n  border-color: #0d9488;\n}\n.alert-error {\n  color: #ef4444;\n  margin-top: 4px;\n}\n.modal-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 12px;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-weight: 500;\n}\n.submit-btn:disabled {\n  background-color: #0d9488;\n  color: white;\n  cursor: not-allowed;\n}\n.cancel-btn {\n  background-color: transparent;\n  color: #4b5563;\n  border: 1px solid #d1d5db;\n  padding: 10px 18px;\n  border-radius: 6px;\n  cursor: pointer;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-suspender {\n  border: none;\n  background: #fff3cd;\n  color: #856404;\n  padding: 8px 12px;\n  border-radius: 20px;\n  cursor: pointer;\n  font-weight: 600;\n}\n.btn-suspender:hover {\n  background: #ffe69c;\n}\n.estado-suspendido {\n  background: #fff3cd;\n  color: #856404;\n}\ntextarea {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #d9e2ec;\n  border-radius: 8px;\n  resize: vertical;\n  font-family: inherit;\n  font-size: 14px;\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=prestamos.css.map */\n"] }]
+  }], () => [{ type: PrestamoService }, { type: SocioServicio }, { type: LibroService }, { type: ActividadServicio }, { type: NgZone }, { type: ChangeDetectorRef }, { type: ActivatedRoute }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Prestamos, { className: "Prestamos", filePath: "app/prestamos/prestamos.ts", lineNumber: 72 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Prestamos, { className: "Prestamos", filePath: "app/prestamos/prestamos.ts", lineNumber: 56 });
 })();
 
 // src/app/socios/socios.ts
-var import_sweetalert24 = __toESM(require_sweetalert2_all());
+var import_sweetalert26 = __toESM(require_sweetalert2_all());
 var _c02 = (a0, a1, a2) => ({ "badge-activo": a0, "badge-inactivo": a1, "badge-suspendido": a2 });
 var _forTrack04 = ($index, $item) => $item.id;
 function Socios_For_52_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td", 23);
+    \u0275\u0275elementStart(0, "tr", 25)(1, "td", 27);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "td", 24)(4, "div", 25);
+    \u0275\u0275elementStart(3, "td", 28)(4, "div", 29);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "div", 26);
+    \u0275\u0275elementStart(6, "div", 30);
     \u0275\u0275text(7);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "td", 27);
+    \u0275\u0275elementStart(8, "td", 31);
     \u0275\u0275text(9);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "td", 28)(11, "div");
+    \u0275\u0275elementStart(10, "td", 32)(11, "div");
     \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "div", 26);
+    \u0275\u0275elementStart(13, "div", 30);
     \u0275\u0275text(14);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(15, "td", 29)(16, "span", 30);
+    \u0275\u0275elementStart(15, "td", 33)(16, "span", 34);
     \u0275\u0275text(17);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "td", 31);
+    \u0275\u0275elementStart(18, "td", 35);
     \u0275\u0275text(19);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(20, "td", 32)(21, "button", 33);
+    \u0275\u0275elementStart(20, "td", 36)(21, "button", 37);
     \u0275\u0275listener("click", function Socios_For_52_Template_button_click_21_listener() {
       const s_r2 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.abrirModalEditar(s_r2));
     });
-    \u0275\u0275text(22, " Editar ");
-    \u0275\u0275elementEnd()()();
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(22, "svg", 38);
+    \u0275\u0275element(23, "path", 39);
+    \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(24, "span");
+    \u0275\u0275text(25, "Editar");
+    \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const s_r2 = ctx.$implicit;
@@ -45798,7 +48663,7 @@ function Socios_For_52_Template(rf, ctx) {
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate1(" ", s_r2.nombre, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", s_r2.edad, " ");
+    \u0275\u0275textInterpolate1(" ", s_r2.edad, " a\xF1os ");
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate1(" ", s_r2.dni, " ");
     \u0275\u0275advance(3);
@@ -45817,7 +48682,7 @@ function Socios_For_52_Template(rf, ctx) {
 }
 function Socios_Conditional_53_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 34);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 40);
     \u0275\u0275text(2, " No se encontraron Socios. ");
     \u0275\u0275elementEnd()();
   }
@@ -45838,8 +48703,8 @@ function Socios_div_54_div_14_small_2_Template(rf, ctx) {
 }
 function Socios_div_54_div_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275template(1, Socios_div_54_div_14_small_1_Template, 2, 0, "small", 51)(2, Socios_div_54_div_14_small_2_Template, 2, 0, "small", 51);
+    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275template(1, Socios_div_54_div_14_small_1_Template, 2, 0, "small", 57)(2, Socios_div_54_div_14_small_2_Template, 2, 0, "small", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -45867,8 +48732,8 @@ function Socios_div_54_div_20_small_2_Template(rf, ctx) {
 }
 function Socios_div_54_div_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275template(1, Socios_div_54_div_20_small_1_Template, 2, 0, "small", 51)(2, Socios_div_54_div_20_small_2_Template, 2, 0, "small", 51);
+    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275template(1, Socios_div_54_div_20_small_1_Template, 2, 0, "small", 57)(2, Socios_div_54_div_20_small_2_Template, 2, 0, "small", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -45896,8 +48761,8 @@ function Socios_div_54_div_26_small_2_Template(rf, ctx) {
 }
 function Socios_div_54_div_26_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275template(1, Socios_div_54_div_26_small_1_Template, 2, 0, "small", 51)(2, Socios_div_54_div_26_small_2_Template, 2, 0, "small", 51);
+    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275template(1, Socios_div_54_div_26_small_1_Template, 2, 0, "small", 57)(2, Socios_div_54_div_26_small_2_Template, 2, 0, "small", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -45925,8 +48790,8 @@ function Socios_div_54_div_32_small_2_Template(rf, ctx) {
 }
 function Socios_div_54_div_32_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275template(1, Socios_div_54_div_32_small_1_Template, 2, 0, "small", 51)(2, Socios_div_54_div_32_small_2_Template, 2, 0, "small", 51);
+    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275template(1, Socios_div_54_div_32_small_1_Template, 2, 0, "small", 57)(2, Socios_div_54_div_32_small_2_Template, 2, 0, "small", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -45948,14 +48813,14 @@ function Socios_div_54_div_38_small_1_Template(rf, ctx) {
 function Socios_div_54_div_38_small_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "small");
-    \u0275\u0275text(1, " El correo debe finalizar en @gmail.com o @hotmail.com. ");
+    \u0275\u0275text(1, " El correo debe incluir el car\xE1cter @. ");
     \u0275\u0275elementEnd();
   }
 }
 function Socios_div_54_div_38_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275template(1, Socios_div_54_div_38_small_1_Template, 2, 0, "small", 51)(2, Socios_div_54_div_38_small_2_Template, 2, 0, "small", 51);
+    \u0275\u0275elementStart(0, "div", 56);
+    \u0275\u0275template(1, Socios_div_54_div_38_small_1_Template, 2, 0, "small", 57)(2, Socios_div_54_div_38_small_2_Template, 2, 0, "small", 57);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -45967,13 +48832,42 @@ function Socios_div_54_div_38_Template(rf, ctx) {
     \u0275\u0275property("ngIf", email_r9.errors == null ? null : email_r9.errors["pattern"]);
   }
 }
+function Socios_div_54_Conditional_39_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 46)(1, "label");
+    \u0275\u0275text(2, "Estado del Socio");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "select", 58);
+    \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Conditional_39_Template_select_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r2 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r2.form.estado, $event) || (ctx_r2.form.estado = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementStart(4, "option", 59);
+    \u0275\u0275text(5, "Activo");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "option", 60);
+    \u0275\u0275text(7, "Inactivo");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "option", 61);
+    \u0275\u0275text(9, "Suspendido");
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r2.form.estado);
+  }
+}
 function Socios_div_54_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 35)(1, "div", 36)(2, "div", 37)(3, "h2");
+    \u0275\u0275elementStart(0, "div", 41)(1, "div", 42)(2, "div", 43)(3, "h2");
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "button", 38);
+    \u0275\u0275elementStart(5, "button", 44);
     \u0275\u0275listener("click", function Socios_div_54_Template_button_click_5_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -45981,16 +48875,16 @@ function Socios_div_54_Template(rf, ctx) {
     });
     \u0275\u0275text(6, " \xD7 ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "form", 39, 0);
+    \u0275\u0275elementStart(7, "form", 45, 0);
     \u0275\u0275listener("ngSubmit", function Socios_div_54_Template_form_ngSubmit_7_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.guardarSocio());
     });
-    \u0275\u0275elementStart(9, "div", 40)(10, "label");
+    \u0275\u0275elementStart(9, "div", 46)(10, "label");
     \u0275\u0275text(11, " Nombre y Apellido ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "input", 41, 1);
+    \u0275\u0275elementStart(12, "input", 47, 1);
     \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Template_input_ngModelChange_12_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -45998,12 +48892,12 @@ function Socios_div_54_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(14, Socios_div_54_div_14_Template, 3, 2, "div", 42);
+    \u0275\u0275template(14, Socios_div_54_div_14_Template, 3, 2, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "div", 40)(16, "label");
+    \u0275\u0275elementStart(15, "div", 46)(16, "label");
     \u0275\u0275text(17, " Edad ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "input", 43, 2);
+    \u0275\u0275elementStart(18, "input", 49, 2);
     \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Template_input_ngModelChange_18_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -46011,12 +48905,12 @@ function Socios_div_54_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(20, Socios_div_54_div_20_Template, 3, 2, "div", 42);
+    \u0275\u0275template(20, Socios_div_54_div_20_Template, 3, 2, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "div", 40)(22, "label");
+    \u0275\u0275elementStart(21, "div", 46)(22, "label");
     \u0275\u0275text(23, " DNI ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(24, "input", 44, 3);
+    \u0275\u0275elementStart(24, "input", 50, 3);
     \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Template_input_ngModelChange_24_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -46024,12 +48918,12 @@ function Socios_div_54_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(26, Socios_div_54_div_26_Template, 3, 2, "div", 42);
+    \u0275\u0275template(26, Socios_div_54_div_26_Template, 3, 2, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(27, "div", 40)(28, "label");
+    \u0275\u0275elementStart(27, "div", 46)(28, "label");
     \u0275\u0275text(29, " Tel\xE9fono ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(30, "input", 45, 4);
+    \u0275\u0275elementStart(30, "input", 51, 4);
     \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Template_input_ngModelChange_30_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -46037,12 +48931,12 @@ function Socios_div_54_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(32, Socios_div_54_div_32_Template, 3, 2, "div", 42);
+    \u0275\u0275template(32, Socios_div_54_div_32_Template, 3, 2, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(33, "div", 40)(34, "label");
+    \u0275\u0275elementStart(33, "div", 46)(34, "label");
     \u0275\u0275text(35, " Correo Electr\xF3nico ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(36, "input", 46, 5);
+    \u0275\u0275elementStart(36, "input", 52, 5);
     \u0275\u0275twoWayListener("ngModelChange", function Socios_div_54_Template_input_ngModelChange_36_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
@@ -46050,22 +48944,23 @@ function Socios_div_54_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(38, Socios_div_54_div_38_Template, 3, 2, "div", 42);
+    \u0275\u0275template(38, Socios_div_54_div_38_Template, 3, 2, "div", 48);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(39, "div", 47)(40, "button", 48);
-    \u0275\u0275text(41);
+    \u0275\u0275conditionalCreate(39, Socios_div_54_Conditional_39_Template, 10, 1, "div", 46);
+    \u0275\u0275elementStart(40, "div", 53)(41, "button", 54);
+    \u0275\u0275text(42);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(42, "button", 49);
-    \u0275\u0275listener("click", function Socios_div_54_Template_button_click_42_listener() {
+    \u0275\u0275elementStart(43, "button", 55);
+    \u0275\u0275listener("click", function Socios_div_54_Template_button_click_43_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.closeModal());
     });
-    \u0275\u0275text(43, " Cancelar ");
+    \u0275\u0275text(44, " Cancelar ");
     \u0275\u0275elementEnd()()()()();
   }
   if (rf & 2) {
-    const socioForm_r10 = \u0275\u0275reference(8);
+    const socioForm_r11 = \u0275\u0275reference(8);
     const nombre_r5 = \u0275\u0275reference(13);
     const edad_r6 = \u0275\u0275reference(19);
     const dni_r7 = \u0275\u0275reference(25);
@@ -46094,8 +48989,10 @@ function Socios_div_54_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.form.email);
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", email_r9.invalid && email_r9.touched);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r2.esEdicion ? 39 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275property("disabled", !socioForm_r10.valid);
+    \u0275\u0275property("disabled", !socioForm_r11.valid);
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", ctx_r2.esEdicion ? "Guardar cambios" : "Guardar", " ");
   }
@@ -46108,7 +49005,7 @@ var PATRONES_SOCIO = {
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s+[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/,
   dni: /^[0-9]{7,}$/,
   telefono: /^\+[0-9]{12}$/,
-  email: /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/
+  email: /@/
 };
 var crearFormVacio = () => ({
   nombre: "",
@@ -46120,11 +49017,8 @@ var crearFormVacio = () => ({
 });
 var Socios = class _Socios {
   route;
-  ngZone;
-  changeDetector;
   socioServicio;
   actividadServicio;
-  prestamoService;
   // =========================
   // ESTADO DE LA VISTA
   // =========================
@@ -46138,13 +49032,10 @@ var Socios = class _Socios {
   // =========================
   // CONSTRUCTOR
   // =========================
-  constructor(route, ngZone, changeDetector, socioServicio, actividadServicio, prestamoService) {
+  constructor(route, socioServicio, actividadServicio) {
     this.route = route;
-    this.ngZone = ngZone;
-    this.changeDetector = changeDetector;
     this.socioServicio = socioServicio;
     this.actividadServicio = actividadServicio;
-    this.prestamoService = prestamoService;
   }
   // =========================
   // CICLO DE VIDA
@@ -46161,7 +49052,10 @@ var Socios = class _Socios {
   // SOCIOS
   // =========================
   obtenerSocios() {
-    this.socios = this.socioServicio.tenerSocios();
+    this.socioServicio.cargarSocios().subscribe({
+      next: (socios) => this.socios = socios,
+      error: (error) => this.mostrarErrorApi(error)
+    });
   }
   // =========================
   // FILTROS
@@ -46236,7 +49130,7 @@ var Socios = class _Socios {
   async guardarSocio() {
     const error = this.validarFormulario();
     if (error) {
-      await import_sweetalert24.default.fire({
+      await import_sweetalert26.default.fire({
         title: error.titulo,
         text: error.texto,
         icon: error.icono,
@@ -46264,10 +49158,15 @@ var Socios = class _Socios {
       prestamos: "Libre",
       cuota: "pagada"
     });
-    this.socioServicio.agregarSocio(nuevoSocio);
-    this.actualizarVistaTrasGuardado();
-    this.registrarActividad(`Nuevo socio registrado: ${datos.nombre}`, datos.dni);
-    await this.mostrarExito("\xA1Socio registrado!", `El socio "${datos.nombre}" se guard\xF3 exitosamente.`);
+    try {
+      await firstValueFrom(this.socioServicio.agregarSocio(nuevoSocio));
+      this.socios = this.socioServicio.tenerSocios();
+      this.closeModal();
+      this.registrarActividad(`Nuevo socio registrado: ${datos.nombre}`, datos.dni);
+      await this.mostrarExito("\xA1Socio registrado!", `El socio "${datos.nombre}" se guard\xF3 exitosamente.`);
+    } catch (error) {
+      await this.mostrarErrorApi(error);
+    }
   }
   // =========================
   // EDITAR
@@ -46282,22 +49181,18 @@ var Socios = class _Socios {
     if (!confirmado) {
       return;
     }
-    const nombreAnterior = original.nombre;
     const actualizado = __spreadProps(__spreadValues(__spreadValues({}, original), datos), {
       estado: this.form.estado
     });
-    this.socioServicio.actualizarSocio(actualizado);
-    this.prestamoService.actualizarDatosSocio(actualizado.id, nombreAnterior, actualizado.nombre);
-    this.actualizarVistaTrasGuardado();
-    this.registrarActividad(`Socio actualizado: ${actualizado.nombre}`, actualizado.dni);
-    await this.mostrarExito("\xA1Socio actualizado!", `Los datos de "${actualizado.nombre}" se guardaron.`);
-  }
-  actualizarVistaTrasGuardado() {
-    setTimeout(() => this.ngZone.run(() => {
-      this.obtenerSocios();
+    try {
+      await firstValueFrom(this.socioServicio.actualizarSocio(actualizado));
+      this.socios = this.socioServicio.tenerSocios();
       this.closeModal();
-      this.changeDetector.detectChanges();
-    }));
+      this.registrarActividad(`Socio actualizado: ${actualizado.nombre}`, actualizado.dni);
+      await this.mostrarExito("\xA1Socio actualizado!", `Los datos de "${actualizado.nombre}" se guardaron.`);
+    } catch (error) {
+      await this.mostrarErrorApi(error);
+    }
   }
   // =========================
   // VALIDACIONES
@@ -46317,7 +49212,7 @@ var Socios = class _Socios {
       return this.error("Tel\xE9fono inv\xE1lido", 'El tel\xE9fono debe iniciar con "+" seguido de 12 d\xEDgitos.');
     }
     if (!PATRONES_SOCIO.email.test(email)) {
-      return this.error("Correo inv\xE1lido", "El correo debe ser de dominio @gmail.com o @hotmail.com.");
+      return this.error("Correo inv\xE1lido", "El correo debe incluir el car\xE1cter @.");
     }
     if (this.dniDuplicado(dni)) {
       return this.error("Socio duplicado", "Ya existe un socio registrado con este n\xFAmero de DNI.", "error");
@@ -46351,7 +49246,7 @@ var Socios = class _Socios {
     this.actividadServicio.registrarActividad("socio", descripcion, idRelacionado);
   }
   async confirmar(titulo, texto, textoConfirmar) {
-    const { isConfirmed } = await import_sweetalert24.default.fire({
+    const { isConfirmed } = await import_sweetalert26.default.fire({
       title: titulo,
       text: texto,
       icon: "warning",
@@ -46364,7 +49259,7 @@ var Socios = class _Socios {
     return isConfirmed;
   }
   mostrarExito(titulo, texto) {
-    return import_sweetalert24.default.fire({
+    return import_sweetalert26.default.fire({
       title: titulo,
       text: texto,
       icon: "success",
@@ -46373,10 +49268,19 @@ var Socios = class _Socios {
       showConfirmButton: false
     }).then(() => void 0);
   }
+  mostrarErrorApi(error) {
+    const mensaje = error instanceof Error ? error.message : "No se pudo completar la operaci\xF3n en la API.";
+    return import_sweetalert26.default.fire({
+      title: "Error de conexi\xF3n con la API",
+      text: mensaje,
+      icon: "error",
+      confirmButtonColor: COLOR_PRIMARIO
+    }).then(() => void 0);
+  }
   static \u0275fac = function Socios_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Socios)(\u0275\u0275directiveInject(ActivatedRoute), \u0275\u0275directiveInject(NgZone), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(PrestamoService));
+    return new (__ngFactoryType__ || _Socios)(\u0275\u0275directiveInject(ActivatedRoute), \u0275\u0275directiveInject(SocioServicio), \u0275\u0275directiveInject(ActividadServicio));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Socios, selectors: [["app-socios"]], decls: 55, vars: 18, consts: [["socioForm", "ngForm"], ["nombre", "ngModel"], ["edad", "ngModel"], ["dni", "ngModel"], ["telefono", "ngModel"], ["email", "ngModel"], [1, "body"], [1, "main"], [1, "header"], ["type", "button", 1, "btn-primary", 3, "click"], [1, "toolbar"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter-group"], ["type", "button", 1, "filter-btn", 3, "click"], ["type", "button", 1, "filter-btn", "dark", 3, "click"], [1, "results-count"], [1, "table-container"], ["class", "modal-overlay", 4, "ngIf"], ["data-label", "CARNET", 1, "text-muted"], ["data-label", "NOMBRE"], [1, "user-name"], [1, "user-subtext"], ["data-label", "DNI"], ["data-label", "CONTACTO"], ["data-label", "ESTADO"], [1, "badge", 3, "ngClass"], ["data-label", "PR\xC9STAMO"], ["data-label", "ACCIONES"], ["type", "button", 1, "btn-editar", 3, "click"], ["colspan", "7", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "nombre", "pattern", "^[a-zA-Z\xE1\xE9\xED\xF3\xFA\xC1\xC9\xCD\xD3\xDA\xF1\xD1]+(\\s+[a-zA-Z\xE1\xE9\xED\xF3\xFA\xC1\xC9\xCD\xD3\xDA\xF1\xD1]+)+$", "placeholder", "Ej: Juan P\xE9rez", "required", "", 3, "ngModelChange", "ngModel"], ["class", "alert-error", 4, "ngIf"], ["type", "number", "name", "edad", "min", "4", "placeholder", "M\xEDnimo 4", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "dni", "pattern", "^[0-9]{7,}$", "placeholder", "M\xEDnimo 7 n\xFAmeros", "required", "", 3, "ngModelChange", "ngModel"], ["type", "tel", "name", "telefono", "pattern", "^\\+[0-9]{12}$", "placeholder", "Ej: +5491112345678", "required", "", 3, "ngModelChange", "ngModel"], ["type", "email", "name", "email", "pattern", "^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\\.com$", "placeholder", "usuario@gmail.com o @hotmail.com", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "alert-error"], [4, "ngIf"]], template: function Socios_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Socios, selectors: [["app-socios"]], decls: 55, vars: 18, consts: [["socioForm", "ngForm"], ["nombre", "ngModel"], ["edad", "ngModel"], ["dni", "ngModel"], ["telefono", "ngModel"], ["email", "ngModel"], [1, "body"], [1, "main"], [1, "header"], ["type", "button", 1, "btn-primary", 3, "click"], [1, "toolbar"], [1, "search-box"], ["width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", 1, "search-icon"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filters"], [1, "filter-group"], ["type", "button", 1, "filter-btn", 3, "click"], ["type", "button", 1, "filter-btn", "estado-activo", 3, "click"], ["type", "button", 1, "filter-btn", "estado-suspendido", 3, "click"], ["type", "button", 1, "filter-btn", "estado-inactivo", 3, "click"], ["type", "button", 1, "filter-btn", "dark", 3, "click"], [1, "results-count"], [1, "table-container"], [1, "socio-row"], ["class", "modal-overlay", 4, "ngIf"], ["data-label", "CARNET", 1, "text-muted"], ["data-label", "NOMBRE"], [1, "user-name"], [1, "user-subtext"], ["data-label", "DNI"], ["data-label", "CONTACTO"], ["data-label", "ESTADO"], [1, "badge", 3, "ngClass"], ["data-label", "PR\xC9STAMO"], ["data-label", "ACCIONES"], ["type", "button", 1, "btn-editar", 3, "click"], ["aria-hidden", "true", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "1.8", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "m16 4 4 4M4 20l4.2-.8L19 8.4a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z"], ["colspan", "7", 1, "sin-resultados"], [1, "modal-overlay"], [1, "modal-card"], [1, "modal-header"], ["type", "button", 1, "close-btn", 3, "click"], [3, "ngSubmit"], [1, "form-group"], ["type", "text", "name", "nombre", "pattern", "^[a-zA-Z\xE1\xE9\xED\xF3\xFA\xC1\xC9\xCD\xD3\xDA\xF1\xD1]+(\\s+[a-zA-Z\xE1\xE9\xED\xF3\xFA\xC1\xC9\xCD\xD3\xDA\xF1\xD1]+)+$", "placeholder", "Ej: Juan P\xE9rez", "required", "", 3, "ngModelChange", "ngModel"], ["class", "alert-error", 4, "ngIf"], ["type", "number", "name", "edad", "min", "4", "placeholder", "M\xEDnimo 4", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "dni", "pattern", "^[0-9]{7,}$", "placeholder", "M\xEDnimo 7 n\xFAmeros", "required", "", 3, "ngModelChange", "ngModel"], ["type", "tel", "name", "telefono", "pattern", "^\\+[0-9]{12}$", "placeholder", "Ej: +5491112345678", "required", "", 3, "ngModelChange", "ngModel"], ["type", "text", "name", "email", "pattern", ".*@.*", "placeholder", "usuario@dominio", "required", "", 3, "ngModelChange", "ngModel"], [1, "modal-actions"], ["type", "submit", 1, "submit-btn", 3, "disabled"], ["type", "button", 1, "cancel-btn", 3, "click"], [1, "alert-error"], [4, "ngIf"], ["name", "estado", 1, "form-control", 3, "ngModelChange", "ngModel"], ["value", "activo"], ["value", "inactivo"], ["value", "suspendido"]], template: function Socios_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 6)(1, "div", 7)(2, "header", 8)(3, "h1");
       \u0275\u0275text(4, "Socios");
@@ -46405,46 +49309,46 @@ var Socios = class _Socios {
       });
       \u0275\u0275text(16, " Todos ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(17, "button", 18);
+      \u0275\u0275elementStart(17, "button", 19);
       \u0275\u0275listener("click", function Socios_Template_button_click_17_listener() {
         return ctx.filtrarPorEstado("activo");
       });
       \u0275\u0275text(18, " Activo ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(19, "button", 18);
+      \u0275\u0275elementStart(19, "button", 20);
       \u0275\u0275listener("click", function Socios_Template_button_click_19_listener() {
         return ctx.filtrarPorEstado("suspendido");
       });
       \u0275\u0275text(20, " Suspendidos ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(21, "button", 18);
+      \u0275\u0275elementStart(21, "button", 21);
       \u0275\u0275listener("click", function Socios_Template_button_click_21_listener() {
         return ctx.filtrarPorEstado("inactivo");
       });
       \u0275\u0275text(22, " Inactivos ");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(23, "div", 17)(24, "button", 19);
+      \u0275\u0275elementStart(23, "div", 17)(24, "button", 18);
       \u0275\u0275listener("click", function Socios_Template_button_click_24_listener() {
         return ctx.filtrarPorEdad("Todas edades");
       });
       \u0275\u0275text(25, " Todas edades ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(26, "button", 18);
+      \u0275\u0275elementStart(26, "button", 22);
       \u0275\u0275listener("click", function Socios_Template_button_click_26_listener() {
         return ctx.filtrarPorEdad("+18");
       });
       \u0275\u0275text(27, " +18 ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(28, "button", 18);
+      \u0275\u0275elementStart(28, "button", 22);
       \u0275\u0275listener("click", function Socios_Template_button_click_28_listener() {
         return ctx.filtrarPorEdad("-18");
       });
       \u0275\u0275text(29, " -18 ");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(30, "span", 20);
+      \u0275\u0275elementStart(30, "span", 23);
       \u0275\u0275text(31);
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(32, "div", 21)(33, "table")(34, "thead")(35, "tr")(36, "th");
+      \u0275\u0275elementStart(32, "div", 24)(33, "table")(34, "thead")(35, "tr")(36, "th");
       \u0275\u0275text(37, "CARNET");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(38, "th");
@@ -46466,10 +49370,10 @@ var Socios = class _Socios {
       \u0275\u0275text(49, "ACCIONES");
       \u0275\u0275elementEnd()()();
       \u0275\u0275elementStart(50, "tbody");
-      \u0275\u0275repeaterCreate(51, Socios_For_52_Template, 23, 17, "tr", null, _forTrack04);
+      \u0275\u0275repeaterCreate(51, Socios_For_52_Template, 26, 17, "tr", 25, _forTrack04);
       \u0275\u0275conditionalCreate(53, Socios_Conditional_53_Template, 3, 0, "tr");
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(54, Socios_div_54_Template, 44, 13, "div", 22);
+      \u0275\u0275template(54, Socios_div_54_Template, 45, 14, "div", 26);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -46498,15 +49402,12 @@ var Socios = class _Socios {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isModalOpen);
     }
-  }, dependencies: [CommonModule, NgClass, NgIf, FormsModule, \u0275NgNoValidate, DefaultValueAccessor, NumberValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, PatternValidator, MinValidator, NgModel, NgForm], styles: ["\n.btn-editar[_ngcontent-%COMP%] {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar[_ngcontent-%COMP%]:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar[_ngcontent-%COMP%]:active {\n  transform: translateY(0);\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active[_ngcontent-%COMP%] {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO][_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso[_ngcontent-%COMP%] {\n  color: #ef4444;\n}\n.prestamo-libre[_ngcontent-%COMP%] {\n  color: #23b2a0;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-primary[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .filter-btn[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay[_ngcontent-%COMP%], \n.modal-backdrop[_ngcontent-%COMP%], \n.modal-card[_ngcontent-%COMP%] {\n  z-index: 1000;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, NgIf, FormsModule, \u0275NgNoValidate, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, NumberValueAccessor, SelectControlValueAccessor, NgControlStatus, NgControlStatusGroup, RequiredValidator, PatternValidator, MinValidator, NgModel, NgForm], styles: ["\n.btn-editar[_ngcontent-%COMP%] {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-editar[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 14px;\n  height: 14px;\n  flex: 0 0 auto;\n}\n.btn-editar[_ngcontent-%COMP%]:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar[_ngcontent-%COMP%]:active {\n  transform: translateY(0);\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary[_ngcontent-%COMP%]:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box[_ngcontent-%COMP%] {\n  position: relative;\n  width: 100%;\n}\n.search-icon[_ngcontent-%COMP%] {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]::placeholder {\n  color: #94a3b8;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active[_ngcontent-%COMP%] {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.filter-btn.estado-activo.active[_ngcontent-%COMP%] {\n  background-color: #d5ffe4;\n  color: #15803d;\n}\n.filter-btn.estado-inactivo.active[_ngcontent-%COMP%] {\n  background-color: #fddbdb;\n  color: #991b1b;\n}\n.filter-btn.estado-suspendido.active[_ngcontent-%COMP%] {\n  background-color: #ffe7c8;\n  color: #c2410c;\n}\n.results-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody[_ngcontent-%COMP%]   tr.socio-row[_ngcontent-%COMP%] {\n  transition: background-color 0.15s ease;\n}\ntbody[_ngcontent-%COMP%]   tr.socio-row[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n}\ntd[_ngcontent-%COMP%] {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr[_ngcontent-%COMP%]:last-child   td[_ngcontent-%COMP%] {\n  border-bottom: none;\n}\n.text-muted[_ngcontent-%COMP%] {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name[_ngcontent-%COMP%] {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO][_ngcontent-%COMP%] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso[_ngcontent-%COMP%] {\n  color: #ef4444;\n}\n.prestamo-libre[_ngcontent-%COMP%] {\n  color: #23b2a0;\n}\n.sin-resultados[_ngcontent-%COMP%] {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error[_ngcontent-%COMP%] {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container[_ngcontent-%COMP%] {\n    padding: 16px 12px;\n  }\n  .filters[_ngcontent-%COMP%] {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count[_ngcontent-%COMP%] {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header[_ngcontent-%COMP%]   h1[_ngcontent-%COMP%] {\n    font-size: 22px;\n  }\n  .btn-primary[_ngcontent-%COMP%] {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container[_ngcontent-%COMP%] {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table[_ngcontent-%COMP%], \n   thead[_ngcontent-%COMP%], \n   tbody[_ngcontent-%COMP%], \n   th[_ngcontent-%COMP%], \n   td[_ngcontent-%COMP%], \n   tr[_ngcontent-%COMP%] {\n    display: block;\n  }\n  thead[_ngcontent-%COMP%] {\n    display: none;\n  }\n  tr[_ngcontent-%COMP%] {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td[_ngcontent-%COMP%] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td[_ngcontent-%COMP%]:last-child {\n    border-bottom: none;\n  }\n  td[_ngcontent-%COMP%]::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group[_ngcontent-%COMP%] {\n    width: 100%;\n  }\n  .filter-btn[_ngcontent-%COMP%] {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: _ngcontent-%COMP%_fadeIn 0.2s ease-out;\n}\n.modal-header[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header[_ngcontent-%COMP%]   h2[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group[_ngcontent-%COMP%]   input[_ngcontent-%COMP%]:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay[_ngcontent-%COMP%], \n.modal-backdrop[_ngcontent-%COMP%], \n.modal-card[_ngcontent-%COMP%] {\n  z-index: 1000;\n}\n.modal-actions[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn[_ngcontent-%COMP%]:hover {\n  background-color: #0f766e;\n}\n.cancel-btn[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes _ngcontent-%COMP%_fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension[_ngcontent-%COMP%] {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension[_ngcontent-%COMP%]:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Socios, [{
     type: Component,
-    args: [{ selector: "app-socios", standalone: true, imports: [
-      CommonModule,
-      FormsModule
-    ], template: `<div class="body">\r
+    args: [{ selector: "app-socios", standalone: true, imports: [CommonModule, FormsModule], template: `<div class="body">\r
 \r
   <div class="main">\r
 \r
@@ -46584,7 +49485,7 @@ var Socios = class _Socios {
 \r
           <button\r
             type="button"\r
-            class="filter-btn"\r
+            class="filter-btn estado-activo"\r
             [class.active]="filtroEstado === 'activo'"\r
             (click)="filtrarPorEstado('activo')">\r
 \r
@@ -46595,7 +49496,7 @@ var Socios = class _Socios {
 \r
           <button\r
             type="button"\r
-            class="filter-btn"\r
+            class="filter-btn estado-suspendido"\r
             [class.active]="filtroEstado === 'suspendido'"\r
             (click)="filtrarPorEstado('suspendido')">\r
 \r
@@ -46604,12 +49505,9 @@ var Socios = class _Socios {
           </button>\r
 \r
 \r
-          \r
-\r
-\r
           <button\r
             type="button"\r
-            class="filter-btn"\r
+            class="filter-btn estado-inactivo"\r
             [class.active]="filtroEstado === 'inactivo'"\r
             (click)="filtrarPorEstado('inactivo')">\r
 \r
@@ -46624,7 +49522,7 @@ var Socios = class _Socios {
 \r
           <button\r
             type="button"\r
-            class="filter-btn dark"\r
+            class="filter-btn"\r
             [class.active]="filtroEdad === 'Todas edades'"\r
             (click)="filtrarPorEdad('Todas edades')">\r
 \r
@@ -46635,7 +49533,7 @@ var Socios = class _Socios {
 \r
           <button\r
             type="button"\r
-            class="filter-btn"\r
+            class="filter-btn dark"\r
             [class.active]="filtroEdad === '+18'"\r
             (click)="filtrarPorEdad('+18')">\r
 \r
@@ -46646,7 +49544,7 @@ var Socios = class _Socios {
 \r
           <button\r
             type="button"\r
-            class="filter-btn"\r
+            class="filter-btn dark"\r
             [class.active]="filtroEdad === '-18'"\r
             (click)="filtrarPorEdad('-18')">\r
 \r
@@ -46706,7 +49604,7 @@ var Socios = class _Socios {
             track s.id\r
           ) {\r
 \r
-            <tr>\r
+            <tr class="socio-row">\r
 \r
               <!-- CARNET -->\r
 \r
@@ -46731,7 +49629,7 @@ var Socios = class _Socios {
 \r
                 <div class="user-subtext">\r
 \r
-                  {{ s.edad }}\r
+                  {{ s.edad }} a\xF1os\r
 \r
                 </div>\r
 \r
@@ -46782,9 +49680,7 @@ var Socios = class _Socios {
                       s.estado === 'inactivo',\r
 \r
                     'badge-suspendido':\r
-                      s.estado === 'suspendido',\r
-\r
-                    \r
+                      s.estado === 'suspendido'\r
 \r
                   }">\r
 \r
@@ -46823,7 +49719,10 @@ var Socios = class _Socios {
                   class="btn-editar"\r
                   (click)="abrirModalEditar(s)">\r
 \r
-                  Editar\r
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+                    <path d="m16 4 4 4M4 20l4.2-.8L19 8.4a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z"></path>\r
+                  </svg>\r
+                  <span>Editar</span>\r
 \r
                 </button>\r
 \r
@@ -47116,12 +50015,12 @@ var Socios = class _Socios {
 \r
 \r
           <input\r
-            type="email"\r
+            type="text"\r
             [(ngModel)]="form.email"\r
             name="email"\r
             #email="ngModel"\r
-            pattern="^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\\.com$"\r
-            placeholder="usuario@gmail.com o @hotmail.com"\r
+            pattern=".*@.*"\r
+            placeholder="usuario@dominio"\r
             required />\r
 \r
 \r
@@ -47147,14 +50046,26 @@ var Socios = class _Socios {
                 email.errors?.['pattern']\r
               ">\r
 \r
-              El correo debe finalizar\r
-              en @gmail.com o @hotmail.com.\r
+              El correo debe incluir el car\xE1cter @.\r
 \r
             </small>\r
 \r
           </div>\r
 \r
         </div>\r
+\r
+\r
+        <!-- ESTADO (SOLO EN EDICI\xD3N) -->\r
+        @if (esEdicion) {\r
+          <div class="form-group">\r
+            <label>Estado del Socio</label>\r
+            <select [(ngModel)]="form.estado" name="estado" class="form-control">\r
+              <option value="activo">Activo</option>\r
+              <option value="inactivo">Inactivo</option>\r
+              <option value="suspendido">Suspendido</option>\r
+            </select>\r
+          </div>\r
+        }\r
 \r
 \r
         <!-- ACCIONES MODAL -->\r
@@ -47192,62 +50103,46 @@ var Socios = class _Socios {
 \r
   </div>\r
 \r
-</div>`, styles: ["/* src/app/socios/socios.css */\n.btn-editar {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n}\n.btn-editar:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar:active {\n  transform: translateY(0);\n}\n.body {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.results-count {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso {\n  color: #ef4444;\n}\n.prestamo-libre {\n  color: #23b2a0;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container {\n    padding: 16px 12px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header h1 {\n    font-size: 22px;\n  }\n  .btn-primary {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .filter-btn {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: fadeIn 0.2s ease-out;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay,\n.modal-backdrop,\n.modal-card {\n  z-index: 1000;\n}\n.modal-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn:hover {\n  background-color: #0f766e;\n}\n.cancel-btn {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */\n"] }]
-  }], () => [{ type: ActivatedRoute }, { type: NgZone }, { type: ChangeDetectorRef }, { type: SocioServicio }, { type: ActividadServicio }, { type: PrestamoService }], null);
+</div>`, styles: ["/* src/app/socios/socios.css */\n.btn-editar {\n  border: none;\n  background: #0d9488;\n  color: white;\n  padding: 7px 14px;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n}\n.btn-editar svg {\n  width: 14px;\n  height: 14px;\n  flex: 0 0 auto;\n}\n.btn-editar:hover {\n  opacity: 0.85;\n  transform: translateY(-1px);\n}\n.btn-editar:active {\n  transform: translateY(0);\n}\n.body {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.main {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.header h1 {\n  margin: 0;\n  font-size: 25px;\n  font-weight: 700;\n  color: #102b43;\n}\n.btn-primary {\n  background-color: #23b2a0;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 30px;\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  white-space: nowrap;\n  transition: background-color 0.2s ease, transform 0.1s ease;\n}\n.btn-primary:hover {\n  background-color: #1c9687;\n  transform: translateY(-1px);\n}\n.toolbar {\n  background-color: #ffffff;\n  border-radius: 20px;\n  padding: 18px 20px;\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n}\n.search-box {\n  position: relative;\n  width: 100%;\n}\n.search-icon {\n  position: absolute;\n  left: 16px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: #94a3b8;\n}\n.search-box input {\n  width: 100%;\n  padding: 12px 16px 12px 44px;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  font-size: 14px;\n  background-color: #f8fafc;\n  color: #0f172a;\n  outline: none;\n  box-sizing: border-box;\n  transition: border-color 0.2s ease, background-color 0.2s ease;\n}\n.search-box input:focus {\n  border-color: #23b2a0;\n  background-color: #ffffff;\n}\n.search-box input::placeholder {\n  color: #94a3b8;\n}\n.filters {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n  color: #0f172a;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.filter-btn.dark.active {\n  background-color: #1e293b;\n  color: #ffffff;\n}\n.filter-btn.estado-activo.active {\n  background-color: #d5ffe4;\n  color: #15803d;\n}\n.filter-btn.estado-inactivo.active {\n  background-color: #fddbdb;\n  color: #991b1b;\n}\n.filter-btn.estado-suspendido.active {\n  background-color: #ffe7c8;\n  color: #c2410c;\n}\n.results-count {\n  font-size: 13px;\n  color: #94a3b8;\n  font-weight: 500;\n  margin-left: auto;\n}\n.table-container {\n  background-color: #ffffff;\n  border-radius: 20PX;\n  padding: 12px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);\n  overflow-x: auto;\n}\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\nth {\n  padding: 16px;\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.8px;\n  border-bottom: 1px solid #f1f5f9;\n}\ntbody tr.socio-row {\n  transition: background-color 0.15s ease;\n}\ntbody tr.socio-row:hover {\n  background-color: #f8fafc;\n}\ntd {\n  padding: 16px;\n  font-size: 14px;\n  color: #0f172a;\n  border-bottom: 1px solid #f8fafc;\n  vertical-align: middle;\n}\ntr:last-child td {\n  border-bottom: none;\n}\n.text-muted {\n  color: #64748b;\n  font-weight: 600;\n  font-size: 13px;\n}\n.user-name {\n  font-weight: 700;\n  color: #0f172a;\n}\n.user-subtext {\n  font-size: 12px;\n  color: #94a3b8;\n  margin-top: 2px;\n  word-break: break-all;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 30px;\n  font-size: 12px;\n  font-weight: 700;\n  text-transform: lowercase;\n}\n.badge-activo {\n  background-color: #dcfce7;\n  color: #15803d;\n}\n.badge-inactivo {\n  background-color: #fee2e2;\n  color: #991b1b;\n}\n.badge-suspendido {\n  background-color: #ffedd5;\n  color: #c2410c;\n}\ntd[data-label=PR\\c9STAMO] {\n  font-weight: 600;\n  font-size: 13px;\n}\n.prestamo-encurso {\n  color: #ef4444;\n}\n.prestamo-libre {\n  color: #23b2a0;\n}\n.sin-resultados {\n  height: 100px;\n  text-align: center;\n  color: #8291a2;\n  font-size: 13px;\n}\n.alert-error {\n  color: #e74c3c;\n  font-size: 0.85rem;\n  margin-top: 4px;\n  display: flex;\n  flex-direction: column;\n}\n@media (max-width: 768px) {\n  .container {\n    padding: 16px 12px;\n  }\n  .filters {\n    flex-direction: column;\n    align-items: flex-start;\n  }\n  .results-count {\n    margin-left: 0;\n    width: 100%;\n    text-align: right;\n  }\n}\n@media (max-width: 600px) {\n  .header h1 {\n    font-size: 22px;\n  }\n  .btn-primary {\n    padding: 8px 14px;\n    font-size: 13px;\n  }\n  .table-container {\n    padding: 8px;\n    background-color: transparent;\n    box-shadow: none;\n  }\n  table,\n  thead,\n  tbody,\n  th,\n  td,\n  tr {\n    display: block;\n  }\n  thead {\n    display: none;\n  }\n  tr {\n    background-color: #ffffff;\n    border-radius: 20px;\n    padding: 14px 16px;\n    margin-bottom: 12px;\n    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);\n    border: 1px solid #f1f5f9;\n  }\n  td {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 10px 0;\n    border-bottom: 1px dotted #f1f5f9;\n    text-align: right;\n  }\n  td:last-child {\n    border-bottom: none;\n  }\n  td::before {\n    content: attr(data-label);\n    font-size: 11px;\n    font-weight: 700;\n    color: #94a3b8;\n    letter-spacing: 0.5px;\n    text-transform: uppercase;\n    text-align: left;\n    padding-right: 12px;\n  }\n  .filter-group {\n    width: 100%;\n  }\n  .filter-btn {\n    flex: 1;\n    text-align: center;\n    padding: 8px 10px;\n    font-size: 12px;\n  }\n}\n.modal-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100vw;\n  height: 100vh;\n  background-color: rgba(15, 23, 42, 0.55);\n  -webkit-backdrop-filter: blur(4px);\n  backdrop-filter: blur(4px);\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  z-index: 1000;\n  padding: 16px;\n}\n.modal-card {\n  background-color: #ffffff;\n  border-radius: 16px;\n  width: 100%;\n  max-width: 480px;\n  padding: 24px;\n  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);\n  animation: fadeIn 0.2s ease-out;\n}\n.modal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n}\n.modal-header h2 {\n  margin: 0;\n  font-size: 18px;\n  font-weight: 700;\n  color: #0f172a;\n}\n.close-btn {\n  background: transparent;\n  border: none;\n  font-size: 24px;\n  line-height: 1;\n  color: #64748b;\n  cursor: pointer;\n  padding: 4px 8px;\n  border-radius: 6px;\n  transition: background-color 0.2s;\n}\n.close-btn:hover {\n  background-color: #f1f5f9;\n  color: #0f172a;\n}\n.form-group {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n  margin-bottom: 16px;\n}\n.form-group label {\n  font-size: 13px;\n  font-weight: 600;\n  color: #475569;\n}\n.form-group input {\n  padding: 10px 14px;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  font-size: 14px;\n  color: #1e293b;\n  outline: none;\n  transition: border-color 0.2s, box-shadow 0.2s;\n}\n.form-group input:focus {\n  border-color: #0d9488;\n  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);\n}\n.modal-overlay,\n.modal-backdrop,\n.modal-card {\n  z-index: 1000;\n}\n.modal-actions {\n  display: flex;\n  gap: 12px;\n  justify-content: flex-end;\n  margin-top: 24px;\n}\n.submit-btn {\n  background-color: #0d9488;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s;\n}\n.submit-btn:hover {\n  background-color: #0f766e;\n}\n.cancel-btn {\n  background-color: #ffffff;\n  color: #475569;\n  border: 1px solid #cbd5e1;\n  padding: 10px 20px;\n  border-radius: 8px;\n  font-weight: 600;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background-color 0.2s, border-color 0.2s;\n}\n.cancel-btn:hover {\n  background-color: #f8fafc;\n  border-color: #94a3b8;\n}\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n    transform: scale(0.95);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1);\n  }\n}\n.btn-quitar-suspension {\n  background-color: #0d9488;\n  color: white;\n  border: none;\n  padding: 8px 12px;\n  border-radius: 6px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n}\n.btn-quitar-suspension:hover {\n  opacity: 0.9;\n}\n/*# sourceMappingURL=socios.css.map */\n"] }]
+  }], () => [{ type: ActivatedRoute }, { type: SocioServicio }, { type: ActividadServicio }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Socios, { className: "Socios", filePath: "app/socios/socios.ts", lineNumber: 171 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Socios, { className: "Socios", filePath: "app/socios/socios.ts", lineNumber: 79 });
 })();
 
 // src/app/cuotas/cuotas.ts
-var import_sweetalert25 = __toESM(require_sweetalert2_all());
+var import_sweetalert27 = __toESM(require_sweetalert2_all());
 
 // src/app/services/cuotas-service.ts
 var CuotasService = class _CuotasService {
   socioServicio;
-  // ==========================================
-  // CONSTRUCTOR
-  // ==========================================
   constructor(socioServicio) {
     this.socioServicio = socioServicio;
   }
-  // ==========================================
-  // OBTENER CUOTAS
-  // ==========================================
   obtenerCuotas() {
     return this.socioServicio.tenerSocios();
   }
-  // ==========================================
-  // COBRAR CUOTA
-  // ==========================================
-  cobrarCuota(idSocio) {
-    this.socioServicio.actualizarEstadoCuota(idSocio, "pagada");
+  cargarCuotas() {
+    return this.socioServicio.cargarSocios();
   }
-  // ==========================================
-  // WHATSAPP
-  // ==========================================
+  cobrarCuota(idSocio) {
+    return this.socioServicio.actualizarEstadoCuota(idSocio, "pagada");
+  }
   enviarRecordatorioWhatsApp(socio) {
     const mensaje = `Hola ${socio.nombre}, te recordamos que tu cuota se encuentra en estado: ${socio.cuota.toUpperCase()}.`;
     const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank");
   }
-  // ==========================================
-  // DAR DE BAJA
-  // ==========================================
-  darDeBaja(id) {
-    const socio = this.socioServicio.tenerSocios().find((s) => s.id === id);
-    if (socio) {
-      socio.estado = "inactivo";
-      const mensaje = `Hola ${socio.nombre}, le avisamos que su estado ha sido cambiado a "inactivo". Si desea reactivar su membres\xEDa, por favor p\xF3ngase en contacto con nosotros.`;
-      const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, "_blank");
-    }
+  notificarCambioEstado(socio, estado) {
+    const mensaje = estado === "inactivo" ? `Hola ${socio.nombre}, le avisamos que su estado ha cambiado a "inactivo".` : `Hola ${socio.nombre}, le avisamos que su membres\xEDa volvi\xF3 a estar activa.`;
+    const url = `https://wa.me/${socio.telefono}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
   }
-  // ==========================================
-  // DAR DE ALTA
-  // ==========================================
+  darDeBaja(id) {
+    return this.socioServicio.actualizarEstadoSocio(id, "inactivo");
+  }
   darDeAlta(id) {
-    this.socioServicio.actualizarEstadoSocio(id, "activo");
+    return this.socioServicio.actualizarEstadoSocio(id, "activo");
   }
   static \u0275fac = function CuotasService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _CuotasService)(\u0275\u0275inject(SocioServicio));
@@ -47267,21 +50162,21 @@ var CuotasService = class _CuotasService {
 var _forTrack05 = ($index, $item) => $item.id;
 function Cuotas_For_40_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 23);
+    \u0275\u0275elementStart(0, "span", 24);
     \u0275\u0275text(1, "Inactivo");
     \u0275\u0275elementEnd();
   }
 }
 function Cuotas_For_40_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 24);
+    \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "Al d\xEDa");
     \u0275\u0275elementEnd();
   }
 }
 function Cuotas_For_40_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275elementStart(0, "span", 26);
     \u0275\u0275text(1, "Pendiente");
     \u0275\u0275elementEnd();
   }
@@ -47296,75 +50191,93 @@ function Cuotas_For_40_Conditional_14_Template(rf, ctx) {
 function Cuotas_For_40_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 36);
+    \u0275\u0275elementStart(0, "button", 37);
     \u0275\u0275listener("click", function Cuotas_For_40_Conditional_16_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r2);
       const cuota_r3 = \u0275\u0275nextContext().$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.cobrar(cuota_r3.id));
     });
-    \u0275\u0275text(1, "Cobrar");
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 38);
+    \u0275\u0275element(2, "rect", 39)(3, "circle", 40)(4, "path", 41);
     \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(5, "span");
+    \u0275\u0275text(6, "Cobrar");
+    \u0275\u0275elementEnd()();
   }
 }
 function Cuotas_For_40_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 37);
+    \u0275\u0275elementStart(0, "button", 42);
     \u0275\u0275listener("click", function Cuotas_For_40_Conditional_17_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r5);
       const cuota_r3 = \u0275\u0275nextContext().$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.darDeAlta(cuota_r3.id));
     });
-    \u0275\u0275text(1, "Dar de Alta");
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 38);
+    \u0275\u0275element(2, "path", 43)(3, "circle", 44)(4, "path", 45);
     \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(5, "span");
+    \u0275\u0275text(6, "Dar de Alta");
+    \u0275\u0275elementEnd()();
   }
 }
 function Cuotas_For_40_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 38);
+    \u0275\u0275elementStart(0, "button", 46);
     \u0275\u0275listener("click", function Cuotas_For_40_Conditional_18_Template_button_click_0_listener() {
       \u0275\u0275restoreView(_r6);
       const cuota_r3 = \u0275\u0275nextContext().$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.darDeBaja(cuota_r3.id));
     });
-    \u0275\u0275text(1, "Dar de Baja");
+    \u0275\u0275namespaceSVG();
+    \u0275\u0275elementStart(1, "svg", 38);
+    \u0275\u0275element(2, "path", 43)(3, "circle", 44)(4, "path", 47);
     \u0275\u0275elementEnd();
+    \u0275\u0275namespaceHTML();
+    \u0275\u0275elementStart(5, "span");
+    \u0275\u0275text(6, "Dar de Baja");
+    \u0275\u0275elementEnd()();
   }
 }
 function Cuotas_For_40_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td", 19)(2, "div", 20);
+    \u0275\u0275elementStart(0, "tr", 19)(1, "td", 20)(2, "div", 21);
     \u0275\u0275text(3);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 21);
+    \u0275\u0275elementStart(4, "div", 22);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td", 22);
-    \u0275\u0275conditionalCreate(7, Cuotas_For_40_Conditional_7_Template, 2, 0, "span", 23)(8, Cuotas_For_40_Conditional_8_Template, 2, 0, "span", 24)(9, Cuotas_For_40_Conditional_9_Template, 2, 0, "span", 25);
+    \u0275\u0275elementStart(6, "td", 23);
+    \u0275\u0275conditionalCreate(7, Cuotas_For_40_Conditional_7_Template, 2, 0, "span", 24)(8, Cuotas_For_40_Conditional_8_Template, 2, 0, "span", 25)(9, Cuotas_For_40_Conditional_9_Template, 2, 0, "span", 26);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "td", 26)(11, "span", 27);
+    \u0275\u0275elementStart(10, "td", 27)(11, "span", 28);
     \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "span", 28);
+    \u0275\u0275elementStart(13, "span", 29);
     \u0275\u0275conditionalCreate(14, Cuotas_For_40_Conditional_14_Template, 2, 0, "span");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(15, "td", 29);
-    \u0275\u0275conditionalCreate(16, Cuotas_For_40_Conditional_16_Template, 2, 0, "button", 30);
-    \u0275\u0275conditionalCreate(17, Cuotas_For_40_Conditional_17_Template, 2, 0, "button", 31)(18, Cuotas_For_40_Conditional_18_Template, 2, 0, "button", 32);
-    \u0275\u0275elementStart(19, "button", 33);
+    \u0275\u0275elementStart(15, "td", 30);
+    \u0275\u0275conditionalCreate(16, Cuotas_For_40_Conditional_16_Template, 7, 0, "button", 31);
+    \u0275\u0275conditionalCreate(17, Cuotas_For_40_Conditional_17_Template, 7, 0, "button", 32)(18, Cuotas_For_40_Conditional_18_Template, 7, 0, "button", 33);
+    \u0275\u0275elementStart(19, "button", 34);
     \u0275\u0275listener("click", function Cuotas_For_40_Template_button_click_19_listener() {
       const cuota_r3 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r3 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r3.notificarSocio(cuota_r3));
     });
     \u0275\u0275namespaceSVG();
-    \u0275\u0275elementStart(20, "svg", 34);
-    \u0275\u0275element(21, "path", 35);
+    \u0275\u0275elementStart(20, "svg", 35);
+    \u0275\u0275element(21, "path", 36);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -47390,7 +50303,7 @@ function Cuotas_For_40_Template(rf, ctx) {
 }
 function Cuotas_ForEmpty_41_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 39);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 48);
     \u0275\u0275text(2, "No se encontraron cuotas para este filtro.");
     \u0275\u0275elementEnd()();
   }
@@ -47398,15 +50311,13 @@ function Cuotas_ForEmpty_41_Template(rf, ctx) {
 var Cuotas = class _Cuotas {
   cuotaService;
   actividadServicio;
-  cdr;
   route;
   cuotas = [];
   filtroActivo = "todos";
   terminoBusqueda = "";
-  constructor(cuotaService, actividadServicio, cdr, route) {
+  constructor(cuotaService, actividadServicio, route) {
     this.cuotaService = cuotaService;
     this.actividadServicio = actividadServicio;
-    this.cdr = cdr;
     this.route = route;
   }
   ngOnInit() {
@@ -47414,8 +50325,12 @@ var Cuotas = class _Cuotas {
     this.cargarCuotas();
   }
   cargarCuotas() {
-    this.cuotas = [...this.cuotaService.obtenerCuotas()];
-    this.cdr.detectChanges();
+    this.cuotaService.cargarCuotas().subscribe({
+      next: (socios) => {
+        this.cuotas = socios;
+      },
+      error: (error) => this.mostrarErrorApi(error)
+    });
   }
   filtrarPorEstado(estado) {
     this.filtroActivo = estado;
@@ -47436,7 +50351,7 @@ var Cuotas = class _Cuotas {
     return resultado;
   }
   cobrar(id) {
-    import_sweetalert25.default.fire({
+    import_sweetalert27.default.fire({
       title: "\xBFEst\xE1s seguro?",
       text: "\xBFDeseas cobrar esta cuota?",
       icon: "warning",
@@ -47448,18 +50363,22 @@ var Cuotas = class _Cuotas {
     }).then((res) => {
       if (res.isConfirmed) {
         const socioCobrar = this.cuotas.find((socio) => socio.id === id);
-        this.cuotaService.cobrarCuota(id);
-        if (socioCobrar) {
-          this.actividadServicio.registrarActividad("cuota", `Cuota cobrada: ${socioCobrar.nombre}`, String(socioCobrar.id));
-        }
-        this.cargarCuotas();
-        import_sweetalert25.default.fire({
-          title: "\xA1Cuota Pagada!",
-          text: `La cuota del socio "${socioCobrar?.nombre}" se ha cobrado exitosamente.`,
-          icon: "success",
-          confirmButtonColor: "#0d9488",
-          timer: 2e3,
-          showConfirmButton: false
+        this.cuotaService.cobrarCuota(id).subscribe({
+          next: () => {
+            if (socioCobrar) {
+              this.actividadServicio.registrarActividad("cuota", `Cuota cobrada: ${socioCobrar.nombre}`, String(socioCobrar.id));
+            }
+            this.cargarCuotas();
+            void import_sweetalert27.default.fire({
+              title: "\xA1Cuota Pagada!",
+              text: `La cuota del socio "${socioCobrar?.nombre}" se ha cobrado exitosamente.`,
+              icon: "success",
+              confirmButtonColor: "#0d9488",
+              timer: 2e3,
+              showConfirmButton: false
+            });
+          },
+          error: (error) => this.mostrarErrorApi(error)
         });
       }
     });
@@ -47469,7 +50388,7 @@ var Cuotas = class _Cuotas {
     this.actividadServicio.registrarActividad("cuota", `Recordatorio de cuota preparado para WhatsApp: ${socio.nombre}`, String(socio.id));
   }
   darDeBaja(id) {
-    import_sweetalert25.default.fire({
+    import_sweetalert27.default.fire({
       title: "\xBFEst\xE1s seguro?",
       text: 'Se cambiar\xE1 el estado del socio a "Inactivo" y se abrir\xE1 el aviso por WhatsApp.',
       icon: "warning",
@@ -47481,17 +50400,22 @@ var Cuotas = class _Cuotas {
     }).then((res) => {
       if (res.isConfirmed) {
         const socio = this.cuotas.find((s) => s.id === id);
-        this.cuotaService.darDeBaja(id);
-        if (socio) {
-          this.actividadServicio.registrarActividad("cuota", `Socio dado de baja desde cuotas: ${socio.nombre}`, String(socio.id));
-        }
-        this.cargarCuotas();
+        this.cuotaService.darDeBaja(id).subscribe({
+          next: () => {
+            if (socio) {
+              this.cuotaService.notificarCambioEstado(socio, "inactivo");
+              this.actividadServicio.registrarActividad("cuota", `Socio dado de baja desde cuotas: ${socio.nombre}`, String(socio.id));
+            }
+            this.cargarCuotas();
+          },
+          error: (error) => this.mostrarErrorApi(error)
+        });
       }
     });
   }
   darDeAlta(id) {
     const socio = this.cuotas.find((s) => s.id === id);
-    import_sweetalert25.default.fire({
+    import_sweetalert27.default.fire({
       title: "\xBFDar de alta al socio?",
       text: `El socio "${socio?.nombre}" volver\xE1 a estar activo.`,
       icon: "question",
@@ -47502,18 +50426,32 @@ var Cuotas = class _Cuotas {
       cancelButtonText: "Cancelar"
     }).then((res) => {
       if (res.isConfirmed) {
-        this.cuotaService.darDeAlta(id);
-        if (socio) {
-          this.actividadServicio.registrarActividad("cuota", `Socio dado de alta desde cuotas: ${socio.nombre}`, String(socio.id));
-        }
-        this.cargarCuotas();
+        this.cuotaService.darDeAlta(id).subscribe({
+          next: () => {
+            if (socio) {
+              this.cuotaService.notificarCambioEstado(socio, "activo");
+              this.actividadServicio.registrarActividad("cuota", `Socio dado de alta desde cuotas: ${socio.nombre}`, String(socio.id));
+            }
+            this.cargarCuotas();
+          },
+          error: (error) => this.mostrarErrorApi(error)
+        });
       }
     });
   }
+  mostrarErrorApi(error) {
+    const mensaje = error instanceof Error ? error.message : "No se pudo completar la operaci\xF3n en la API.";
+    void import_sweetalert27.default.fire({
+      title: "Error de conexi\xF3n con la API",
+      text: mensaje,
+      icon: "error",
+      confirmButtonColor: "#0d9488"
+    });
+  }
   static \u0275fac = function Cuotas_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Cuotas)(\u0275\u0275directiveInject(CuotasService), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ActivatedRoute));
+    return new (__ngFactoryType__ || _Cuotas)(\u0275\u0275directiveInject(CuotasService), \u0275\u0275directiveInject(ActividadServicio), \u0275\u0275directiveInject(ActivatedRoute));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Cuotas, selectors: [["app-cuotas"]], decls: 42, vars: 11, consts: [[1, "body"], [1, "header"], [1, "h1"], [1, "badge-monto"], [1, "main-card"], [1, "toolbar"], [1, "search-box"], ["xmlns", "http://www.w3.org/2000/svg", "width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filter-group"], [1, "btn-filter", 3, "click"], [1, "btn-pago", 3, "click"], [1, "btn-debe", 3, "click"], [1, "btn-baja", 3, "click"], [1, "count-label"], [1, "table-container"], [1, "cuotas-table"], [1, "socio-info"], [1, "nombre"], [1, "meta"], [1, "estado-col"], [1, "estado-badge", "inactivo"], [1, "estado-badge", "al-dia"], [1, "estado-badge", "pendiente"], [1, "deuda-col"], [1, "deuda-monto"], [1, "deuda-meses"], [1, "acciones-col"], [1, "btn-cobrar"], [1, "btn-alta"], [1, "btn-bajar"], ["title", "Enviar WhatsApp", 1, "btn-wsp", 3, "click"], ["xmlns", "http://www.w3.org/2000/svg", "width", "18", "height", "18", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"], [1, "btn-cobrar", 3, "click"], [1, "btn-alta", 3, "click"], [1, "btn-bajar", 3, "click"], ["colspan", "4", 2, "text-align", "center", "padding", "20px"]], template: function Cuotas_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Cuotas, selectors: [["app-cuotas"]], decls: 42, vars: 11, consts: [[1, "body"], [1, "header"], [1, "h1"], [1, "badge-monto"], [1, "main-card"], [1, "toolbar"], [1, "search-box"], ["xmlns", "http://www.w3.org/2000/svg", "width", "16", "height", "16", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["cx", "11", "cy", "11", "r", "8"], ["x1", "21", "y1", "21", "x2", "16.65", "y2", "16.65"], ["type", "text", "placeholder", "Buscar por nombre, DNI o carnet...", 3, "ngModelChange", "ngModel"], [1, "filter-group"], [1, "btn-filter", 3, "click"], [1, "btn-pago", 3, "click"], [1, "btn-debe", 3, "click"], [1, "btn-baja", 3, "click"], [1, "count-label"], [1, "table-container"], [1, "cuotas-table"], [1, "cuota-row"], [1, "socio-info"], [1, "nombre"], [1, "meta"], [1, "estado-col"], [1, "estado-badge", "inactivo"], [1, "estado-badge", "al-dia"], [1, "estado-badge", "pendiente"], [1, "deuda-col"], [1, "deuda-monto"], [1, "deuda-meses"], [1, "acciones-col"], [1, "btn-cobrar"], [1, "btn-alta"], [1, "btn-bajar"], ["title", "Enviar WhatsApp", 1, "btn-wsp", 3, "click"], ["xmlns", "http://www.w3.org/2000/svg", "width", "18", "height", "18", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "2", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"], [1, "btn-cobrar", 3, "click"], ["aria-hidden", "true", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "1.8", "stroke-linecap", "round", "stroke-linejoin", "round"], ["x", "3", "y", "5.5", "width", "18", "height", "13", "rx", "2"], ["cx", "12", "cy", "12", "r", "2.5"], ["d", "M7 9h.01M17 15h.01M12 10.5v3m1-.3c0-.4-.4-.7-1-.7s-1 .3-1 .7.4.7 1 .7 1 .3 1 .7-.4.7-1 .7-1-.3-1-.7"], [1, "btn-alta", 3, "click"], ["d", "M15 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"], ["cx", "9.5", "cy", "7", "r", "4"], ["d", "M19 8v6m-3-3h6"], [1, "btn-bajar", 3, "click"], ["d", "M16 11h6"], ["colspan", "4", 2, "text-align", "center", "padding", "20px"]], template: function Cuotas_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "h1", 2);
       \u0275\u0275text(3, "Cuotas");
@@ -47575,7 +50513,7 @@ var Cuotas = class _Cuotas {
       \u0275\u0275text(37, "ACCIONES");
       \u0275\u0275elementEnd()()();
       \u0275\u0275elementStart(38, "tbody");
-      \u0275\u0275repeaterCreate(39, Cuotas_For_40_Template, 22, 10, "tr", null, _forTrack05, false, Cuotas_ForEmpty_41_Template, 3, 0, "tr");
+      \u0275\u0275repeaterCreate(39, Cuotas_For_40_Template, 22, 10, "tr", 19, _forTrack05, false, Cuotas_ForEmpty_41_Template, 3, 0, "tr");
       \u0275\u0275elementEnd()()()()();
     }
     if (rf & 2) {
@@ -47594,7 +50532,7 @@ var Cuotas = class _Cuotas {
       \u0275\u0275advance(14);
       \u0275\u0275repeater(ctx.cuotasFiltradas);
     }
-  }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto[_ngcontent-%COMP%] {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-pago[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-debe[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-baja[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.btn-pago[_ngcontent-%COMP%]:hover, \n.btn-pago.active[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #087443;\n}\n.btn-debe[_ngcontent-%COMP%]:hover, \n.btn-debe.active[_ngcontent-%COMP%] {\n  background-color: #fef3c7;\n  color: #92400e;\n}\n.btn-baja[_ngcontent-%COMP%]:hover, \n.btn-baja.active[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.count-label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container[_ngcontent-%COMP%] {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px;\n  border-bottom: none;\n  vertical-align: middle;\n}\n.socio-info[_ngcontent-%COMP%] {\n  width: 34%;\n}\n.socio-info[_ngcontent-%COMP%]   .nombre[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info[_ngcontent-%COMP%]   .meta[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.estado-col[_ngcontent-%COMP%] {\n  width: 18%;\n}\n.estado-badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 5px 12px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.estado-badge.al-dia[_ngcontent-%COMP%] {\n  color: #087443;\n  background-color: #dcfce7;\n}\n.estado-badge.pendiente[_ngcontent-%COMP%], \n.estado-badge.vencida[_ngcontent-%COMP%] {\n  color: #92400e;\n  background-color: #fef3c7;\n}\n.estado-badge.inactivo[_ngcontent-%COMP%] {\n  color: #b42323;\n  background-color: #fee2e2;\n}\n.deuda-col[_ngcontent-%COMP%] {\n  width: 18%;\n}\n.deuda-monto[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #0f172a;\n  display: block;\n}\n.deuda-col.inactivo[_ngcontent-%COMP%]   .deuda-monto[_ngcontent-%COMP%], \n.deuda-col.inactivo[_ngcontent-%COMP%]   .deuda-meses[_ngcontent-%COMP%] {\n  color: #991b1b;\n}\n.deuda-meses[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #64748b;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.deuda-meses[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: inline-block;\n}\n.acciones-col[_ngcontent-%COMP%] {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #000000;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-cobrar[_ngcontent-%COMP%]:hover {\n  background-color: #dcfce7;\n}\n.btn-alta[_ngcontent-%COMP%] {\n  background-color: #2dad4e;\n  color: #ffffff;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta[_ngcontent-%COMP%]:hover {\n  background-color: #ea580c;\n}\n.btn-bajar[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #b42323;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-bajar[_ngcontent-%COMP%]:hover {\n  background-color: #fee2e2;\n}\n.btn-wsp[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp[_ngcontent-%COMP%]:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */"] });
+  }, dependencies: [CommonModule, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ["\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n}\n.body[_ngcontent-%COMP%] {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto[_ngcontent-%COMP%] {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card[_ngcontent-%COMP%] {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-pago[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-debe[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-baja[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.btn-pago[_ngcontent-%COMP%]:hover, \n.btn-pago.active[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #087443;\n}\n.btn-debe[_ngcontent-%COMP%]:hover, \n.btn-debe.active[_ngcontent-%COMP%] {\n  background-color: #fef3c7;\n  color: #92400e;\n}\n.btn-baja[_ngcontent-%COMP%]:hover, \n.btn-baja.active[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.count-label[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container[_ngcontent-%COMP%] {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px;\n  border-bottom: none;\n  vertical-align: middle;\n}\n.cuotas-table[_ngcontent-%COMP%]   tbody[_ngcontent-%COMP%]   tr.cuota-row[_ngcontent-%COMP%] {\n  transition: background-color 0.15s ease;\n}\n.cuotas-table[_ngcontent-%COMP%]   tbody[_ngcontent-%COMP%]   tr.cuota-row[_ngcontent-%COMP%]:hover {\n  background-color: #f8fafc;\n}\n.socio-info[_ngcontent-%COMP%] {\n  width: 34%;\n}\n.socio-info[_ngcontent-%COMP%]   .nombre[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info[_ngcontent-%COMP%]   .meta[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.estado-col[_ngcontent-%COMP%] {\n  width: 18%;\n}\n.estado-badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 5px 12px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.estado-badge.al-dia[_ngcontent-%COMP%] {\n  color: #087443;\n  background-color: #dcfce7;\n}\n.estado-badge.pendiente[_ngcontent-%COMP%], \n.estado-badge.vencida[_ngcontent-%COMP%] {\n  color: #92400e;\n  background-color: #fef3c7;\n}\n.estado-badge.inactivo[_ngcontent-%COMP%] {\n  color: #b42323;\n  background-color: #fee2e2;\n}\n.deuda-col[_ngcontent-%COMP%] {\n  width: 18%;\n}\n.deuda-monto[_ngcontent-%COMP%] {\n  font-weight: 700;\n  font-size: 14px;\n  color: #0f172a;\n  display: block;\n}\n.deuda-col.inactivo[_ngcontent-%COMP%]   .deuda-monto[_ngcontent-%COMP%], \n.deuda-col.inactivo[_ngcontent-%COMP%]   .deuda-meses[_ngcontent-%COMP%] {\n  color: #991b1b;\n}\n.deuda-meses[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: #64748b;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.deuda-meses[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: inline-block;\n}\n.acciones-col[_ngcontent-%COMP%] {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar[_ngcontent-%COMP%] {\n  background-color: #dcfce7;\n  color: #087443;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-cobrar[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.btn-cobrar[_ngcontent-%COMP%]:hover {\n  background-color: #dcfce7;\n}\n.btn-alta[_ngcontent-%COMP%] {\n  background-color: #e0f2fe;\n  color: #0369a1;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta[_ngcontent-%COMP%]:hover {\n  background-color: #e0f2fe;\n}\n.btn-bajar[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #b42323;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%], \n.btn-bajar[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.btn-bajar[_ngcontent-%COMP%]:hover {\n  background-color: #fee2e2;\n}\n.btn-wsp[_ngcontent-%COMP%] {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp[_ngcontent-%COMP%]:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Cuotas, [{
@@ -47663,7 +50601,7 @@ var Cuotas = class _Cuotas {
         <tbody>\r
           <!-- Iteramos sobre cuotasFiltradas en vez de cuotas -->\r
           @for (cuota of cuotasFiltradas; track cuota.id) {\r
-            <tr>\r
+            <tr class="cuota-row">\r
               <!-- Columna Socio -->\r
               <td class="socio-info">\r
                 <div class="nombre">{{ cuota.nombre }}</div>\r
@@ -47696,13 +50634,34 @@ var Cuotas = class _Cuotas {
               <!-- Columna Acciones -->\r
               <td class="acciones-col">\r
                 @if (puedeCobrarCuota(cuota)) {\r
-                  <button class="btn-cobrar" (click)="cobrar(cuota.id)">Cobrar</button>\r
+                  <button class="btn-cobrar" (click)="cobrar(cuota.id)">\r
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+                      <rect x="3" y="5.5" width="18" height="13" rx="2"></rect>\r
+                      <circle cx="12" cy="12" r="2.5"></circle>\r
+                      <path d="M7 9h.01M17 15h.01M12 10.5v3m1-.3c0-.4-.4-.7-1-.7s-1 .3-1 .7.4.7 1 .7 1 .3 1 .7-.4.7-1 .7-1-.3-1-.7"></path>\r
+                    </svg>\r
+                    <span>Cobrar</span>\r
+                  </button>\r
                 }\r
                 \r
                 @if (cuota.estado === 'inactivo') {\r
-                  <button (click)="darDeAlta(cuota.id)" class="btn-alta">Dar de Alta</button>\r
+                  <button (click)="darDeAlta(cuota.id)" class="btn-alta">\r
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+                      <path d="M15 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>\r
+                      <circle cx="9.5" cy="7" r="4"></circle>\r
+                      <path d="M19 8v6m-3-3h6"></path>\r
+                    </svg>\r
+                    <span>Dar de Alta</span>\r
+                  </button>\r
                 } @else {\r
-                  <button (click)="darDeBaja(cuota.id)" class="btn-bajar">Dar de Baja</button>\r
+                  <button (click)="darDeBaja(cuota.id)" class="btn-bajar">\r
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+                      <path d="M15 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>\r
+                      <circle cx="9.5" cy="7" r="4"></circle>\r
+                      <path d="M16 11h6"></path>\r
+                    </svg>\r
+                    <span>Dar de Baja</span>\r
+                  </button>\r
                 }\r
                 \r
                 <!-- bot\xF3n para enviar el mensaje personalizado mediante el servicio -->\r
@@ -47724,15 +50683,16 @@ var Cuotas = class _Cuotas {
       </table>\r
     </div>\r
   </div>\r
-</div>`, styles: ["/* src/app/cuotas/cuotas.css */\n* {\n  box-sizing: border-box;\n}\n.body {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box svg {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-pago {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-debe {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-baja {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.btn-pago:hover,\n.btn-pago.active {\n  background-color: #dcfce7;\n  color: #087443;\n}\n.btn-debe:hover,\n.btn-debe.active {\n  background-color: #fef3c7;\n  color: #92400e;\n}\n.btn-baja:hover,\n.btn-baja.active {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.count-label {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table td {\n  padding: 16px;\n  border-bottom: none;\n  vertical-align: middle;\n}\n.socio-info {\n  width: 34%;\n}\n.socio-info .nombre {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info .meta {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.estado-col {\n  width: 18%;\n}\n.estado-badge {\n  display: inline-block;\n  padding: 5px 12px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.estado-badge.al-dia {\n  color: #087443;\n  background-color: #dcfce7;\n}\n.estado-badge.pendiente,\n.estado-badge.vencida {\n  color: #92400e;\n  background-color: #fef3c7;\n}\n.estado-badge.inactivo {\n  color: #b42323;\n  background-color: #fee2e2;\n}\n.deuda-col {\n  width: 18%;\n}\n.deuda-monto {\n  font-weight: 700;\n  font-size: 14px;\n  color: #0f172a;\n  display: block;\n}\n.deuda-col.inactivo .deuda-monto,\n.deuda-col.inactivo .deuda-meses {\n  color: #991b1b;\n}\n.deuda-meses {\n  font-size: 11px;\n  color: #64748b;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.deuda-meses span {\n  display: inline-block;\n}\n.acciones-col {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar {\n  background-color: #dcfce7;\n  color: #000000;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-cobrar:hover {\n  background-color: #dcfce7;\n}\n.btn-alta {\n  background-color: #2dad4e;\n  color: #ffffff;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta:hover {\n  background-color: #ea580c;\n}\n.btn-bajar {\n  background-color: #fee2e2;\n  color: #b42323;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-block;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-bajar:hover {\n  background-color: #fee2e2;\n}\n.btn-wsp {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */\n"] }]
-  }], () => [{ type: CuotasService }, { type: ActividadServicio }, { type: ChangeDetectorRef }, { type: ActivatedRoute }], null);
+</div>`, styles: ["/* src/app/cuotas/cuotas.css */\n* {\n  box-sizing: border-box;\n}\n.body {\n  width: 100%;\n  margin-bottom: 25px;\n  min-height: 100vh;\n  box-sizing: border-box;\n  padding: 28px 24px;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #13283a;\n}\n.header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n}\n.h1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.badge-monto {\n  background: #ffffff;\n  padding: 8px 16px;\n  border-radius: 20px;\n  font-size: 13px;\n  color: #64748b;\n  border: 1px solid #e2e8f0;\n}\n.main-card {\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);\n  padding: 20px;\n  width: 100%;\n  box-sizing: border-box;\n  margin-top: 10px;\n}\n.toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 20px;\n  gap: 16px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex-grow: 1;\n  max-width: 500px;\n}\n.search-box svg {\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filter-group {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.btn-filter {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-pago {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-debe {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-baja {\n  background-color: #f1f5f9;\n  color: #64748b;\n  border: none;\n  padding: 7px 16px;\n  border-radius: 30px;\n  font-size: 13px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s ease;\n}\n.btn-filter.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.btn-pago:hover,\n.btn-pago.active {\n  background-color: #dcfce7;\n  color: #087443;\n}\n.btn-debe:hover,\n.btn-debe.active {\n  background-color: #fef3c7;\n  color: #92400e;\n}\n.btn-baja:hover,\n.btn-baja.active {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.count-label {\n  font-size: 13px;\n  color: #94a3b8;\n  margin-left: 8px;\n}\n.table-container {\n  overflow-x: auto;\n  width: 100%;\n}\n.cuotas-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.cuotas-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  padding: 12px 16px;\n  border-bottom: 1px solid #f1f5f9;\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n}\n.cuotas-table td {\n  padding: 16px;\n  border-bottom: none;\n  vertical-align: middle;\n}\n.cuotas-table tbody tr.cuota-row {\n  transition: background-color 0.15s ease;\n}\n.cuotas-table tbody tr.cuota-row:hover {\n  background-color: #f8fafc;\n}\n.socio-info {\n  width: 34%;\n}\n.socio-info .nombre {\n  font-weight: 700;\n  font-size: 14px;\n  color: #1e293b;\n}\n.socio-info .meta {\n  font-size: 12px;\n  color: #94a3b8;\n  margin: 2px 0 6px 0;\n}\n.estado-col {\n  width: 18%;\n}\n.estado-badge {\n  display: inline-block;\n  padding: 5px 12px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 600;\n  white-space: nowrap;\n}\n.estado-badge.al-dia {\n  color: #087443;\n  background-color: #dcfce7;\n}\n.estado-badge.pendiente,\n.estado-badge.vencida {\n  color: #92400e;\n  background-color: #fef3c7;\n}\n.estado-badge.inactivo {\n  color: #b42323;\n  background-color: #fee2e2;\n}\n.deuda-col {\n  width: 18%;\n}\n.deuda-monto {\n  font-weight: 700;\n  font-size: 14px;\n  color: #0f172a;\n  display: block;\n}\n.deuda-col.inactivo .deuda-monto,\n.deuda-col.inactivo .deuda-meses {\n  color: #991b1b;\n}\n.deuda-meses {\n  font-size: 11px;\n  color: #64748b;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n.deuda-meses span {\n  display: inline-block;\n}\n.acciones-col {\n  width: 30%;\n  white-space: nowrap;\n  gap: 8px;\n  align-items: center;\n  display: flex;\n}\n.btn-cobrar {\n  background-color: #dcfce7;\n  color: #087443;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-cobrar svg {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.btn-cobrar:hover {\n  background-color: #dcfce7;\n}\n.btn-alta {\n  background-color: #e0f2fe;\n  color: #0369a1;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta:hover {\n  background-color: #e0f2fe;\n}\n.btn-bajar {\n  background-color: #fee2e2;\n  color: #b42323;\n  border: 0;\n  padding: 8px 16px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-size: 13px;\n  font-weight: 600;\n  line-height: 1.2;\n  transition: background-color 0.2s ease;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  vertical-align: middle;\n  box-shadow: none;\n  outline: none;\n  appearance: none;\n  -webkit-appearance: none;\n}\n.btn-alta svg,\n.btn-bajar svg {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.btn-bajar:hover {\n  background-color: #fee2e2;\n}\n.btn-wsp {\n  background: transparent;\n  border: none;\n  color: #22c55e;\n  cursor: pointer;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  padding: 4px;\n  margin-left: 8px;\n  vertical-align: middle;\n}\n.btn-wsp:hover {\n  color: #16a34a;\n}\n/*# sourceMappingURL=cuotas.css.map */\n"] }]
+  }], () => [{ type: CuotasService }, { type: ActividadServicio }, { type: ActivatedRoute }], null);
 })();
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Cuotas, { className: "Cuotas", filePath: "app/cuotas/cuotas.ts", lineNumber: 18 });
 })();
 
 // src/app/actividades/actividades.ts
-function Actividades_tr_41_Template(rf, ctx) {
+var import_sweetalert28 = __toESM(require_sweetalert2_all());
+function Actividades_tr_43_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td")(2, "span", 17);
     \u0275\u0275text(3);
@@ -47752,10 +50712,11 @@ function Actividades_tr_41_Template(rf, ctx) {
   }
   if (rf & 2) {
     const actividad_r1 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
     \u0275\u0275property("ngClass", "badge-" + actividad_r1.tipo);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", actividad_r1.tipo, " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r1.obtenerEtiquetaTipo(actividad_r1.tipo), " ");
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate1(" ", actividad_r1.descripcion, " ");
     \u0275\u0275advance(2);
@@ -47768,7 +50729,7 @@ function Actividades_tr_41_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", actividad_r1.idrelacionado || "\u2014", " ");
   }
 }
-function Actividades_tr_42_Template(rf, ctx) {
+function Actividades_tr_44_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td", 19);
     \u0275\u0275text(2, " No se encontraron actividades. ");
@@ -47807,8 +50768,21 @@ var Actividades = class _Actividades {
   // AL INICIAR EL COMPONENTE
   // ==========================================
   ngOnInit() {
-    this.actividades = this.actividadServicio.obtenerActividades();
-    this.actividadesFiltradas = [...this.actividades];
+    this.actividadServicio.cargarActividades().subscribe({
+      next: (actividades) => {
+        this.actividades = actividades;
+        this.aplicarFiltros();
+      },
+      error: (error) => {
+        const mensaje = error instanceof Error ? error.message : "No se pudieron cargar las actividades.";
+        void import_sweetalert28.default.fire({
+          title: "Error de conexi\xF3n con la API",
+          text: mensaje,
+          icon: "error",
+          confirmButtonColor: "#0d9488"
+        });
+      }
+    });
   }
   // ==========================================
   // FILTRAR POR TIPO
@@ -47853,10 +50827,13 @@ var Actividades = class _Actividades {
   esFiltroActivo(tipo) {
     return this.filtroActual === tipo;
   }
+  obtenerEtiquetaTipo(tipo) {
+    return tipo === "eliminacion" ? "Eliminaci\xF3n" : tipo;
+  }
   static \u0275fac = function Actividades_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _Actividades)(\u0275\u0275directiveInject(ActividadServicio));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Actividades, selectors: [["app-actividades"]], decls: 43, vars: 15, consts: [[1, "actividad-container"], [1, "h1"], [1, "toolbar-card"], [1, "search-box"], ["type", "text", "placeholder", "Buscador", 3, "ngModelChange", "input", "ngModel"], [1, "date-filter-group"], [1, "date-input-wrapper"], ["for", "fecha-desde"], ["type", "date", "id", "fecha-desde", 1, "date-input", 3, "ngModelChange", "change", "ngModel"], [1, "filters"], [1, "filter-btn", 3, "click"], [1, "selector-container"], [1, "records-count"], [1, "table-card"], [1, "activity-table"], [4, "ngFor", "ngForOf"], [4, "ngIf"], [1, "badge", 3, "ngClass"], [1, "badge-user"], ["colspan", "5"]], template: function Actividades_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Actividades, selectors: [["app-actividades"]], decls: 45, vars: 17, consts: [[1, "actividad-container"], [1, "h1"], [1, "toolbar-card"], [1, "search-box"], ["type", "text", "placeholder", "Buscador", 3, "ngModelChange", "input", "ngModel"], [1, "date-filter-group"], [1, "date-input-wrapper"], ["for", "fecha-desde"], ["type", "date", "id", "fecha-desde", 1, "date-input", 3, "ngModelChange", "change", "ngModel"], [1, "filters"], [1, "filter-btn", 3, "click"], [1, "selector-container"], [1, "records-count"], [1, "table-card"], [1, "activity-table"], [4, "ngFor", "ngForOf"], [4, "ngIf"], [1, "badge", 3, "ngClass"], [1, "badge-user"], ["colspan", "5"]], template: function Actividades_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "body")(1, "div", 0)(2, "h1", 1);
       \u0275\u0275text(3, "Actividades");
@@ -47896,42 +50873,48 @@ var Actividades = class _Actividades {
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(17, "button", 10);
       \u0275\u0275listener("click", function Actividades_Template_button_click_17_listener() {
-        return ctx.filtrarPorTipo("cuota");
+        return ctx.filtrarPorTipo("eliminacion");
       });
-      \u0275\u0275text(18, " Cuotas ");
+      \u0275\u0275text(18, " Eliminaciones ");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(19, "button", 10);
       \u0275\u0275listener("click", function Actividades_Template_button_click_19_listener() {
-        return ctx.filtrarPorTipo("socio");
+        return ctx.filtrarPorTipo("cuota");
       });
-      \u0275\u0275text(20, " Socios ");
+      \u0275\u0275text(20, " Cuotas ");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(21, "button", 10);
       \u0275\u0275listener("click", function Actividades_Template_button_click_21_listener() {
+        return ctx.filtrarPorTipo("socio");
+      });
+      \u0275\u0275text(22, " Socios ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(23, "button", 10);
+      \u0275\u0275listener("click", function Actividades_Template_button_click_23_listener() {
         return ctx.filtrarPorTipo("libro");
       });
-      \u0275\u0275text(22, " Libros ");
+      \u0275\u0275text(24, " Libros ");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(23, "div", 11)(24, "span", 12);
-      \u0275\u0275text(25);
+      \u0275\u0275elementStart(25, "div", 11)(26, "span", 12);
+      \u0275\u0275text(27);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275elementStart(26, "div", 13)(27, "table", 14)(28, "thead")(29, "tr")(30, "th");
-      \u0275\u0275text(31, "TIPO");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(32, "th");
-      \u0275\u0275text(33, "DESCRIPCI\xD3N");
+      \u0275\u0275elementStart(28, "div", 13)(29, "table", 14)(30, "thead")(31, "tr")(32, "th");
+      \u0275\u0275text(33, "TIPO");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(34, "th");
-      \u0275\u0275text(35, "FECHA Y HORA");
+      \u0275\u0275text(35, "DESCRIPCI\xD3N");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(36, "th");
-      \u0275\u0275text(37, "USUARIO");
+      \u0275\u0275text(37, "FECHA Y HORA");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(38, "th");
-      \u0275\u0275text(39, "ID RELACIONADO");
+      \u0275\u0275text(39, "USUARIO");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(40, "th");
+      \u0275\u0275text(41, "ID RELACIONADO");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(40, "tbody");
-      \u0275\u0275template(41, Actividades_tr_41_Template, 13, 10, "tr", 15)(42, Actividades_tr_42_Template, 3, 0, "tr", 16);
+      \u0275\u0275elementStart(42, "tbody");
+      \u0275\u0275template(43, Actividades_tr_43_Template, 13, 10, "tr", 15)(44, Actividades_tr_44_Template, 3, 0, "tr", 16);
       \u0275\u0275elementEnd()()()()();
     }
     if (rf & 2) {
@@ -47943,6 +50926,8 @@ var Actividades = class _Actividades {
       \u0275\u0275classProp("active", ctx.esFiltroActivo("todos"));
       \u0275\u0275advance(2);
       \u0275\u0275classProp("active", ctx.esFiltroActivo("prestamo"));
+      \u0275\u0275advance(2);
+      \u0275\u0275classProp("active", ctx.esFiltroActivo("eliminacion"));
       \u0275\u0275advance(2);
       \u0275\u0275classProp("active", ctx.esFiltroActivo("cuota"));
       \u0275\u0275advance(2);
@@ -47956,7 +50941,7 @@ var Actividades = class _Actividades {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.actividadesFiltradas.length === 0);
     }
-  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ['\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n  font-family:\n    "Segoe UI",\n    system-ui,\n    -apple-system,\n    sans-serif;\n  margin: 0;\n  padding: 0;\n}\nbody[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.actividad-container[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\nh1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.toolbar-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  padding: 16px 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  margin-bottom: 20px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex: 1;\n  max-width: 450px;\n}\n.search-icon[_ngcontent-%COMP%] {\n  font-size: 14px;\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  border: none;\n  padding: 8px 14px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  color: #64748b;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.selector-container[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-left: auto;\n}\n.records-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  white-space: nowrap;\n}\n.table-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.activity-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.activity-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.5px;\n  padding: 16px 20px;\n  border-bottom: 1px solid #f1f5f9;\n}\n.activity-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  font-size: 14px;\n  color: #334155;\n  border-bottom: 1px solid #f8fafc;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login[_ngcontent-%COMP%] {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo[_ngcontent-%COMP%] {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio[_ngcontent-%COMP%] {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro[_ngcontent-%COMP%] {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-user[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  padding: 4px 10px;\n  border-radius: 10px;\n  font-size: 12px;\n  color: #475569;\n  font-weight: 500;\n}\n.id-code[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n}\n.empty-id[_ngcontent-%COMP%] {\n  color: #cbd5e1;\n}\n.date-filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.date-input-wrapper[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  padding: 4px 10px;\n}\n.date-input-wrapper[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #94a3b8;\n  text-transform: uppercase;\n}\n.date-input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  font-size: 13px;\n  color: #334155;\n  font-family: inherit;\n  cursor: pointer;\n}\n.toolbar-card[_ngcontent-%COMP%] {\n  flex-wrap: wrap;\n}\n/*# sourceMappingURL=actividades.css.map */'] });
+  }, dependencies: [CommonModule, NgClass, NgForOf, NgIf, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel], styles: ['\n*[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n  font-family:\n    "Segoe UI",\n    system-ui,\n    -apple-system,\n    sans-serif;\n  margin: 0;\n  padding: 0;\n}\nbody[_ngcontent-%COMP%] {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.actividad-container[_ngcontent-%COMP%] {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\nh1[_ngcontent-%COMP%] {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.toolbar-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  padding: 16px 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  margin-bottom: 20px;\n}\n.search-box[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex: 1;\n  max-width: 450px;\n}\n.search-icon[_ngcontent-%COMP%] {\n  font-size: 14px;\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filters[_ngcontent-%COMP%] {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.filter-btn[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  border: none;\n  padding: 8px 14px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  color: #64748b;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.filter-btn[_ngcontent-%COMP%]:hover {\n  background-color: #e2e8f0;\n}\n.filter-btn.active[_ngcontent-%COMP%] {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.selector-container[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-left: auto;\n}\n.records-count[_ngcontent-%COMP%] {\n  font-size: 13px;\n  color: #94a3b8;\n  white-space: nowrap;\n}\n.table-card[_ngcontent-%COMP%] {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.activity-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.activity-table[_ngcontent-%COMP%]   th[_ngcontent-%COMP%] {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.5px;\n  padding: 16px 20px;\n  border-bottom: 1px solid #f1f5f9;\n}\n.activity-table[_ngcontent-%COMP%]   td[_ngcontent-%COMP%] {\n  padding: 16px 20px;\n  font-size: 14px;\n  color: #334155;\n  border-bottom: 1px solid #f8fafc;\n}\n.badge[_ngcontent-%COMP%] {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login[_ngcontent-%COMP%] {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo[_ngcontent-%COMP%] {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-eliminacion[_ngcontent-%COMP%] {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.badge-cuota[_ngcontent-%COMP%] {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio[_ngcontent-%COMP%] {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro[_ngcontent-%COMP%] {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-user[_ngcontent-%COMP%] {\n  background-color: #f1f5f9;\n  padding: 4px 10px;\n  border-radius: 10px;\n  font-size: 12px;\n  color: #475569;\n  font-weight: 500;\n}\n.id-code[_ngcontent-%COMP%] {\n  font-size: 12px;\n  color: #94a3b8;\n}\n.empty-id[_ngcontent-%COMP%] {\n  color: #cbd5e1;\n}\n.date-filter-group[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.date-input-wrapper[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  padding: 4px 10px;\n}\n.date-input-wrapper[_ngcontent-%COMP%]   label[_ngcontent-%COMP%] {\n  font-size: 12px;\n  font-weight: 600;\n  color: #94a3b8;\n  text-transform: uppercase;\n}\n.date-input[_ngcontent-%COMP%] {\n  border: none;\n  background: transparent;\n  outline: none;\n  font-size: 13px;\n  color: #334155;\n  font-family: inherit;\n  cursor: pointer;\n}\n.toolbar-card[_ngcontent-%COMP%] {\n  flex-wrap: wrap;\n}\n/*# sourceMappingURL=actividades.css.map */'] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Actividades, [{
@@ -48032,6 +51017,14 @@ var Actividades = class _Actividades {
           (click)="filtrarPorTipo('prestamo')"\r
         >\r
           Pr\xE9stamos\r
+        </button>\r
+\r
+        <button\r
+          class="filter-btn"\r
+          [class.active]="esFiltroActivo('eliminacion')"\r
+          (click)="filtrarPorTipo('eliminacion')"\r
+        >\r
+          Eliminaciones\r
         </button>\r
 \r
 \r
@@ -48136,7 +51129,7 @@ var Actividades = class _Actividades {
               [ngClass]="'badge-' + actividad.tipo"\r
             >\r
 \r
-              {{ actividad.tipo }}\r
+              {{ obtenerEtiquetaTipo(actividad.tipo) }}\r
 \r
             </span>\r
 \r
@@ -48214,11 +51207,99 @@ var Actividades = class _Actividades {
 \r
 </div>\r
 </body>\r
-`, styles: ['/* src/app/actividades/actividades.css */\n* {\n  box-sizing: border-box;\n  font-family:\n    "Segoe UI",\n    system-ui,\n    -apple-system,\n    sans-serif;\n  margin: 0;\n  padding: 0;\n}\nbody {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.actividad-container {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.toolbar-card {\n  background-color: #ffffff;\n  border-radius: 12px;\n  padding: 16px 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  margin-bottom: 20px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex: 1;\n  max-width: 450px;\n}\n.search-icon {\n  font-size: 14px;\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filters {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  border: none;\n  padding: 8px 14px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  color: #64748b;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.selector-container {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-left: auto;\n}\n.records-count {\n  font-size: 13px;\n  color: #94a3b8;\n  white-space: nowrap;\n}\n.table-card {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.activity-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.activity-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.5px;\n  padding: 16px 20px;\n  border-bottom: 1px solid #f1f5f9;\n}\n.activity-table td {\n  padding: 16px 20px;\n  font-size: 14px;\n  color: #334155;\n  border-bottom: 1px solid #f8fafc;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-cuota {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-user {\n  background-color: #f1f5f9;\n  padding: 4px 10px;\n  border-radius: 10px;\n  font-size: 12px;\n  color: #475569;\n  font-weight: 500;\n}\n.id-code {\n  font-size: 12px;\n  color: #94a3b8;\n}\n.empty-id {\n  color: #cbd5e1;\n}\n.date-filter-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.date-input-wrapper {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  padding: 4px 10px;\n}\n.date-input-wrapper label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #94a3b8;\n  text-transform: uppercase;\n}\n.date-input {\n  border: none;\n  background: transparent;\n  outline: none;\n  font-size: 13px;\n  color: #334155;\n  font-family: inherit;\n  cursor: pointer;\n}\n.toolbar-card {\n  flex-wrap: wrap;\n}\n/*# sourceMappingURL=actividades.css.map */\n'] }]
+`, styles: ['/* src/app/actividades/actividades.css */\n* {\n  box-sizing: border-box;\n  font-family:\n    "Segoe UI",\n    system-ui,\n    -apple-system,\n    sans-serif;\n  margin: 0;\n  padding: 0;\n}\nbody {\n  width: 100%;\n  min-height: 100vh;\n  padding: 24px 18px 70px;\n  box-sizing: border-box;\n  background: #eef3f7;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  color: #102b43;\n}\n.actividad-container {\n  margin: 0 auto;\n  padding: 20px 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0 0 5px;\n  font-size: 24px;\n  font-weight: 700;\n  color: #12263a;\n}\n.toolbar-card {\n  background-color: #ffffff;\n  border-radius: 12px;\n  padding: 16px 20px;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  margin-bottom: 20px;\n}\n.search-box {\n  display: flex;\n  align-items: center;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 20px;\n  padding: 8px 16px;\n  flex: 1;\n  max-width: 450px;\n}\n.search-icon {\n  font-size: 14px;\n  color: #94a3b8;\n  margin-right: 8px;\n}\n.search-box input {\n  border: none;\n  background: transparent;\n  outline: none;\n  width: 100%;\n  font-size: 14px;\n  color: #334155;\n}\n.filters {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.filter-btn {\n  background-color: #f1f5f9;\n  border: none;\n  padding: 8px 14px;\n  border-radius: 6px;\n  font-size: 13px;\n  font-weight: 500;\n  color: #64748b;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.filter-btn:hover {\n  background-color: #e2e8f0;\n}\n.filter-btn.active {\n  background-color: #23b2a0;\n  color: #ffffff;\n}\n.selector-container {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-left: auto;\n}\n.records-count {\n  font-size: 13px;\n  color: #94a3b8;\n  white-space: nowrap;\n}\n.table-card {\n  background-color: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\n  overflow: hidden;\n}\n.activity-table {\n  width: 100%;\n  border-collapse: collapse;\n  text-align: left;\n}\n.activity-table th {\n  font-size: 11px;\n  font-weight: 700;\n  color: #94a3b8;\n  letter-spacing: 0.5px;\n  padding: 16px 20px;\n  border-bottom: 1px solid #f1f5f9;\n}\n.activity-table td {\n  padding: 16px 20px;\n  font-size: 14px;\n  color: #334155;\n  border-bottom: 1px solid #f8fafc;\n}\n.badge {\n  display: inline-block;\n  padding: 4px 12px;\n  border-radius: 12px;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge-login {\n  background-color: #e0f2fe;\n  color: #0284c7;\n}\n.badge-prestamo {\n  background-color: #ccfbf1;\n  color: #0d9488;\n}\n.badge-eliminacion {\n  background-color: #fee2e2;\n  color: #b42323;\n}\n.badge-cuota {\n  background-color: #ffedd5;\n  color: #ea580c;\n}\n.badge-socio {\n  background-color: #f3e8ff;\n  color: #9333ea;\n}\n.badge-libro {\n  background-color: #e2cfbb;\n  color: #b6670d;\n}\n.badge-user {\n  background-color: #f1f5f9;\n  padding: 4px 10px;\n  border-radius: 10px;\n  font-size: 12px;\n  color: #475569;\n  font-weight: 500;\n}\n.id-code {\n  font-size: 12px;\n  color: #94a3b8;\n}\n.empty-id {\n  color: #cbd5e1;\n}\n.date-filter-group {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.date-input-wrapper {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  padding: 4px 10px;\n}\n.date-input-wrapper label {\n  font-size: 12px;\n  font-weight: 600;\n  color: #94a3b8;\n  text-transform: uppercase;\n}\n.date-input {\n  border: none;\n  background: transparent;\n  outline: none;\n  font-size: 13px;\n  color: #334155;\n  font-family: inherit;\n  cursor: pointer;\n}\n.toolbar-card {\n  flex-wrap: wrap;\n}\n/*# sourceMappingURL=actividades.css.map */\n'] }]
   }], () => [{ type: ActividadServicio }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Actividades, { className: "Actividades", filePath: "app/actividades/actividades.ts", lineNumber: 19 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Actividades, { className: "Actividades", filePath: "app/actividades/actividades.ts", lineNumber: 20 });
+})();
+
+// src/app/guard/admin.guard.ts
+var adminGuard = () => {
+  const auth = inject2(AuthService);
+  const router = inject2(Router);
+  if (auth.estaLogueado() && auth.esAdmin()) {
+    return true;
+  }
+  return router.createUrlTree([
+    auth.estaLogueado() ? "/inicio" : "/inicioSesion"
+  ]);
+};
+
+// src/app/services/admin.ts
+var AdminComponent = class _AdminComponent {
+  auth = inject2(AuthService);
+  router = inject2(Router);
+  irA(ruta) {
+    this.router.navigate([`/${ruta}`]);
+  }
+  cerrarSesion() {
+    this.auth.logout();
+    this.router.navigate(["/inicioSeson"]);
+  }
+  static \u0275fac = function AdminComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AdminComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AdminComponent, selectors: [["app-admin"]], decls: 14, vars: 0, consts: [[1, "p-6"], [1, "text-2xl", "font-bold", "mb-4"], [1, "mb-4"], [1, "grid", "gap-4"], [1, "bg-blue-500", "text-white", "p-2", "rounded", 3, "click"], [1, "bg-green-500", "text-white", "p-2", "rounded", 3, "click"], [1, "bg-purple-500", "text-white", "p-2", "rounded", 3, "click"], [1, "bg-red-500", "text-white", "p-2", "rounded", 3, "click"]], template: function AdminComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275domElementStart(0, "div", 0)(1, "h1", 1);
+      \u0275\u0275text(2, "Panel de Administraci\xF3n - Biblioteca");
+      \u0275\u0275domElementEnd();
+      \u0275\u0275domElementStart(3, "p", 2);
+      \u0275\u0275text(4, "Bienvenido, administrador. Aqu\xED puedes gestionar el sistema.");
+      \u0275\u0275domElementEnd();
+      \u0275\u0275domElementStart(5, "div", 3)(6, "button", 4);
+      \u0275\u0275domListener("click", function AdminComponent_Template_button_click_6_listener() {
+        return ctx.irA("libros");
+      });
+      \u0275\u0275text(7, "Gestionar Libros");
+      \u0275\u0275domElementEnd();
+      \u0275\u0275domElementStart(8, "button", 5);
+      \u0275\u0275domListener("click", function AdminComponent_Template_button_click_8_listener() {
+        return ctx.irA("socios");
+      });
+      \u0275\u0275text(9, "Gestionar Socios");
+      \u0275\u0275domElementEnd();
+      \u0275\u0275domElementStart(10, "button", 6);
+      \u0275\u0275domListener("click", function AdminComponent_Template_button_click_10_listener() {
+        return ctx.irA("prestamos");
+      });
+      \u0275\u0275text(11, "Gestionar Pr\xE9stamos");
+      \u0275\u0275domElementEnd();
+      \u0275\u0275domElementStart(12, "button", 7);
+      \u0275\u0275domListener("click", function AdminComponent_Template_button_click_12_listener() {
+        return ctx.cerrarSesion();
+      });
+      \u0275\u0275text(13, "Cerrar Sesi\xF3n");
+      \u0275\u0275domElementEnd()()();
+    }
+  }, dependencies: [CommonModule], encapsulation: 2 });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AdminComponent, [{
+    type: Component,
+    args: [{
+      selector: "app-admin",
+      standalone: true,
+      imports: [CommonModule],
+      template: `
+    <div class="p-6">
+      <h1 class="text-2xl font-bold mb-4">Panel de Administraci\xF3n - Biblioteca</h1>
+      <p class="mb-4">Bienvenido, administrador. Aqu\xED puedes gestionar el sistema.</p>
+      
+      <div class="grid gap-4">
+        <button (click)="irA('libros')" class="bg-blue-500 text-white p-2 rounded">Gestionar Libros</button>
+        <button (click)="irA('socios')" class="bg-green-500 text-white p-2 rounded">Gestionar Socios</button>
+        <button (click)="irA('prestamos')" class="bg-purple-500 text-white p-2 rounded">Gestionar Pr\xE9stamos</button>
+        <button (click)="cerrarSesion()" class="bg-red-500 text-white p-2 rounded">Cerrar Sesi\xF3n</button>
+      </div>
+    </div>
+  `
+    }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AdminComponent, { className: "AdminComponent", filePath: "app/services/admin.ts", lineNumber: 24 });
 })();
 
 // src/app/app.routes.ts
@@ -48226,27 +51307,76 @@ var routes = [
   { path: "", redirectTo: "inicio", pathMatch: "full" },
   { path: "inicio", component: Inicio },
   { path: "inicioSesion", component: InicioSesion },
+  { path: "inicioSeson", redirectTo: "inicioSesion" },
   { path: "libros", component: Libros },
   { path: "prestamos", component: Prestamos },
   { path: "socios", component: Socios },
   { path: "cuotas", component: Cuotas },
-  { path: "actividades", component: Actividades }
+  { path: "actividades", component: Actividades },
+  {
+    path: "admin/panel",
+    component: AdminComponent,
+    canActivate: [adminGuard]
+  },
+  {
+    path: "paginas/admin",
+    component: AdminComponent,
+    canActivate: [adminGuard]
+  }
 ];
+
+// src/app/services/auth.interceptor.ts
+var authInterceptor = (request, next) => {
+  const apiUrl = new URL(API_BASE_URL);
+  const requestUrl = new URL(request.url, API_BASE_URL);
+  const perteneceApi = requestUrl.origin === apiUrl.origin && requestUrl.pathname.startsWith(`${apiUrl.pathname}/`);
+  const esRutaPublica = [
+    "/usuarios/login",
+    "/usuarios/registro"
+  ].some((ruta) => requestUrl.pathname.endsWith(ruta));
+  const token = inject2(AuthService).getToken();
+  if (!token || !perteneceApi || esRutaPublica) {
+    return next(request);
+  }
+  return next(request.clone({
+    setHeaders: {
+      Authorization: `Bearer ${token}`
+    }
+  }));
+};
 
 // src/app/app.config.ts
 var appConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes)
+    provideRouter(routes),
+    provideHttpClient(withInterceptors([authInterceptor]))
   ]
 };
 
 // src/app/nav/nav.ts
+var _c03 = () => ({ exact: true });
 var Nav = class _Nav {
+  auth;
+  router;
+  constructor(auth, router) {
+    this.auth = auth;
+    this.router = router;
+  }
+  get nombreUsuario() {
+    return this.auth.getUsuario()?.nombre ?? "Invitado";
+  }
+  get inicialUsuario() {
+    return this.nombreUsuario.charAt(0).toUpperCase() || "U";
+  }
+  cerrarSesion() {
+    this.auth.logout();
+    this.router.navigate(["/inicioSesion"]);
+  }
   static \u0275fac = function Nav_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Nav)();
+    return new (__ngFactoryType__ || _Nav)(\u0275\u0275directiveInject(AuthService), \u0275\u0275directiveInject(Router));
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Nav, selectors: [["app-nav"]], decls: 32, vars: 0, consts: [[1, "nav"], [1, "footer-header"], [1, "logo-container"], ["src", "/OIP.webp", "alt", "Biblioteca Popular"], [1, "biblioteca-info"], [1, "footer-menu"], [1, "menu-title"], ["routerLink", "/inicio", 1, "menu-item"], ["routerLink", "/socios", 1, "menu-item"], ["routerLink", "/prestamos", 1, "menu-item"], ["routerLink", "/cuotas", 1, "menu-item"], ["routerLink", "/libros", 1, "menu-item"], ["routerLink", "/actividades", 1, "menu-item"], [1, "footer-bottom"], [1, "usuario"], [1, "avatar"], [1, "nombre"], ["routerLink", "/inicioSesion", "title", "Cerrar sesi\xF3n", 1, "logout"]], template: function Nav_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _Nav, selectors: [["app-nav"]], decls: 51, vars: 14, consts: [[1, "nav"], [1, "footer-header"], [1, "logo-container"], ["src", "/OIP.webp", "alt", "Biblioteca Popular"], [1, "biblioteca-info"], [1, "footer-menu"], [1, "menu-title"], ["routerLink", "/inicio", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["aria-hidden", "true", "viewBox", "0 0 24 24", "fill", "none", "stroke", "currentColor", "stroke-width", "1.8", "stroke-linecap", "round", "stroke-linejoin", "round"], ["d", "m3 10 9-7 9 7"], ["d", "M5 9v12h14V9M9 21v-7h6v7"], ["routerLink", "/socios", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["cx", "9", "cy", "8", "r", "3.5"], ["d", "M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20M16 5a3.5 3.5 0 0 1 0 6.8M18 14a5 5 0 0 1 3.5 4.8V20"], ["routerLink", "/prestamos", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["x", "5", "y", "4", "width", "14", "height", "17", "rx", "2"], ["d", "M9 4.5h6M9 10h6M9 14h6M9 18h3"], ["routerLink", "/cuotas", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["x", "3", "y", "5.5", "width", "18", "height", "13", "rx", "2"], ["cx", "12", "cy", "12", "r", "2.5"], ["d", "M7 9h.01M17 15h.01"], ["routerLink", "/libros", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["d", "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"], ["d", "M4 5.5v14A2.5 2.5 0 0 1 6.5 17H20M8 7h8"], ["routerLink", "/actividades", "routerLinkActive", "active", 1, "menu-item", 3, "routerLinkActiveOptions"], ["cx", "12", "cy", "12", "r", "9"], ["d", "M12 7v5l3 2"], [1, "footer-bottom"], [1, "usuario"], [1, "avatar"], [1, "nombre"], ["type", "button", "title", "Cerrar sesi\xF3n", 1, "logout", 3, "click"]], template: function Nav_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "nav", 0)(1, "div", 1)(2, "div", 2);
       \u0275\u0275element(3, "img", 3);
@@ -48261,39 +51391,90 @@ var Nav = class _Nav {
       \u0275\u0275text(11, "MEN\xDA");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(12, "a", 7);
-      \u0275\u0275text(13, " Inicio ");
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(13, "svg", 8);
+      \u0275\u0275element(14, "path", 9)(15, "path", 10);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(14, "a", 8);
-      \u0275\u0275text(15, " Socios ");
+      \u0275\u0275text(16, " Inicio ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(16, "a", 9);
-      \u0275\u0275text(17, "Pr\xE9stamos");
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(17, "a", 11);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(18, "svg", 8);
+      \u0275\u0275element(19, "circle", 12)(20, "path", 13);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(18, "a", 10);
-      \u0275\u0275text(19, " Cuotas ");
+      \u0275\u0275text(21, " Socios ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(20, "a", 11);
-      \u0275\u0275text(21, " Libros ");
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(22, "a", 14);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(23, "svg", 8);
+      \u0275\u0275element(24, "rect", 15)(25, "path", 16);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(22, "a", 12);
-      \u0275\u0275text(23, " Actividad ");
+      \u0275\u0275text(26, " Pr\xE9stamos ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(27, "a", 17);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(28, "svg", 8);
+      \u0275\u0275element(29, "rect", 18)(30, "circle", 19)(31, "path", 20);
+      \u0275\u0275elementEnd();
+      \u0275\u0275text(32, " Cuotas ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(33, "a", 21);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(34, "svg", 8);
+      \u0275\u0275element(35, "path", 22)(36, "path", 23);
+      \u0275\u0275elementEnd();
+      \u0275\u0275text(37, " Libros ");
+      \u0275\u0275elementEnd();
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(38, "a", 24);
+      \u0275\u0275namespaceSVG();
+      \u0275\u0275elementStart(39, "svg", 8);
+      \u0275\u0275element(40, "circle", 25)(41, "path", 26);
+      \u0275\u0275elementEnd();
+      \u0275\u0275text(42, " Actividad ");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(24, "div", 13)(25, "div", 14)(26, "div", 15);
-      \u0275\u0275text(27, " A ");
+      \u0275\u0275namespaceHTML();
+      \u0275\u0275elementStart(43, "div", 27)(44, "div", 28)(45, "div", 29);
+      \u0275\u0275text(46);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(28, "span", 16);
-      \u0275\u0275text(29, "admin");
+      \u0275\u0275elementStart(47, "span", 30);
+      \u0275\u0275text(48);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(30, "button", 17);
-      \u0275\u0275text(31, " \u21AA ");
+      \u0275\u0275elementStart(49, "button", 31);
+      \u0275\u0275listener("click", function Nav_Template_button_click_49_listener() {
+        return ctx.cerrarSesion();
+      });
+      \u0275\u0275text(50, " \u21AA ");
       \u0275\u0275elementEnd()()()();
     }
-  }, dependencies: [RouterLink], styles: ["\n[_nghost-%COMP%] {\n  display: block;\n}\n.nav[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 204px;\n  height: 100vh;\n  background: #193b4c;\n  color: #ffffff;\n  display: flex;\n  flex-direction: column;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  border-right: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  z-index: 1000;\n}\n.footer-header[_ngcontent-%COMP%] {\n  height: 70px;\n  display: flex;\n  align-items: center;\n  padding: 0 14px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  flex-shrink: 0;\n}\n.logo-container[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: #ffffff;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.logo-container[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n.biblioteca-info[_ngcontent-%COMP%] {\n  margin-left: 9px;\n}\n.biblioteca-info[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 11px;\n  font-weight: 700;\n  line-height: 15px;\n  color: #ffffff;\n}\n.biblioteca-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: block;\n  color: #ff7910;\n  font-size: 9px;\n  font-weight: 600;\n  line-height: 13px;\n}\n.footer-menu[_ngcontent-%COMP%] {\n  padding: 23px 9px 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.menu-title[_ngcontent-%COMP%] {\n  margin: 0 11px 11px;\n  font-size: 9px;\n  color: #718b97;\n  letter-spacing: 1px;\n  font-weight: 600;\n}\n.menu-item[_ngcontent-%COMP%] {\n  height: 36px;\n  display: flex;\n  align-items: center;\n  padding: 0 12px;\n  border-radius: 8px;\n  color: #a9b9c0;\n  text-decoration: none;\n  font-size: 12px;\n  transition: all 0.2s ease;\n  box-sizing: border-box;\n}\n.menu-item[_ngcontent-%COMP%]:hover {\n  background: rgba(44, 174, 181, 0.15);\n  color: #ffffff;\n}\n.menu-item.active[_ngcontent-%COMP%] {\n  background: #2caeb5;\n  color: #ffffff;\n}\n.footer-bottom[_ngcontent-%COMP%] {\n  margin-top: auto;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n  padding: 12px 14px;\n  box-sizing: border-box;\n}\n.usuario[_ngcontent-%COMP%] {\n  height: 34px;\n  display: flex;\n  align-items: center;\n}\n.avatar[_ngcontent-%COMP%] {\n  width: 27px;\n  height: 27px;\n  border-radius: 50%;\n  background: #2caeb5;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: #ffffff;\n  font-size: 11px;\n  font-weight: 600;\n}\n.nombre[_ngcontent-%COMP%] {\n  margin-left: 8px;\n  color: #d2dadd;\n  font-size: 10px;\n}\n.logout[_ngcontent-%COMP%] {\n  margin-left: auto;\n  background: transparent;\n  border: none;\n  color: #8fa3aa;\n  font-size: 16px;\n  cursor: pointer;\n  transition: 0.2s;\n}\n.logout[_ngcontent-%COMP%]:hover {\n  color: #ffffff;\n}\n@media (max-width: 700px) {\n  .nav[_ngcontent-%COMP%] {\n    width: 190px;\n  }\n}\n@media (max-width: 500px) {\n  .nav[_ngcontent-%COMP%] {\n    width: 65px;\n  }\n  .biblioteca-info[_ngcontent-%COMP%], \n   .menu-title[_ngcontent-%COMP%], \n   .nombre[_ngcontent-%COMP%] {\n    display: none;\n  }\n  .footer-header[_ngcontent-%COMP%] {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-menu[_ngcontent-%COMP%] {\n    padding: 24px 7px 0;\n  }\n  .menu-item[_ngcontent-%COMP%] {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-bottom[_ngcontent-%COMP%] {\n    padding: 10px 7px;\n  }\n  .alertas[_ngcontent-%COMP%] {\n    justify-content: center;\n  }\n  .alertas-info[_ngcontent-%COMP%] {\n    display: none;\n  }\n  .notification[_ngcontent-%COMP%] {\n    position: absolute;\n    right: 4px;\n  }\n  .usuario[_ngcontent-%COMP%] {\n    justify-content: center;\n  }\n  .logout[_ngcontent-%COMP%] {\n    display: none;\n  }\n}\n/*# sourceMappingURL=nav.css.map */"] });
+    if (rf & 2) {
+      \u0275\u0275advance(12);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(8, _c03));
+      \u0275\u0275advance(5);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(9, _c03));
+      \u0275\u0275advance(5);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(10, _c03));
+      \u0275\u0275advance(5);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(11, _c03));
+      \u0275\u0275advance(6);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(12, _c03));
+      \u0275\u0275advance(5);
+      \u0275\u0275property("routerLinkActiveOptions", \u0275\u0275pureFunction0(13, _c03));
+      \u0275\u0275advance(8);
+      \u0275\u0275textInterpolate1(" ", ctx.inicialUsuario, " ");
+      \u0275\u0275advance(2);
+      \u0275\u0275textInterpolate(ctx.nombreUsuario);
+    }
+  }, dependencies: [RouterLink, RouterLinkActive], styles: ["\n[_nghost-%COMP%] {\n  display: block;\n}\n.nav[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 204px;\n  height: 100vh;\n  background: #193b4c;\n  color: #ffffff;\n  display: flex;\n  flex-direction: column;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  border-right: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  z-index: 1000;\n}\n.footer-header[_ngcontent-%COMP%] {\n  height: 70px;\n  display: flex;\n  align-items: center;\n  padding: 0 14px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  flex-shrink: 0;\n}\n.logo-container[_ngcontent-%COMP%] {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: #ffffff;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.logo-container[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n.biblioteca-info[_ngcontent-%COMP%] {\n  margin-left: 9px;\n}\n.biblioteca-info[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 11px;\n  font-weight: 700;\n  line-height: 15px;\n  color: #ffffff;\n}\n.biblioteca-info[_ngcontent-%COMP%]   span[_ngcontent-%COMP%] {\n  display: block;\n  color: #23b2a0;\n  font-size: 9px;\n  font-weight: 600;\n  line-height: 13px;\n}\n.footer-menu[_ngcontent-%COMP%] {\n  padding: 23px 9px 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.menu-title[_ngcontent-%COMP%] {\n  margin: 0 11px 11px;\n  font-size: 9px;\n  color: #718b97;\n  letter-spacing: 1px;\n  font-weight: 600;\n}\n.menu-item[_ngcontent-%COMP%] {\n  height: 36px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 0 12px;\n  border-radius: 8px;\n  color: #a9b9c0;\n  text-decoration: none;\n  font-size: 12px;\n  transition: all 0.2s ease;\n  box-sizing: border-box;\n}\n.menu-item[_ngcontent-%COMP%]:hover {\n  background: rgba(44, 174, 181, 0.15);\n  color: #ffffff;\n}\n.menu-item.active[_ngcontent-%COMP%] {\n  background: #2bb5aa;\n  color: #ffffff;\n}\n.menu-item[_ngcontent-%COMP%]   svg[_ngcontent-%COMP%] {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.footer-bottom[_ngcontent-%COMP%] {\n  margin-top: auto;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n  padding: 12px 14px;\n  box-sizing: border-box;\n}\n.usuario[_ngcontent-%COMP%] {\n  height: 34px;\n  display: flex;\n  align-items: center;\n}\n.avatar[_ngcontent-%COMP%] {\n  width: 27px;\n  height: 27px;\n  border-radius: 50%;\n  background: #2caeb5;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: #ffffff;\n  font-size: 11px;\n  font-weight: 600;\n}\n.nombre[_ngcontent-%COMP%] {\n  margin-left: 8px;\n  color: #d2dadd;\n  font-size: 10px;\n}\n.logout[_ngcontent-%COMP%] {\n  margin-left: auto;\n  background: transparent;\n  border: none;\n  color: #8fa3aa;\n  font-size: 16px;\n  cursor: pointer;\n  transition: 0.2s;\n}\n.logout[_ngcontent-%COMP%]:hover {\n  color: #ffffff;\n}\n@media (max-width: 700px) {\n  .nav[_ngcontent-%COMP%] {\n    width: 190px;\n  }\n}\n@media (max-width: 500px) {\n  .nav[_ngcontent-%COMP%] {\n    width: 65px;\n  }\n  .biblioteca-info[_ngcontent-%COMP%], \n   .menu-title[_ngcontent-%COMP%], \n   .nombre[_ngcontent-%COMP%] {\n    display: none;\n  }\n  .footer-header[_ngcontent-%COMP%] {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-menu[_ngcontent-%COMP%] {\n    padding: 24px 7px 0;\n  }\n  .menu-item[_ngcontent-%COMP%] {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-bottom[_ngcontent-%COMP%] {\n    padding: 10px 7px;\n  }\n  .alertas[_ngcontent-%COMP%] {\n    justify-content: center;\n  }\n  .alertas-info[_ngcontent-%COMP%] {\n    display: none;\n  }\n  .notification[_ngcontent-%COMP%] {\n    position: absolute;\n    right: 4px;\n  }\n  .usuario[_ngcontent-%COMP%] {\n    justify-content: center;\n  }\n  .logout[_ngcontent-%COMP%] {\n    display: none;\n  }\n}\n/*# sourceMappingURL=nav.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Nav, [{
     type: Component,
-    args: [{ selector: "app-nav", standalone: true, imports: [RouterLink], template: `<nav class="nav">\r
+    args: [{ selector: "app-nav", standalone: true, imports: [RouterLink, RouterLinkActive], template: `<nav class="nav">\r
     <!-- ENCABEZADO -->\r
   <div class="footer-header">\r
 \r
@@ -48313,25 +51494,52 @@ var Nav = class _Nav {
 \r
   <span class="menu-title">MEN\xDA</span>\r
 \r
-  <a routerLink='/inicio' class="menu-item">\r
+  <a routerLink='/inicio' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <path d="m3 10 9-7 9 7"></path>\r
+      <path d="M5 9v12h14V9M9 21v-7h6v7"></path>\r
+    </svg>\r
     Inicio\r
   </a>\r
 \r
-  <a routerLink='/socios' class="menu-item">\r
-  Socios\r
+  <a routerLink='/socios' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <circle cx="9" cy="8" r="3.5"></circle>\r
+      <path d="M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20M16 5a3.5 3.5 0 0 1 0 6.8M18 14a5 5 0 0 1 3.5 4.8V20"></path>\r
+    </svg>\r
+    Socios\r
   </a>\r
 \r
-  <a routerLink='/prestamos' class="menu-item">Pr\xE9stamos</a>\r
+  <a routerLink='/prestamos' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <rect x="5" y="4" width="14" height="17" rx="2"></rect>\r
+      <path d="M9 4.5h6M9 10h6M9 14h6M9 18h3"></path>\r
+    </svg>\r
+    Pr\xE9stamos\r
+  </a>\r
 \r
-  <a routerLink='/cuotas' class="menu-item">\r
+  <a routerLink='/cuotas' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <rect x="3" y="5.5" width="18" height="13" rx="2"></rect>\r
+      <circle cx="12" cy="12" r="2.5"></circle>\r
+      <path d="M7 9h.01M17 15h.01"></path>\r
+    </svg>\r
     Cuotas\r
   </a>\r
 \r
-  <a routerLink='/libros' class="menu-item">\r
+  <a routerLink='/libros' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"></path>\r
+      <path d="M4 5.5v14A2.5 2.5 0 0 1 6.5 17H20M8 7h8"></path>\r
+    </svg>\r
     Libros\r
   </a>\r
 \r
-  <a routerLink='/actividades' class="menu-item">\r
+  <a routerLink='/actividades' routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="menu-item">\r
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\r
+      <circle cx="12" cy="12" r="9"></circle>\r
+      <path d="M12 7v5l3 2"></path>\r
+    </svg>\r
     Actividad\r
   </a>\r
 \r
@@ -48346,12 +51554,12 @@ var Nav = class _Nav {
     <div class="usuario">\r
 \r
       <div class="avatar">\r
-        A\r
+        {{ inicialUsuario }}\r
       </div>\r
 \r
-      <span class="nombre">admin</span>\r
+      <span class="nombre">{{ nombreUsuario }}</span>\r
 \r
-      <button routerLink='/inicioSesion' class="logout" title="Cerrar sesi\xF3n">\r
+      <button type="button" class="logout" title="Cerrar sesi\xF3n" (click)="cerrarSesion()">\r
         \u21AA\r
       </button>\r
 \r
@@ -48361,12 +51569,11 @@ var Nav = class _Nav {
 </nav>\r
 \r
   \r
-\r
-`, styles: ["/* src/app/nav/nav.css */\n:host {\n  display: block;\n}\n.nav {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 204px;\n  height: 100vh;\n  background: #193b4c;\n  color: #ffffff;\n  display: flex;\n  flex-direction: column;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  border-right: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  z-index: 1000;\n}\n.footer-header {\n  height: 70px;\n  display: flex;\n  align-items: center;\n  padding: 0 14px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  flex-shrink: 0;\n}\n.logo-container {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: #ffffff;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.logo-container img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n.biblioteca-info {\n  margin-left: 9px;\n}\n.biblioteca-info h3 {\n  margin: 0;\n  font-size: 11px;\n  font-weight: 700;\n  line-height: 15px;\n  color: #ffffff;\n}\n.biblioteca-info span {\n  display: block;\n  color: #ff7910;\n  font-size: 9px;\n  font-weight: 600;\n  line-height: 13px;\n}\n.footer-menu {\n  padding: 23px 9px 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.menu-title {\n  margin: 0 11px 11px;\n  font-size: 9px;\n  color: #718b97;\n  letter-spacing: 1px;\n  font-weight: 600;\n}\n.menu-item {\n  height: 36px;\n  display: flex;\n  align-items: center;\n  padding: 0 12px;\n  border-radius: 8px;\n  color: #a9b9c0;\n  text-decoration: none;\n  font-size: 12px;\n  transition: all 0.2s ease;\n  box-sizing: border-box;\n}\n.menu-item:hover {\n  background: rgba(44, 174, 181, 0.15);\n  color: #ffffff;\n}\n.menu-item.active {\n  background: #2caeb5;\n  color: #ffffff;\n}\n.footer-bottom {\n  margin-top: auto;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n  padding: 12px 14px;\n  box-sizing: border-box;\n}\n.usuario {\n  height: 34px;\n  display: flex;\n  align-items: center;\n}\n.avatar {\n  width: 27px;\n  height: 27px;\n  border-radius: 50%;\n  background: #2caeb5;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: #ffffff;\n  font-size: 11px;\n  font-weight: 600;\n}\n.nombre {\n  margin-left: 8px;\n  color: #d2dadd;\n  font-size: 10px;\n}\n.logout {\n  margin-left: auto;\n  background: transparent;\n  border: none;\n  color: #8fa3aa;\n  font-size: 16px;\n  cursor: pointer;\n  transition: 0.2s;\n}\n.logout:hover {\n  color: #ffffff;\n}\n@media (max-width: 700px) {\n  .nav {\n    width: 190px;\n  }\n}\n@media (max-width: 500px) {\n  .nav {\n    width: 65px;\n  }\n  .biblioteca-info,\n  .menu-title,\n  .nombre {\n    display: none;\n  }\n  .footer-header {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-menu {\n    padding: 24px 7px 0;\n  }\n  .menu-item {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-bottom {\n    padding: 10px 7px;\n  }\n  .alertas {\n    justify-content: center;\n  }\n  .alertas-info {\n    display: none;\n  }\n  .notification {\n    position: absolute;\n    right: 4px;\n  }\n  .usuario {\n    justify-content: center;\n  }\n  .logout {\n    display: none;\n  }\n}\n/*# sourceMappingURL=nav.css.map */\n"] }]
-  }], null, null);
+`, styles: ["/* src/app/nav/nav.css */\n:host {\n  display: block;\n}\n.nav {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 204px;\n  height: 100vh;\n  background: #193b4c;\n  color: #ffffff;\n  display: flex;\n  flex-direction: column;\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n  border-right: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  z-index: 1000;\n}\n.footer-header {\n  height: 70px;\n  display: flex;\n  align-items: center;\n  padding: 0 14px;\n  border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n  box-sizing: border-box;\n  flex-shrink: 0;\n}\n.logo-container {\n  width: 36px;\n  height: 36px;\n  border-radius: 50%;\n  background: #ffffff;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n}\n.logo-container img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n.biblioteca-info {\n  margin-left: 9px;\n}\n.biblioteca-info h3 {\n  margin: 0;\n  font-size: 11px;\n  font-weight: 700;\n  line-height: 15px;\n  color: #ffffff;\n}\n.biblioteca-info span {\n  display: block;\n  color: #23b2a0;\n  font-size: 9px;\n  font-weight: 600;\n  line-height: 13px;\n}\n.footer-menu {\n  padding: 23px 9px 0;\n  display: flex;\n  flex-direction: column;\n  gap: 3px;\n}\n.menu-title {\n  margin: 0 11px 11px;\n  font-size: 9px;\n  color: #718b97;\n  letter-spacing: 1px;\n  font-weight: 600;\n}\n.menu-item {\n  height: 36px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 0 12px;\n  border-radius: 8px;\n  color: #a9b9c0;\n  text-decoration: none;\n  font-size: 12px;\n  transition: all 0.2s ease;\n  box-sizing: border-box;\n}\n.menu-item:hover {\n  background: rgba(44, 174, 181, 0.15);\n  color: #ffffff;\n}\n.menu-item.active {\n  background: #2bb5aa;\n  color: #ffffff;\n}\n.menu-item svg {\n  width: 16px;\n  height: 16px;\n  flex: 0 0 auto;\n}\n.footer-bottom {\n  margin-top: auto;\n  border-top: 1px solid rgba(255, 255, 255, 0.08);\n  padding: 12px 14px;\n  box-sizing: border-box;\n}\n.usuario {\n  height: 34px;\n  display: flex;\n  align-items: center;\n}\n.avatar {\n  width: 27px;\n  height: 27px;\n  border-radius: 50%;\n  background: #2caeb5;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  color: #ffffff;\n  font-size: 11px;\n  font-weight: 600;\n}\n.nombre {\n  margin-left: 8px;\n  color: #d2dadd;\n  font-size: 10px;\n}\n.logout {\n  margin-left: auto;\n  background: transparent;\n  border: none;\n  color: #8fa3aa;\n  font-size: 16px;\n  cursor: pointer;\n  transition: 0.2s;\n}\n.logout:hover {\n  color: #ffffff;\n}\n@media (max-width: 700px) {\n  .nav {\n    width: 190px;\n  }\n}\n@media (max-width: 500px) {\n  .nav {\n    width: 65px;\n  }\n  .biblioteca-info,\n  .menu-title,\n  .nombre {\n    display: none;\n  }\n  .footer-header {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-menu {\n    padding: 24px 7px 0;\n  }\n  .menu-item {\n    justify-content: center;\n    padding: 0;\n  }\n  .footer-bottom {\n    padding: 10px 7px;\n  }\n  .alertas {\n    justify-content: center;\n  }\n  .alertas-info {\n    display: none;\n  }\n  .notification {\n    position: absolute;\n    right: 4px;\n  }\n  .usuario {\n    justify-content: center;\n  }\n  .logout {\n    display: none;\n  }\n}\n/*# sourceMappingURL=nav.css.map */\n"] }]
+  }], () => [{ type: AuthService }, { type: Router }], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Nav, { className: "Nav", filePath: "app/nav/nav.ts", lineNumber: 11 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(Nav, { className: "Nav", filePath: "app/nav/nav.ts", lineNumber: 12 });
 })();
 
 // src/app/footer/footer.ts

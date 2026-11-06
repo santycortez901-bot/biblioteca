@@ -12,6 +12,15 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Conexión con la API PHP
+
+Iniciá Apache y MySQL desde XAMPP. La aplicación usa la API local configurada en
+`src/app/config/api.config.ts` (`http://localhost/api_proyecto_biblioteca/public`).
+Si cambiás la ubicación o el puerto de la API, actualizá esa URL. Durante el
+desarrollo, Angular debe ejecutarse en `http://localhost:4200`, origen permitido
+por la configuración CORS del backend. Los endpoints de préstamos, cuotas y
+actividades requieren una sesión de administrador.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

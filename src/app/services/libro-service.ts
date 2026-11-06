@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, map, switchMap, tap } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 export interface Copia {
   id: string;
@@ -16,114 +18,72 @@ export interface Libro {
   listaCopias: Copia[];
 }
 
+interface LibroApi {
+  id: string;
+  titulo: string;
+  autor: string;
+  copias: number;
+  copiasTotales: number;
+  estado: string;
+  listaCopias: Copia[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class LibroService {
-  private contador = 1;
-  private librosSubject = new BehaviorSubject<Libro[]>([]);
-  libros$: Observable<Libro[]> = this.librosSubject.asObservable();
-
-  constructor() {
-    this.generarLibrosDePrueba(20);
-  }
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${API_BASE_URL}/libros`;
+  private readonly librosSubject = new BehaviorSubject<Libro[]>([]);
+  readonly libros$: Observable<Libro[]> = this.librosSubject.asObservable();
 
   get libros(): Libro[] {
     return this.librosSubject.getValue();
   }
 
-  // Obtiene la primera copia disponible de un libro
-  obtenerSiguienteCopiaDisponible(libroId: string): Copia | null {
-    const libro = this.libros.find(l => l.id === libroId);
-    if (!libro) return null;
-    return libro.listaCopias.find(c => c.estado === 'Disponible') || null;
+  cargarLibros(): Observable<Libro[]> {
+    return this.http.get<LibroApi[]>(this.apiUrl).pipe(
+      map(libros => libros.map(libro => ({
+        id: String(libro.id),
+        titulo: libro.titulo,
+        autor: libro.autor,
+        copias: Number(libro.copias),
+        copiasTotales: Number(libro.copiasTotales),
+        estado: libro.estado,
+        listaCopias: libro.listaCopias ?? []
+      }))),
+      tap(libros => this.librosSubject.next(libros))
+    );
   }
 
-  // Presta una copia específica
-  prestarCopia(libroId: string, copiaId: string): boolean {
-    const listaActual = [...this.libros];
-    const libro = listaActual.find(l => l.id === libroId);
-    if (!libro) return false;
+  guardarLibro(titulo: string, autor: string, cantidad: number): Observable<void> {
+    const existente = this.libros.find(libro =>
+      libro.titulo.trim().toLowerCase() === titulo.trim().toLowerCase() &&
+      libro.autor.trim().toLowerCase() === autor.trim().toLowerCase()
+    );
 
-    const copia = libro.listaCopias.find(c => c.id === copiaId && c.estado === 'Disponible');
-    if (!copia) return false;
-
-    copia.estado = 'Prestada';
-    this.actualizarEstadoLibro(libro);
-    this.librosSubject.next(listaActual);
-    return true;
-  }
-
-  // Devuelve una copia dada su clave de inventario (Ej: INV001-01)
-  devolverCopiaPorInventario(inventarioId: string): void {
-    const listaActual = [...this.libros];
-    for (const libro of listaActual) {
-      const copia = libro.listaCopias.find(c => c.id === inventarioId);
-      if (copia && copia.estado === 'Prestada') {
-        copia.estado = 'Disponible';
-        this.actualizarEstadoLibro(libro);
-        this.librosSubject.next(listaActual);
-        break;
-      }
-    }
-  }
-
-  private actualizarEstadoLibro(libro: Libro): void {
-    libro.copias = libro.listaCopias.filter(c => c.estado === 'Disponible').length;
-    libro.estado = libro.copias === 0 ? 'sin copias' : 'disponible';
-  }
-
-  private generarLibrosDePrueba(cantidad: number): void {
-    const catalogos = [
-      { titulo: 'Cien Años de Soledad', autor: 'Gabriel García Márquez' },
-      { titulo: 'Don Quijote de la Mancha', autor: 'Miguel de Cervantes' },
-      { titulo: 'El Principito', autor: 'Antoine de Saint-Exupéry' },
-      { titulo: '1984', autor: 'George Orwell' },
-      { titulo: 'Un Mundo Feliz', autor: 'Aldous Huxley' },
-      { titulo: 'Ficciones', autor: 'Jorge Luis Borges' },
-      { titulo: 'El Aleph', autor: 'Jorge Luis Borges' },
-      { titulo: 'La Odisea', autor: 'Homero' },
-      { titulo: 'Crimen y Castigo', autor: 'Fiódor Dostoyevski' },
-      { titulo: 'El Señor de los Anillos', autor: 'J.R.R. Tolkien' },
-      { titulo: 'Rayuela', autor: 'Julio Cortázar' },
-      { titulo: 'Pedro Páramo', autor: 'Juan Rulfo' },
-      { titulo: 'El Túnel', autor: 'Ernesto Sabato' },
-      { titulo: 'La Metamorfosis', autor: 'Franz Kafka' },
-      { titulo: 'Ensayo sobre la Ceguera', autor: 'José Saramago' },
-      { titulo: 'Los Miserables', autor: 'Victor Hugo' },
-      { titulo: 'La Sombra del Viento', autor: 'Carlos Ruiz Zafón' },
-      { titulo: 'Fahrenheit 451', autor: 'Ray Bradbury' },
-      { titulo: 'Drácula', autor: 'Bram Stoker' },
-      { titulo: 'El Retrato de Dorian Gray', autor: 'Oscar Wilde' }
-    ];
-
-    const seleccionados = catalogos.sort(() => 0.5 - Math.random()).slice(0, cantidad);
-    const nuevosLibros: Libro[] = [];
-
-    seleccionados.forEach(item => {
-      const copiasTotales = Math.floor(Math.random() * 4) + 1;
-      const nuevoId = 'INV' + this.contador.toString().padStart(3, '0');
-      this.contador++;
-
-      const listaCopias: Copia[] = [];
-      for (let i = 1; i <= copiasTotales; i++) {
-        listaCopias.push({
-          id: `${nuevoId}-${i.toString().padStart(2, '0')}`,
-          estado: 'Disponible'
+    const request = existente
+      ? this.http.put(`${this.apiUrl}/${encodeURIComponent(existente.id)}`, {
+          titulo: existente.titulo,
+          autor: existente.autor,
+          copias: existente.copiasTotales + cantidad,
+          estado: 'disponible'
+        })
+      : this.http.post(this.apiUrl, {
+          id: `INV${Date.now().toString(36).toUpperCase()}`,
+          titulo: titulo.trim(),
+          autor: autor.trim(),
+          copias: cantidad
         });
-      }
 
-      nuevosLibros.push({
-        id: nuevoId,
-        titulo: item.titulo,
-        autor: item.autor,
-        copias: copiasTotales,
-        copiasTotales,
-        estado: 'disponible',
-        listaCopias
-      });
-    });
+    return request.pipe(
+      switchMap(() => this.cargarLibros()),
+      map(() => undefined)
+    );
+  }
 
-    this.librosSubject.next(nuevosLibros);
+  obtenerSiguienteCopiaDisponible(libroId: string): Copia | null {
+    const libro = this.libros.find(item => item.id === libroId);
+    return libro?.listaCopias.find(copia => copia.estado === 'Disponible') ?? null;
   }
 }

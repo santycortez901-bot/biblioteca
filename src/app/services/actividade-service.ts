@@ -1,72 +1,41 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, Subject, map, switchMap, tap } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 import { Actividad, TipoActividad } from '../models/models/actividad';
+import Swal from 'sweetalert2';
+
+interface ActividadApi extends Actividad {
+  id: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ActividadServicio {
-
-  private actividades: Actividad[] = [
-    {
-      tipo: 'login',
-      descripcion: 'Inicio de sesión del sistema',
-      fecha: '28/08/2026 12:00',
-      user: 'admin'
-    },
-    {
-      tipo: 'login',
-      descripcion: 'Inicio de sesión del sistema',
-      fecha: '19/08/2026 10:30',
-      user: 'admin'
-    },
-    {
-      tipo: 'prestamo',
-      descripcion: 'Nuevo préstamo: Rayuela → Florencia Morales',
-      fecha: '19/08/2026 09:15',
-      user: 'admin',
-      idrelacionado: 'PR005'
-    },
-    {
-      tipo: 'cuota',
-      descripcion: 'Cuota cobrada: María González — Julio 2026 ($1.200)',
-      fecha: '18/08/2026 16:20',
-      user: 'admin',
-      idrelacionado: 'S001'
-    },
-    {
-      tipo: 'socio',
-      descripcion: 'Nuevo socio registrado: Pablo Torres (CAR010)',
-      fecha: '18/08/2026 14:45',
-      user: 'admin',
-      idrelacionado: 'S010'
-    },
-    {
-      tipo: 'libro',
-      descripcion: 'Nuevo libro registrado: Cien años de soledad',
-      fecha: '17/08/2026 11:30',
-      user: 'admin',
-      idrelacionado: 'L001'
-    },
-  ];
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${API_BASE_URL}/actividades`;
+  private readonly actividadesSubject = new BehaviorSubject<Actividad[]>([]);
+  private readonly erroresSubject = new Subject<unknown>();
+  readonly errores$: Observable<unknown> = this.erroresSubject.asObservable();
 
   obtenerActividades(): Actividad[] {
-    return this.actividades;
+    return [...this.actividadesSubject.getValue()];
+  }
+
+  cargarActividades(): Observable<Actividad[]> {
+    return this.http.get<ActividadApi[]>(this.apiUrl).pipe(
+      map(actividades => actividades.map(({ id, ...actividad }) => actividad)),
+      tap(actividades => this.actividadesSubject.next(actividades))
+    );
   }
 
   agregarActividad(actividad: Actividad): void {
-    this.actividades.unshift(actividad);
-  }
-
-  eliminarActividadRelacionada(
-    tipo: TipoActividad,
-    idRelacionado: string
-  ): void {
-    for (let index = this.actividades.length - 1; index >= 0; index--) {
-      const actividad = this.actividades[index];
-      if (actividad.tipo === tipo && actividad.idrelacionado === idRelacionado) {
-        this.actividades.splice(index, 1);
-      }
-    }
+    this.registrarActividad(
+      actividad.tipo,
+      actividad.descripcion,
+      actividad.idrelacionado
+    );
   }
 
   registrarActividad(
@@ -74,25 +43,26 @@ export class ActividadServicio {
     descripcion: string,
     idRelacionado?: string
   ): void {
-    const ahora = new Date();
-    const fecha = ahora.toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    const hora = ahora.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-
-    this.agregarActividad({
+    this.http.post(this.apiUrl, {
       tipo,
       descripcion,
-      fecha: `${fecha} ${hora}`,
-      user: 'admin',
-      idrelacionado: idRelacionado
+      idrelacionado: idRelacionado ?? null
+    }).pipe(
+      switchMap(() => this.cargarActividades())
+    ).subscribe({
+      error: error => {
+        console.error('No se pudo registrar la actividad en la API.', error);
+        this.erroresSubject.next(error);
+        const mensaje = error instanceof Error
+          ? error.message
+          : 'No se pudo guardar el registro de actividad.';
+        void Swal.fire({
+          title: 'No se pudo registrar la actividad',
+          text: mensaje,
+          icon: 'warning',
+          confirmButtonColor: '#0d9488'
+        });
+      }
     });
   }
-  
 }

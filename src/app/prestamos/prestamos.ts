@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 
@@ -92,7 +93,16 @@ export class Prestamos implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.actualizarPrestamos();
+    this.prestamoService.cargarPrestamos().subscribe({
+      next: () => this.actualizarPrestamos(),
+      error: error => this.mostrarErrorApi(error)
+    });
+    this.socioService.cargarSocios().subscribe({
+      error: error => this.mostrarErrorApi(error)
+    });
+    this.libroService.cargarLibros().subscribe({
+      error: error => this.mostrarErrorApi(error)
+    });
 
     this.sub = this.libroService.libros$.subscribe(
       libros => {
@@ -294,9 +304,8 @@ export class Prestamos implements OnInit, OnDestroy {
       renovaciones: 0
     };
 
-    if (this.prestamoService.agregarPrestamo(nuevoPrestamo)) {
-      this.socioService.actualizarEstadoPrestamo(socioObj.id, 'En curso');
-
+    try {
+      await firstValueFrom(this.prestamoService.agregarPrestamo(nuevoPrestamo));
       this.actividadServicio.registrarActividad(
         'prestamo',
         `Nuevo préstamo: ${libroObj.titulo} para ${socioObj.nombre} (copia ${nuevoPrestamo.inventario})`,
@@ -319,9 +328,10 @@ export class Prestamos implements OnInit, OnDestroy {
       });
 
       return true;
+    } catch (error: unknown) {
+      await this.mostrarErrorApi(error);
+      return false;
     }
-
-    return false;
   }
 
   async eliminarPrestamo(prestamo: Prestamo): Promise<void> {
@@ -335,25 +345,19 @@ export class Prestamos implements OnInit, OnDestroy {
       return;
     }
 
-    const eliminado = this.prestamoService.eliminarPrestamo(prestamo.id);
-    if (!eliminado) {
+    let eliminado: Prestamo;
+    try {
+      eliminado = await firstValueFrom(this.prestamoService.eliminarPrestamo(prestamo.id));
+    } catch (error: unknown) {
+      await this.mostrarErrorApi(error);
       return;
     }
 
-    this.actividadServicio.eliminarActividadRelacionada('prestamo', eliminado.id);
     this.actividadServicio.registrarActividad(
       'eliminacion',
       `Préstamo eliminado: ${eliminado.libro} para ${eliminado.socio} (copia ${eliminado.inventario})`,
       eliminado.id
     );
-
-    const tieneOtroPrestamoActivo = this.prestamoService
-      .obtenerPrestamos()
-      .some(otro => otro.socioId === eliminado.socioId && otro.estado !== 'devuelto');
-
-    if (!tieneOtroPrestamoActivo) {
-      this.socioService.actualizarEstadoPrestamo(eliminado.socioId, 'Libre');
-    }
 
     this.ngZone.run(() => {
       this.actualizarPrestamos();
@@ -370,12 +374,17 @@ export class Prestamos implements OnInit, OnDestroy {
     });
   }
 
-  renovarPrestamo(prestamo: Prestamo): void {
+  async renovarPrestamo(prestamo: Prestamo): Promise<void> {
     const socioObj = this.socioService
       .tenerSocios()
       .find(s => s.id === prestamo.socioId);
 
-    this.prestamoService.renovarPrestamo(prestamo.id);
+    try {
+      await firstValueFrom(this.prestamoService.renovarPrestamo(prestamo.id));
+    } catch (error: unknown) {
+      await this.mostrarErrorApi(error);
+      return;
+    }
 
     const actualizado = this.prestamos.find(p => p.id === prestamo.id) || prestamo;
 
@@ -415,26 +424,23 @@ export class Prestamos implements OnInit, OnDestroy {
       '¿Estás seguro?',
       `¿Deseas devolver "${prestamo.libro}"?`,
       'Sí, devolver'
-    ).then(confirmado => {
+    ).then(async confirmado => {
       if (!confirmado) {
         return;
       }
 
-      const socioObj = this.socioService
-        .tenerSocios()
-        .find(s => s.id === prestamo.socioId);
-
-      this.prestamoService.devolverPrestamo(prestamo.id);
+      try {
+        await firstValueFrom(this.prestamoService.devolverPrestamo(prestamo.id));
+      } catch (error: unknown) {
+        await this.mostrarErrorApi(error);
+        return;
+      }
 
       this.actividadServicio.registrarActividad(
         'prestamo',
         `Préstamo devuelto: ${prestamo.libro} por ${prestamo.socio}`,
         prestamo.id
       );
-
-      if (socioObj) {
-        this.socioService.actualizarEstadoPrestamo(socioObj.id, 'Libre');
-      }
 
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
@@ -446,20 +452,24 @@ export class Prestamos implements OnInit, OnDestroy {
       '¿Suspender préstamo?',
       `Se suspenderá el préstamo de "${prestamo.libro}" a nombre de ${prestamo.socio}.`,
       'Sí, suspender'
-    ).then(confirmado => {
+    ).then(async confirmado => {
       if (!confirmado) {
         return;
       }
 
-      this.prestamoService.suspenderPrestamo(prestamo.id);
+      try {
+        await firstValueFrom(this.prestamoService.suspenderPrestamo(prestamo.id));
+        await firstValueFrom(this.socioService.actualizarEstadoSocio(prestamo.socioId, 'suspendido'));
+      } catch (error: unknown) {
+        await this.mostrarErrorApi(error);
+        return;
+      }
 
       this.actividadServicio.registrarActividad(
         'prestamo',
         `Préstamo suspendido: ${prestamo.libro} para ${prestamo.socio}`,
         prestamo.id
       );
-
-      this.socioService.actualizarEstadoSocio(prestamo.socioId, 'suspendido');
 
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
@@ -471,26 +481,27 @@ export class Prestamos implements OnInit, OnDestroy {
       '¿Quitar suspensión?',
       `El préstamo de "${prestamo.libro}" volverá a estar vigente.`,
       'Sí, quitar'
-    ).then(confirmado => {
+    ).then(async confirmado => {
       if (!confirmado) {
         return;
       }
 
-      this.prestamoService.quitarSuspension(prestamo.id);
+      try {
+        await firstValueFrom(this.prestamoService.quitarSuspension(prestamo.id));
+        const socio = this.socioService.tenerSocios().find(item => item.id === prestamo.socioId);
+        if (socio?.estado === 'suspendido') {
+          await firstValueFrom(this.socioService.actualizarEstadoSocio(prestamo.socioId, 'activo'));
+        }
+      } catch (error: unknown) {
+        await this.mostrarErrorApi(error);
+        return;
+      }
 
       this.actividadServicio.registrarActividad(
         'prestamo',
         `Suspensión retirada: préstamo de ${prestamo.libro} para ${prestamo.socio}`,
         prestamo.id
       );
-
-      const socioObj = this.socioService
-        .tenerSocios()
-        .find(s => s.id === prestamo.socioId);
-
-      if (socioObj?.estado === 'suspendido') {
-        this.socioService.actualizarEstadoSocio(prestamo.socioId, 'activo');
-      }
 
       this.actualizarPrestamos();
       this.changeDetector.detectChanges();
@@ -514,5 +525,17 @@ export class Prestamos implements OnInit, OnDestroy {
     });
 
     return isConfirmed;
+  }
+
+  private mostrarErrorApi(error: unknown): Promise<void> {
+    const mensaje = error instanceof Error
+      ? error.message
+      : 'No se pudo completar la operación en la API.';
+    return Swal.fire({
+      title: 'Error de conexión con la API',
+      text: mensaje,
+      icon: 'error',
+      confirmButtonColor: '#0d9488'
+    }).then(() => undefined);
   }
 }

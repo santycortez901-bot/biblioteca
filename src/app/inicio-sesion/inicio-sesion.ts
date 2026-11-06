@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 import { AuthService } from '../services/auth-service';
+import { ActividadServicio } from '../services/actividade-service';
 
 @Component({
   selector: 'app-inicio-sesion',
@@ -20,7 +21,8 @@ export class InicioSesion {
 
   constructor(
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private actividadServicio: ActividadServicio
   ) {}
 
   iniciarSesion(): void {
@@ -57,7 +59,12 @@ export class InicioSesion {
         this.iniciandoSesion = false;
       }))
       .subscribe({
-        next: () => {
+        next: ({ usuario }) => {
+          this.actividadServicio.registrarActividad(
+            'login',
+            'Inicio de sesión del sistema',
+            String(usuario.id)
+          );
           void this.router.navigate(['/inicio']);
         },
         error: (error: unknown) => {
