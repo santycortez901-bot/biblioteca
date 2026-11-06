@@ -94,4 +94,5 @@ export class ActividadServicio {
       idrelacionado: idRelacionado
     });
   }
+  
 }

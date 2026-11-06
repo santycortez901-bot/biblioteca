@@ -78,12 +78,12 @@
     <div class="usuario">
 
       <div class="avatar">
-        A
+        {{ inicialUsuario }}
       </div>
 
-      <span class="nombre">admin</span>
+      <span class="nombre">{{ nombreUsuario }}</span>
 
-      <button routerLink='/inicioSesion' class="logout" title="Cerrar sesión">
+      <button type="button" class="logout" title="Cerrar sesión" (click)="cerrarSesion()">
         ↪
       </button>
 
@@ -93,4 +93,3 @@
 </nav>
 
   
-

@@ -48,9 +48,14 @@
             required />
         </div>
       </div>
+
+      @if (error) {
+        <p class="error" role="alert">{{ error }}</p>
+      }
+
       <!-- Botón de Ingreso -->
-      <button type="submit" class="btn-login">
-        Iniciar Sesión
+      <button type="submit" class="btn-login" [disabled]="iniciandoSesion">
+        {{ iniciandoSesion ? 'Conectando...' : 'Iniciar Sesión' }}
       </button>
     </form>
 

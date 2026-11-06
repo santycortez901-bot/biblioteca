@@ -114,6 +114,12 @@
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
 
+.error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
 /* Botón de Enviar */
 .btn-login {
   margin-top: 8px;

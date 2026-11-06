@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
+import { AuthService } from '../services/auth-service';
 
 @Component({
   selector: 'app-inicio-sesion',
@@ -10,45 +13,61 @@ import Swal from 'sweetalert2';
   styleUrl: './inicio-sesion.css',
 })
 export class InicioSesion {
-email: string = '';
-  password: string = '';
+  email = '';
+  password = '';
+  iniciandoSesion = false;
+  error = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService
+  ) {}
 
   iniciarSesion(): void {
-    const regexEmail = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail)\.com$/;
+    if (this.iniciandoSesion) {
+      return;
+    }
+
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!this.email || !regexEmail.test(this.email.trim())) {
       Swal.fire({
         title: 'Correo Inválido',
-        text: 'Por favor ingresá un correo válido (@gmail.com o @hotmail.com).',
+        text: 'Ingresá un correo electrónico válido.',
         icon: 'warning',
         confirmButtonColor: '#0d9488'
       });
       return;
     }
 
-    if (!this.password || this.password.length < 4) {
+    if (!this.password.trim()) {
       Swal.fire({
-        title: 'Contraseña Corta',
-        text: 'La contraseña debe tener al menos 4 caracteres.',
+        title: 'Contraseña requerida',
+        text: 'Ingresá tu contraseña.',
         icon: 'warning',
         confirmButtonColor: '#0d9488'
       });
       return;
     }
 
-    // Alerta de éxito y redirección a inicio
-    Swal.fire({
-      title: '¡Bienvenido!',
-      text: 'Inicio de sesión exitoso.',
-      icon: 'success',
-      confirmButtonColor: '#0d9488',
-      timer: 1500,
-      showConfirmButton: false
-    }).then(() => {
-      this.router.navigate(['/inicio']);
-    });
+    this.error = '';
+    this.iniciandoSesion = true;
+    this.auth.login(this.email.trim(), this.password)
+      .pipe(finalize(() => {
+        this.iniciandoSesion = false;
+      }))
+      .subscribe({
+        next: () => {
+          void this.router.navigate(['/inicio']);
+        },
+        error: (error: unknown) => {
+          this.error = error instanceof HttpErrorResponse
+            ? error.error?.error ??
+              (error.status === 0
+                ? 'No se pudo conectar con el servidor. Verificá que el backend esté iniciado.'
+                : 'No se pudo iniciar sesión.')
+            : 'No se pudo iniciar sesión.';
+        }
+      });
   }
-
 }

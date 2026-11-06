@@ -96,9 +96,6 @@
           </button>
 
 
-          
-
-
           <button
             type="button"
             class="filter-btn estado-inactivo"
@@ -223,7 +220,7 @@
 
                 <div class="user-subtext">
 
-                  {{ s.edad }}
+                  {{ s.edad }} años
 
                 </div>
 
@@ -274,9 +271,7 @@
                       s.estado === 'inactivo',
 
                     'badge-suspendido':
-                      s.estado === 'suspendido',
-
-                    
+                      s.estado === 'suspendido'
 
                   }">
 
@@ -649,6 +644,19 @@
           </div>
 
         </div>
+
+
+        <!-- ESTADO (SOLO EN EDICIÓN) -->
+        @if (esEdicion) {
+          <div class="form-group">
+            <label>Estado del Socio</label>
+            <select [(ngModel)]="form.estado" name="estado" class="form-control">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="suspendido">Suspendido</option>
+            </select>
+          </div>
+        }
 
 
         <!-- ACCIONES MODAL -->
