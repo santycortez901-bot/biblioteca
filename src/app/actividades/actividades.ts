@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
@@ -59,7 +59,8 @@ export class Actividades implements OnInit {
   // ==========================================
 
   constructor(
-    private actividadServicio: ActividadServicio
+    private actividadServicio: ActividadServicio,
+    private changeDetector: ChangeDetectorRef
   ) {}
 
 
@@ -72,6 +73,7 @@ export class Actividades implements OnInit {
       next: actividades => {
         this.actividades = actividades;
         this.aplicarFiltros();
+        this.changeDetector.markForCheck();
       },
       error: (error: unknown) => {
         const mensaje = error instanceof Error

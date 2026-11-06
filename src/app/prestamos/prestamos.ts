@@ -98,6 +98,7 @@ export class Prestamos implements OnInit, OnDestroy {
       error: error => this.mostrarErrorApi(error)
     });
     this.socioService.cargarSocios().subscribe({
+      next: () => this.changeDetector.markForCheck(),
       error: error => this.mostrarErrorApi(error)
     });
     this.libroService.cargarLibros().subscribe({
@@ -107,6 +108,7 @@ export class Prestamos implements OnInit, OnDestroy {
     this.sub = this.libroService.libros$.subscribe(
       libros => {
         this.librosDisponibles = libros.filter(l => l.copias > 0);
+        this.changeDetector.markForCheck();
       }
     );
 
@@ -190,6 +192,7 @@ export class Prestamos implements OnInit, OnDestroy {
     this.prestamos = this.prestamoService
       .obtenerPrestamos()
       .filter(p => p.estado !== 'devuelto');
+    this.changeDetector.markForCheck();
   }
 
   get prestamosFiltrados(): Prestamo[] {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -18,6 +18,7 @@ export class Libros implements OnInit, OnDestroy {
   private libroService = inject(LibroService);
   private actividadServicio = inject(ActividadServicio);
   private router = inject(Router);
+  private changeDetector = inject(ChangeDetectorRef);
   private sub: Subscription = new Subscription();
 
   isModalOpen = false;
@@ -34,6 +35,7 @@ export class Libros implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.libroService.libros$.subscribe(data => {
       this.libros = data;
+      this.changeDetector.markForCheck();
     });
     this.libroService.cargarLibros().subscribe({
       error: (error: unknown) => this.mostrarErrorApi(error)

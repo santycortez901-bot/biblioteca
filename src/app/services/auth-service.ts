@@ -6,7 +6,15 @@ import { API_BASE_URL } from '../config/api.config';
 export interface UsuarioAutenticado {
   id: number | string;
   nombre: string;
-  rol: string;
+  rol: 'admin' | 'super_admin';
+}
+
+export interface Administrador {
+  id: number | string;
+  nombre: string;
+  email: string;
+  rol: 'admin';
+  creado: string;
 }
 
 interface RespuestaLogin {
@@ -14,7 +22,7 @@ interface RespuestaLogin {
   usuario: UsuarioAutenticado;
 }
 
-export interface DatosRegistro {
+export interface DatosNuevoAdministrador {
   nombre: string;
   email: string;
   contrasenia: string;
@@ -28,11 +36,18 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  registro(datos: DatosRegistro): Observable<{ mensaje: string }> {
-    return this.http.post<{ mensaje: string }>(
-      `${this.apiUrl}/registro`,
-      datos
-    );
+  obtenerAdministradores(): Observable<Administrador[]> {
+    return this.http.get<Administrador[]>(`${this.apiUrl}/admins`);
+  }
+
+  crearAdministrador(
+    datos: DatosNuevoAdministrador
+  ): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/admins`, datos);
+  }
+
+  eliminarAdministrador(id: number | string): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/admins/${id}`);
   }
 
   login(email: string, contraseña: string): Observable<RespuestaLogin> {
@@ -74,7 +89,7 @@ export class AuthService {
         'rol' in usuario &&
         (typeof usuario.id === 'number' || typeof usuario.id === 'string') &&
         typeof usuario.nombre === 'string' &&
-        typeof usuario.rol === 'string'
+        (usuario.rol === 'admin' || usuario.rol === 'super_admin')
       ) {
         return {
           id: usuario.id,
@@ -95,5 +110,13 @@ export class AuthService {
 
   esAdmin(): boolean {
     return this.getUsuario()?.rol === 'admin';
+  }
+
+  esSuperAdmin(): boolean {
+    return this.getUsuario()?.rol === 'super_admin';
+  }
+
+  puedeAdministrar(): boolean {
+    return this.esAdmin() || this.esSuperAdmin();
   }
 }

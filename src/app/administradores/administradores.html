@@ -1,0 +1,79 @@
+<section class="administradores-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">SUPERADMINISTRACIÓN</p>
+      <h1>Administradores</h1>
+      <p class="subtitle">Creá y administrá las cuentas con acceso al sistema.</p>
+    </div>
+  </header>
+
+  @if (error) {
+    <p class="error-message" role="alert">{{ error }}</p>
+  }
+
+  <section class="panel">
+    <h2>Crear administrador</h2>
+    <form (ngSubmit)="crearAdministrador()" class="admin-form">
+      <label>
+        Nombre
+        <input
+          type="text"
+          name="nombre"
+          [(ngModel)]="nombre"
+          autocomplete="name"
+          required />
+      </label>
+
+      <label>
+        Correo electrónico
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          autocomplete="email"
+          required />
+      </label>
+
+      <label>
+        Contraseña inicial
+        <input
+          type="password"
+          name="contrasenia"
+          [(ngModel)]="contrasenia"
+          autocomplete="new-password"
+          minlength="8"
+          required />
+      </label>
+
+      <button type="submit" [disabled]="guardando">
+        {{ guardando ? 'Creando...' : 'Crear administrador' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Cuentas existentes</h2>
+    @if (cargando) {
+      <p class="empty-state">Cargando administradores...</p>
+    } @else if (administradores.length === 0) {
+      <p class="empty-state">No hay otras cuentas administradoras.</p>
+    } @else {
+      <div class="admin-list">
+        @for (administrador of administradores; track administrador.id) {
+          <article class="admin-row">
+            <div class="admin-details">
+              <strong>{{ administrador.nombre }}</strong>
+              <span>{{ administrador.email }}</span>
+            </div>
+            <button
+              type="button"
+              class="delete-button"
+              (click)="confirmarEliminacion(administrador)">
+              Eliminar
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

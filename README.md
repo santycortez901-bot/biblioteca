@@ -19,7 +19,23 @@ Iniciá Apache y MySQL desde XAMPP. La aplicación usa la API local configurada 
 Si cambiás la ubicación o el puerto de la API, actualizá esa URL. Durante el
 desarrollo, Angular debe ejecutarse en `http://localhost:4200`, origen permitido
 por la configuración CORS del backend. Los endpoints de préstamos, cuotas y
-actividades requieren una sesión de administrador.
+actividades requieren una sesión de admin o superadmin.
+
+La columna `usuarios.contrasenia` en MySQL debe ser `VARCHAR(255)` para no
+truncar los hashes de contraseña. La API puede verificar hashes bcrypt antiguos
+truncados a 50 caracteres y los reemplaza por un hash completo después del
+próximo inicio de sesión exitoso.
+
+El rol `super_admin` conserva los permisos operativos de `admin` y puede crear
+y eliminar cuentas administradoras. La API local guarda el cambio de esquema
+y la promoción inicial en `C:\xampp\htdocs\api_proyecto_biblioteca\migrations\20261106_super_admin.sql`;
+en una base sin superadmin, esa migración promueve al admin de menor ID. El
+registro público de administradores está deshabilitado.
+
+La API firma los tokens con una clave privada local (`config/JwtSecret.php`,
+excluida de Git) o con la variable de entorno `BIBLIOTECA_JWT_SECRET`. Cada
+instalación debe tener su propia clave; al rotarla, las sesiones existentes
+deben iniciar sesión nuevamente.
 
 ## Code scaffolding
 

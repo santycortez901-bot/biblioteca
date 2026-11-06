@@ -50,5 +50,18 @@ describe('AuthService', () => {
 
     expect(service.getToken()).toBe('jwt-de-prueba');
     expect(service.esAdmin()).toBe(true);
+    expect(service.puedeAdministrar()).toBe(true);
+  });
+
+  it('should recognize superadmin without treating it as a regular admin', () => {
+    localStorage.setItem('usuario', JSON.stringify({
+      id: 2,
+      nombre: 'Superadmin',
+      rol: 'super_admin'
+    }));
+
+    expect(service.esSuperAdmin()).toBe(true);
+    expect(service.esAdmin()).toBe(false);
+    expect(service.puedeAdministrar()).toBe(true);
   });
 });

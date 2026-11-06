@@ -1,5 +1,5 @@
 
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -58,7 +58,8 @@ export class Inicio implements OnInit, OnDestroy {
     private actividadServicio: ActividadServicio,
     private socioServicio: SocioServicio,
     private prestamoService: PrestamoService,
-    private authService: AuthService
+    private authService: AuthService,
+    private changeDetector: ChangeDetectorRef
   ) {}
 
 
@@ -88,7 +89,10 @@ export class Inicio implements OnInit, OnDestroy {
         error: error => this.mostrarErrorApi(error)
       });
       this.actividadServicio.cargarActividades().subscribe({
-        next: actividades => this.actividadesRecientes = actividades.slice(0, 4),
+        next: actividades => {
+          this.actividadesRecientes = actividades.slice(0, 4);
+          this.changeDetector.markForCheck();
+        },
         error: error => this.mostrarErrorApi(error)
       });
     }
@@ -139,6 +143,7 @@ export class Inicio implements OnInit, OnDestroy {
             )
         ).length;
 
+    this.changeDetector.markForCheck();
   }
 
 
@@ -254,6 +259,7 @@ export class Inicio implements OnInit, OnDestroy {
         year: 'numeric'
       });
 
+    this.changeDetector.markForCheck();
   }
 
 

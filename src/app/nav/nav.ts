@@ -23,6 +23,10 @@ export class Nav {
     return this.nombreUsuario.charAt(0).toUpperCase() || 'U';
   }
 
+  get esSuperAdmin(): boolean {
+    return this.auth.esSuperAdmin();
+  }
+
   cerrarSesion(): void {
     this.auth.logout();
     this.router.navigate(['/inicioSesion']);

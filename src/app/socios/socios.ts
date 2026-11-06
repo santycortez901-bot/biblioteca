@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component,OnInit} from '@angular/core';
+import {ChangeDetectorRef,Component,OnInit} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import Swal, {type SweetAlertIcon} from 'sweetalert2';
@@ -97,7 +97,8 @@ export class Socios
   constructor(
     private route:ActivatedRoute,
     private socioServicio:SocioServicio,
-    private actividadServicio:ActividadServicio
+    private actividadServicio:ActividadServicio,
+    private changeDetector:ChangeDetectorRef
   ) {}
   // =========================
   // CICLO DE VIDA
@@ -124,7 +125,10 @@ export class Socios
 
   obtenerSocios(): void {
     this.socioServicio.cargarSocios().subscribe({
-      next: socios => this.socios = socios,
+      next: socios => {
+        this.socios = socios;
+        this.changeDetector.markForCheck();
+      },
       error: error => this.mostrarErrorApi(error)
     });
   }

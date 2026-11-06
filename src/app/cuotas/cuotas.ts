@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common'; // 👈 Asegura que reconozca directivas básicas
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -23,7 +23,8 @@ export class Cuotas implements OnInit {
   constructor(
     private cuotaService: CuotasService,
     private actividadServicio: ActividadServicio,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private changeDetector: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -36,6 +37,7 @@ export class Cuotas implements OnInit {
     this.cuotaService.cargarCuotas().subscribe({
       next: socios => {
         this.cuotas = socios;
+        this.changeDetector.markForCheck();
       },
       error: error => this.mostrarErrorApi(error)
     });
