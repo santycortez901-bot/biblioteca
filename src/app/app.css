@@ -27,10 +27,14 @@ body {
   box-sizing: border-box;
 }
 
+.app-content.login-content {
+  margin-left: 0;
+  width: 100%;
+}
+
 .main-content {
   width: 100%;
   box-sizing: border-box;
   background: #eef4f7;
 } 
-
 

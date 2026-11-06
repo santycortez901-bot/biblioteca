@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { Nav } from './nav/nav';
 import { Footer } from './footer/footer';
 
@@ -10,4 +10,10 @@ import { Footer } from './footer/footer';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {}
+export class App {
+  private readonly router = inject(Router);
+
+  get esInicioSesion(): boolean {
+    return this.router.url.split('?')[0] === '/inicioSesion';
+  }
+}
